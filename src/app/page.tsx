@@ -1,9 +1,10 @@
-
-
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 export default function Home() {
   return (
     <>
+      <Navbar />
 
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
         <div className="max-w-3xl text-center bg-white shadow-xl p-10 rounded-2xl border border-blue-100">
@@ -19,8 +20,8 @@ export default function Home() {
           </p>
         </div>
       </main>
-      
-    
+
+      <Footer />
     </>
-  );
+  )
 }
