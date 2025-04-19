@@ -1,13 +1,11 @@
-'use client'
-
-import { ReactNode } from 'react'
+import React, { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FileText, Users, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
-  children: ReactNode
+  children: ReactNode // pastikan children ada di sini
 }
 
 const sections = [
@@ -31,7 +29,7 @@ const sections = [
   },
 ]
 
-export default function Sidebar({ children }: SidebarProps) {
+const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   return (
     <div className="flex">
       {/* Sidebar */}
@@ -80,3 +78,5 @@ export default function Sidebar({ children }: SidebarProps) {
     </div>
   )
 }
+
+export default Sidebar

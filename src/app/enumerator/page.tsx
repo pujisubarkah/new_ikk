@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import Sidebar from "@/components/sidebar"
+import Header from "@/components/header"
 
 // Dummy data enumerator
 const dummyEnumerator = Array.from({ length: 23 }, (_, i) => ({
@@ -23,6 +24,8 @@ export default function TabelEnumerator() {
 
   return (
     <Sidebar> {/* 👈 Ini dia si Sidebar pembungkus */}
+      <Header /> {/* Header di atas sidebar */}
+      {/* Konten utama */}
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">Daftar Enumerator</h2>
