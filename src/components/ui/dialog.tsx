@@ -1,6 +1,5 @@
 import * as React from "react"
-import { Dialog as RadixDialog, DialogTrigger, DialogContent, DialogTitle } from "@radix-ui/react-dialog"
-import { cn } from "@/lib/utils"
+import { Dialog as RadixDialog } from "@radix-ui/react-dialog"
 
 export interface DialogProps {
   open: boolean
@@ -8,9 +7,7 @@ export interface DialogProps {
   children?: React.ReactNode
 }
 
-const Dialog = React.forwardRef<HTMLDivElement, DialogProps>((props, ref) => {
-  const { open, onOpenChange, children } = props
-
+const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(({ open, onOpenChange, children }, ref) => {
   return (
     <RadixDialog open={open} onOpenChange={onOpenChange}>
       {children}
@@ -20,4 +17,4 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>((props, ref) => {
 
 Dialog.displayName = "Dialog"
 
-export { Dialog, DialogTrigger, DialogContent, DialogTitle }
+export { Dialog }
