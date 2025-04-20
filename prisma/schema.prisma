@@ -1,15 +1,51 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model role_id {
+  role_id   Int     @id @default(autoincrement())
+  role_nama String? @db.VarChar
+  users     User[]  // Relasi ke User
+}
+
+model Instansi {
+  id              Int     @id @default(autoincrement())
+  nama_instansi   String  @db.VarChar
+  users           User[]  // Relasi ke User
+}
+
+model status {
+  id        Int     @id @default(autoincrement())
+  status    String  @db.VarChar
+  users     User[]  // Relasi ke User
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  role_id      Int
+  nip          Int
+  nama         String   @db.VarChar
+  jabatan      String   @db.VarChar
+  unit_kerja   String   @db.VarChar
+  nik          Int
+  instansi_id  Int
+  email        String   @unique
+  password     String
+  telp         String
+  status_id    Int
+  createdAt    DateTime @default(now())
+
+  // Relasi ke role_id
+  role         role_id  @relation(fields: [role_id], references: [role_id])
+
+  // Relasi ke Instansi
+  instansi     Instansi @relation(fields: [instansi_id], references: [id])
+
+  // Relasi ke Status
+  status       status   @relation(fields: [status_id], references: [id])
 }
