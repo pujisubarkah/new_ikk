@@ -7,45 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model role_id {
-  role_id   Int     @id @default(autoincrement())
-  role_nama String? @db.VarChar
-  users     User[]  // Relasi ke User
+model instansi {
+  id                Int                @id
+  kode_instansi     Int?
+  nama_instansi     String?            @db.VarChar(226)
+  kat_instansi_id   Int?
+  kategori_instansi kategori_instansi? @relation(fields: [kat_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "constraint_1")
 }
 
-model Instansi {
-  id              Int     @id @default(autoincrement())
-  nama_instansi   String  @db.VarChar
-  users           User[]  // Relasi ke User
+model kategori_instansi {
+  id           Int        @id @default(autoincrement())
+  kat_instansi String?    @db.VarChar
+  instansi     instansi[]
+}
+
+model role_id {
+  role_id                    Int     @id @default(autoincrement())
+  role_nama                  String? @db.VarChar
+  user_user_role_idTorole_id user[]  @relation("user_role_idTorole_id")
 }
 
 model status {
-  id        Int     @id @default(autoincrement())
-  status    String  @db.VarChar
-  users     User[]  // Relasi ke User
+  id     Int    @id @default(autoincrement())
+  status String @db.VarChar
+  user   user[]
 }
 
-model User {
-  id           Int      @id @default(autoincrement())
-  role_id      Int
-  nip          Int
-  nama         String   @db.VarChar
-  jabatan      String   @db.VarChar
-  unit_kerja   String   @db.VarChar
-  nik          Int
-  instansi_id  Int
-  email        String   @unique
-  password     String
-  telp         String
-  status_id    Int
-  createdAt    DateTime @default(now())
-
-  // Relasi ke role_id
-  role         role_id  @relation(fields: [role_id], references: [role_id])
-
-  // Relasi ke Instansi
-  instansi     Instansi @relation(fields: [instansi_id], references: [id])
-
-  // Relasi ke Status
-  status       status   @relation(fields: [status_id], references: [id])
+model user {
+  id                            Int      @id(map: "User_pkey") @default(autoincrement())
+  role_id                       Int
+  nip                           Int
+  nama                          String   @db.VarChar
+  jabatan                       String   @db.VarChar
+  unit_kerja                    String   @db.VarChar
+  nik                           Int
+  instansi_id                   Int
+  email                         String   @unique(map: "User_email_key")
+  password                      String
+  telp                          String
+  status_id                     Int
+  createdAt                     DateTime @default(now())
+  role_id_user_role_idTorole_id role_id  @relation("user_role_idTorole_id", fields: [role_id], references: [role_id], map: "User_role_id_fkey")
+  status                        status   @relation(fields: [status_id], references: [id], map: "User_status_id_fkey")
 }
