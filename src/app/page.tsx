@@ -25,9 +25,8 @@ const bannerImages = [
   '/banner/Banner12.jpg',
 ]
 
-SwiperCore.use([Autoplay, Pagination])
-
 export default function Home() {
+  SwiperCore.use([Autoplay, Pagination])
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
