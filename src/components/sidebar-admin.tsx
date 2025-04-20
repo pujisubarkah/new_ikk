@@ -30,7 +30,11 @@ const sections = [
   },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  children: React.ReactNode
+}
+
+export default function Sidebar({ children }: SidebarProps) {
   return (
     <aside className="w-64 h-screen fixed top-0 left-0 bg-[#16578D] text-white p-6 shadow-lg">
       {/* LOGO */}
@@ -42,7 +46,6 @@ export default function Sidebar() {
           height={150}
           className="rounded-full"
         />
-      
       </div>
 
       {/* MENU */}
@@ -71,6 +74,11 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+
+      {/* RENDERING CHILDREN CONTENT */}
+      <div className="mt-6">
+        {children}
+      </div>
     </aside>
   )
 }

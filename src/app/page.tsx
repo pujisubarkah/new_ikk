@@ -1,6 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import SwiperCore from 'swiper'
+import { Autoplay, Pagination } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/pagination'
+
+import Flow from '@/components/flowstep'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
@@ -19,46 +25,61 @@ const bannerImages = [
   '/banner/Banner12.jpg',
 ]
 
+SwiperCore.use([Autoplay, Pagination])
+
 export default function Home() {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % bannerImages.length)
-    }, 30000) // ganti setiap 30 detik
-    return () => clearInterval(interval)
-  }, [])
-
   return (
-    <div className="relative h-screen overflow-hidden flex flex-col">
-      {/* Background carousel */}
-      <div
-        className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
-        style={{
-          backgroundImage: `url(${bannerImages[currentImageIndex]})`,
-          zIndex: -2,
-        }}
-      />
-      {/* Dark overlay biar teks tetap kebaca */}
-      <div className="absolute inset-0 bg-[#0f0f0f]/20 z-[-1]" />
-
-      {/* Content */}
+    <div className="flex flex-col min-h-screen">
       <Navbar />
 
-      <main className="flex-grow flex items-center justify-center text-white px-4 text-center">
-        <div className="bg-white/90 backdrop-blur-sm p-10 rounded-3xl shadow-lg max-w-4xl text-[#16578d]">
+      {/* Hero Section */}
+      <main className="text-white px-4 text-center bg-[#16578d] py-20">
+        <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Selamat Datang di
           </h1>
           <h2 className="text-3xl md:text-4xl font-semibold mb-6">
             Sistem Informasi Indeks Kualitas Kebijakan
           </h2>
-          <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
-            Membangun kualitas kebijakan <span className="text-[#16578d] font-semibold">berbasis bukti dan berdampak</span> untuk masa depan yang lebih baik.  
-            Sistem ini membantu Anda menilai, memantau, dan meningkatkan kualitas kebijakan dengan pendekatan analitik dan data yang solid.
+          <p className="text-lg md:text-xl text-white/90 leading-relaxed">
+            Membangun kualitas kebijakan{' '}
+            <span className="text-white font-semibold">
+              berbasis bukti dan berdampak
+            </span>{' '}
+            untuk masa depan yang lebih baik. Sistem ini membantu Anda menilai,
+            memantau, dan meningkatkan kualitas kebijakan dengan pendekatan
+            analitik dan data yang solid.
           </p>
         </div>
       </main>
+
+      {/* Image Slider Section */}
+      <section className="w-full py-8 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <Swiper
+            autoplay={{ delay: 3000, disableOnInteraction: false }}
+            pagination={{ clickable: true }}
+            loop={true}
+            slidesPerView={1}
+            spaceBetween={20}
+          >
+            {bannerImages.map((url, index) => (
+              <SwiperSlide key={index}>
+                <img
+                  src={url}
+                  alt={`Banner ${index + 1}`}
+                  className="w-full h-[300px] md:h-[500px] object-cover rounded-xl shadow-lg"
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </section>
+
+      {/* Flow Steps Section */}
+      <section className="bg-white py-16 px-4">
+        <Flow />
+      </section>
 
       <Footer />
     </div>
