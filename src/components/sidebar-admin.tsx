@@ -1,24 +1,27 @@
-'use client'
-
+import React, { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { LayoutDashboard, FileText, Calendar, Building2, MapPin, Users, LifeBuoy } from 'lucide-react'
+import { LayoutDashboard, FileText, Calendar, Users, LifeBuoy } from 'lucide-react' // Importing the necessary icons
 import { cn } from '@/lib/utils'
+
+interface SidebarProps {
+  children: ReactNode // Ensure children are included here
+}
 
 const sections = [
   {
     label: '',
     items: [
-      { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
-      { name: 'Kebijakan', icon: FileText, href: '/kebijakan' },
+      { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' }, // Changed icon
+      { name: 'Kebijakan', icon: FileText, href: 'admin-nasional/kebijakan' },
     ],
   },
   {
     label: 'Master Data',
     items: [
-      { name: 'Tahun Aktif', icon: Calendar, href: '/tahun-aktif' },
-      { name: 'Instansi', icon: Building2, href: '/instansi' },
-      { name: 'Wilayah Koordinasi', icon: MapPin, href: '/wilayah-koordinasi' },
+      { name: 'Tahun Aktif', icon: Calendar, href: '/tahun-aktif' }, // Changed icon
+      { name: 'Instansi', icon: Users, href: '/instansi' },
+      { name: 'Wilayah Koordinasi', icon: Users, href: '/wilayah-koordinasi' },
       { name: 'Pengguna', icon: Users, href: '/pengguna' },
     ],
   },
@@ -30,55 +33,54 @@ const sections = [
   },
 ]
 
-interface SidebarProps {
-  children: React.ReactNode
-}
-
-export default function Sidebar({ children }: SidebarProps) {
+const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   return (
-    <aside className="w-64 h-screen fixed top-0 left-0 bg-[#16578D] text-white p-6 shadow-lg">
-      {/* LOGO */}
-      <div className="mb-8 flex flex-col items-center">
-        <Image
-          src="/lanri.png"
-          alt="Logo LAN"
-          width={150}
-          height={150}
-          className="rounded-full"
-        />
-      </div>
+    <div className="flex">
+      {/* Sidebar */}
+      <aside className="w-64 h-screen fixed top-0 left-0 bg-[#16578D] text-white p-6 shadow-lg">
+        <div className="mb-8 flex flex-col items-center">
+          <Image
+            src="/lanri.png"
+            alt="Logo LAN"
+            width={150}
+            height={150}
+            className="rounded-full"
+          />
+        </div>
 
-      {/* MENU */}
-      <nav className="space-y-6">
-        {sections.map((section, idx) => (
-          <div key={idx}>
-            {section.label && (
-              <div className="uppercase text-xs text-blue-100 tracking-wider mb-2 mt-4">
-                {section.label}
+        <nav className="space-y-6">
+          {sections.map((section, idx) => (
+            <div key={idx}>
+              {section.label && (
+                <div className="uppercase text-xs text-blue-100 tracking-wider mb-2 mt-4">
+                  {section.label}
+                </div>
+              )}
+              <div className="space-y-2">
+                {section.items.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-white hover:text-[#16578D] transition-colors'
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" /> {/* Render the icon */}
+                    <span>{item.name}</span>
+                  </Link>
+                ))}
               </div>
-            )}
-            <div className="space-y-2">
-              {section.items.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-white hover:text-[#16578D] transition-colors'
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.name}</span>
-                </Link>
-              ))}
             </div>
-          </div>
-        ))}
-      </nav>
+          ))}
+        </nav>
+      </aside>
 
-      {/* RENDERING CHILDREN CONTENT */}
-      <div className="mt-6">
+      {/* Content */}
+      <main className="ml-64 flex-1 p-6 bg-gray-50 min-h-screen">
         {children}
-      </div>
-    </aside>
+      </main>
+    </div>
   )
 }
+
+export default Sidebar
