@@ -1,77 +1,23 @@
-'use client'
+import React from 'react';
+import Header from '@/components/header';
+import Sidebar from '@/components/sidebar-admin';
 
-import Image from 'next/image'
-import Link from 'next/link'
-import { LayoutDashboard, FileText, Calendar, Building2, MapPin, Users, LifeBuoy } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-const sections = [
-  {
-    label: '',
-    items: [
-      { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
-      { name: 'Kebijakan', icon: FileText, href: '/kebijakan' },
-    ],
-  },
-  {
-    label: 'Master Data',
-    items: [
-      { name: 'Tahun Aktif', icon: Calendar, href: '/tahun-aktif' },
-      { name: 'Instansi', icon: Building2, href: '/instansi' },
-      { name: 'Wilayah Koordinasi', icon: MapPin, href: '/wilayah-koordinasi' },
-      { name: 'Pengguna', icon: Users, href: '/pengguna' },
-    ],
-  },
-  {
-    label: 'Bantuan',
-    items: [
-      { name: 'Helpdesk', icon: LifeBuoy, href: '/helpdesk' },
-    ],
-  },
-]
-
-export default function Sidebar() {
+const DashboardPage: React.FC = () => {
   return (
-    
-    <aside className="w-64 h-screen fixed top-0 left-0 bg-[#16578D] text-white p-6 shadow-lg">
-      {/* LOGO */}
-      <div className="mb-8 flex flex-col items-center">
-        <Image
-          src="/lanri.png"
-          alt="Logo LAN"
-          width={150}
-          height={150}
-          className="rounded-full"
-        />
-      
+    <div className="flex min-h-screen">
+      <Sidebar>
+        {/* Add any child elements or leave it empty if no children are needed */}
+        <div></div>
+      </Sidebar>
+      <div className="flex-1">
+        <Header />
+        <main className="p-6">
+          <h1 className="text-2xl font-bold">Admin Nasional Dashboard</h1>
+          {/* Konten dashboard lainnya bisa ditambahkan di sini */}
+        </main>
       </div>
+    </div>
+  );
+};
 
-      {/* MENU */}
-      <nav className="space-y-6">
-        {sections.map((section, idx) => (
-          <div key={idx}>
-            {section.label && (
-              <div className="uppercase text-xs text-blue-100 tracking-wider mb-2 mt-4">
-                {section.label}
-              </div>
-            )}
-            <div className="space-y-2">
-              {section.items.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-white hover:text-[#16578D] transition-colors'
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.name}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
-    </aside>
-  )
-}
+export default DashboardPage;

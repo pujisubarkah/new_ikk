@@ -12,7 +12,7 @@ const sections = [
   {
     label: '',
     items: [
-      { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' }, // Changed icon
+      { name: 'Dashboard', icon: LayoutDashboard, href: 'admin-nasional/dashboard' }, // Changed icon
       { name: 'Kebijakan', icon: FileText, href: 'admin-nasional/kebijakan' },
     ],
   },
