@@ -1,52 +1,362 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["ikk"]
 }
 
-model instansi {
-  id                Int                @id
-  kode_instansi     Int?
-  nama_instansi     String?            @db.VarChar(226)
-  kat_instansi_id   Int?
-  kategori_instansi kategori_instansi? @relation(fields: [kat_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "constraint_1")
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model active_year {
+  id          BigInt
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  end_year    DateTime? @db.Timestamp(6)
+  start_year  DateTime? @db.Timestamp(6)
+
+  @@ignore
+  @@schema("ikk")
 }
 
-model kategori_instansi {
-  id           Int        @id @default(autoincrement())
-  kat_instansi String?    @db.VarChar
-  instansi     instansi[]
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model admin_instansi_enumerator {
+  id                BigInt
+  created_at        DateTime? @db.Timestamp(6)
+  created_by        BigInt?
+  modified_by       BigInt?
+  updated_at        DateTime? @db.Timestamp(6)
+  admin_instansi_id BigInt?
+  enumerator_id     BigInt?
+
+  @@ignore
+  @@schema("ikk")
 }
 
-model role_id {
-  role_id                    Int     @id @default(autoincrement())
-  role_nama                  String? @db.VarChar
-  user_user_role_idTorole_id user[]  @relation("user_role_idTorole_id")
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model agencies {
+  id          BigInt
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  name        String?   @db.VarChar(255)
+  category    String?   @db.VarChar(255)
+  kd_bkn      String?   @db.VarChar(100)
+  kd_prov     String?   @db.VarChar(100)
+  kd_kab      String?   @db.VarChar(100)
+
+  @@ignore
+  @@schema("ikk")
 }
 
-model status {
-  id     Int    @id @default(autoincrement())
-  status String @db.VarChar
-  user   user[]
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model agenda_setting {
+  id          BigInt
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  a1a         String?   @db.VarChar(255)
+  a1b         String?   @db.VarChar(255)
+  a1c         String?   @db.VarChar(255)
+  a1d         String?   @db.VarChar(255)
+  a2a         String?   @db.VarChar(255)
+  a2b         String?   @db.VarChar(255)
+  a2c         String?   @db.VarChar(255)
+  informasia3 String?
+
+  @@ignore
+  @@schema("ikk")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model agenda_setting_base_score {
+  id          BigInt
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  a1a         Float?
+  a1b         Float?
+  a1c         Float?
+  a1d         Float?
+  a2a         Float?
+  a2b         Float?
+  a2c         Float?
+  total_score Float?
+
+  @@ignore
+  @@schema("ikk")
+}
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model agenda_setting_file {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model agenda_setting_ki {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model agenda_setting_ki_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model agenda_setting_ku {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model agenda_setting_ku_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model coordinator_types {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model evaluasi_kebijakan {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model evaluasi_kebijakan_base_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model evaluasi_kebijakan_file {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model evaluasi_kebijakan_ki {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model evaluasi_kebijakan_ki_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model evaluasi_kebijakan_ku {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model evaluasi_kebijakan_ku_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model formulasi_kebijakan {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model formulasi_kebijakan_base_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model formulasi_kebijakan_file {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model formulasi_kebijakan_ki {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model formulasi_kebijakan_ki_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model formulasi_kebijakan_ku {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model formulasi_kebijakan_ku_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model implementasi_kebijakan {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model implementasi_kebijakan_base_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model implementasi_kebijakan_file {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model implementasi_kebijakan_ki {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model implementasi_kebijakan_ki_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model implementasi_kebijakan_ku {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model implementasi_kebijakan_ku_score {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model instrument_answer {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model koordinator_instansi_admin_instansi {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model koordinator_instansi_agency {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model koordinator_utama_koordinator_instansi {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model oauth_client_details {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model permission {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model permission_role {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model policies {
+// @@schema("ikk")
+// }
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model policy_details {
+// @@schema("ikk")
+// }
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model policy_process {
+  id          BigInt
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  name        String?   @db.VarChar(255)
+
+  @@ignore
+  @@schema("ikk")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model policy_sample {
+  id            BigInt
+  created_at    DateTime? @db.Timestamp(6)
+  created_by    BigInt?
+  modified_by   BigInt?
+  updated_at    DateTime? @db.Timestamp(6)
+  id_user_admin BigInt?
+  policy_id     BigInt?
+
+  @@ignore
+  @@schema("ikk")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model policy_status {
+  id          BigInt
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  name        String?   @db.VarChar(255)
+
+  @@ignore
+  @@schema("ikk")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model role {
+  id          BigInt
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  name        String?   @db.VarChar(255)
+
+  @@ignore
+  @@schema("ikk")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model role_user {
+  user_id BigInt
+  role_id BigInt
+
+
+  @@schema("ikk")
 }
 
 model user {
-  id                            Int      @id(map: "User_pkey") @default(autoincrement())
-  role_id                       Int
-  nip                           Int
-  nama                          String   @db.VarChar
-  jabatan                       String   @db.VarChar
-  unit_kerja                    String   @db.VarChar
-  nik                           Int
-  instansi_id                   Int
-  email                         String   @unique(map: "User_email_key")
-  password                      String
-  telp                          String
-  status_id                     Int
-  createdAt                     DateTime @default(now())
-  role_id_user_role_idTorole_id role_id  @relation("user_role_idTorole_id", fields: [role_id], references: [role_id], map: "User_role_id_fkey")
-  status                        status   @relation(fields: [status_id], references: [id], map: "User_status_id_fkey")
+  id                  Int       @id
+  created_at          DateTime? @db.Timestamp(6)
+  created_by          BigInt?
+  modified_by         BigInt?
+  updated_at          DateTime? @db.Timestamp(6)
+  coordinator_type    String?   @db.VarChar(255)
+  deleted             String?   @db.Bit(1)
+  deleted_at          DateTime? @db.Timestamp(6)
+  deleted_by          BigInt?
+  email               String?   @db.VarChar(255)
+  name                String?   @db.VarChar(255)
+  nik                 String?   @db.VarChar(255)
+  password            String?   @db.VarChar(255)
+  phone               String?   @db.VarChar(255)
+  position            String?   @db.VarChar(255)
+  status              String?   @db.VarChar(255)
+  username            String?   @db.VarChar(255)
+  work_unit           String?   @db.VarChar(255)
+  agency_id           BigInt?
+  coordinator_type_id BigInt?
+
+  @@schema("ikk")
 }
