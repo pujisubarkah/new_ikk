@@ -1,111 +1,70 @@
+import { PrismaClient } from '@prisma/client';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../../lib/prisma'; // Import Prisma Client
-import bcrypt from 'bcryptjs'; // Mengimpor bcrypt untuk enkripsi password
 
-// Mendefinisikan tipe untuk body POST
-interface CreateUserBody {
-  email: string;
-  name: string;
-  nik: string;
-  password: string;
-  phone: string;
-  position: string;
-  status: string;
-  username: string;
-  work_unit: string;
-  agency_id?: number;
-  coordinator_type_id?: number;
-}
+const prisma = new PrismaClient();
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { method } = req;
+const serializeUser = (user: { id: bigint; created_at: Date | null; updated_at: Date | null; deleted_at: Date | null; deleted_by: bigint | null; created_by: bigint | null; modified_by: bigint | null; agency_id: bigint | null; coordinator_type_id: bigint | null; role_user?: { role_id: bigint } | null }) => ({
+  ...user,
+  id: user.id.toString(), // Convert BigInt to string
+  created_at: user.created_at ? user.created_at.toISOString() : null, // Handle null values
+  updated_at: user.updated_at ? user.updated_at.toISOString() : null,
+  deleted_at: user.deleted_at ? user.deleted_at.toISOString() : null,
+  deleted_by: user.deleted_by ? user.deleted_by.toString() : null,
+  created_by: user.created_by ? user.created_by.toString() : null,
+  modified_by: user.modified_by ? user.modified_by.toString() : null,
+  agency_id: user.agency_id ? user.agency_id.toString() : null,
+  coordinator_type_id: user.coordinator_type_id ? user.coordinator_type_id.toString() : null,
+  role_user: user.role_user ? {
+    ...user.role_user,
+    role_id: user.role_user.role_id.toString(), // Convert BigInt to string in role_user
+  } : null, // Ensure role_user is not null if not present
+});
 
-  switch (method) {
-    case 'GET':
-      try {
-        // Mengambil data semua pengguna
-        const users = await prisma.user.findMany();
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'GET') {
+    const { role_id } = req.query;
 
-        // Menambahkan replacer untuk mengonversi BigInt menjadi string
-        const usersWithStringBigInt = users.map(user => {
-          const userCopy: Record<string, string | number | boolean | null> = {};
-
-          // Mengonversi BigInt ke string dan Date ke ISO string untuk setiap property
-          Object.keys(user).forEach(key => {
-            const value = user[key as keyof typeof user];
-            if (typeof value === 'bigint') {
-              userCopy[key] = value.toString();
-            } else if (value instanceof Date) {
-              userCopy[key] = value.toISOString();
-            } else {
-              userCopy[key] = value;
+    try {
+      const users = await prisma.user.findMany({
+        where: role_id
+          ? {
+              role_user: {
+                role_id: BigInt(role_id as string),
+              },
             }
-          });
-          
-          return userCopy;
-        });
+          : undefined,
+        include: {
+          role_user: true,
+        },
+      });
 
-        // Mengembalikan data pengguna dengan status 200
-        res.status(200).json(usersWithStringBigInt);
-      } catch (error) {
-        console.error('Error occurred while fetching users:', error);
-        res.status(500).json({ error: 'Server error' });
-      }
-      break;
+      const serializedUsers = users.map(user => ({
+        ...user,
+        id: user.id.toString(),
+        created_at: user.created_at?.toISOString(),
+        updated_at: user.updated_at?.toISOString(),
+        deleted_at: user.deleted_at?.toISOString(),
+        deleted_by: user.deleted_by?.toString(),
+        created_by: user.created_by?.toString(),
+        modified_by: user.modified_by?.toString(),
+        agency_id: user.agency_id?.toString(),
+        coordinator_type_id: user.coordinator_type_id?.toString(),
+        role_user: user.role_user
+          ? {
+              ...user.role_user,
+              role_id: user.role_user.role_id.toString(),
+              user_id: user.role_user.user_id?.toString(),
+            }
+          : null,
+      }));
 
-    case 'POST':
-      try {
-        // Menangani body request POST
-        const {
-          email,
-          name,
-          nik,
-          password,
-          phone,
-          position,
-          status,
-          username,
-          work_unit,
-          agency_id,
-          coordinator_type_id,
-        }: CreateUserBody = req.body;
-
-        // Mengenkripsi password menggunakan bcrypt
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Membuat pengguna baru dengan password yang telah terenkripsi
-        const newUser = await prisma.user.create({
-          data: {
-            email,
-            name,
-            nik,
-            password: hashedPassword, // Menyimpan password yang telah terenkripsi
-            phone,
-            position,
-            status,
-            username,
-            work_unit,
-            agency_id,
-            coordinator_type_id,
-            created_at: new Date(),
-            updated_at: new Date(),
-            deleted: '0', // Status deleted defaultnya '0'
-          },
-        });
-
-        // Mengembalikan pengguna yang baru dibuat
-        res.status(201).json(newUser);
-      } catch (error) {
-        console.error('Error occurred while creating user:', error);
-        res.status(500).json({ error: 'Error creating user' });
-      }
-      break;
-
-    default:
-      // Jika metode tidak diizinkan
-      res.status(405).json({ error: 'Method Not Allowed' });
-      break;
+      res.status(200).json(serializedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: 'Error fetching users', details: errorMessage });
+    }
+  } else {
+    res.status(405).json({ error: 'Method not allowed' });
   }
-};
-
-export default handler;
+}

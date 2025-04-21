@@ -23,10 +23,25 @@ export default function TabelInstansi() {
 
   const [data, setData] = useState<User[]>([])
 
+  const getRoleIdFromTab = (tab: string): number => {
+    switch (tab) {
+      case 'Koordinator Utama':
+        return 2
+      case 'Koordinator Instansi':
+      case 'Admin Instansi':
+        return 3
+      case 'Enumerator':
+        return 4
+      default:
+        return 0
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:1337/api/users') // Ganti sesuai endpoint kamu
+        const roleId = getRoleIdFromTab(activeTab)
+        const response = await axios.get(`/api/users?role_id=${roleId}`)
         setData(response.data)
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -34,7 +49,7 @@ export default function TabelInstansi() {
     }
 
     fetchData()
-  }, [])
+  }, [activeTab]) // update data setiap kali tab berubah
 
   const handleEdit = (name: string) => {
     alert(`Edit ${name}`)
@@ -44,25 +59,17 @@ export default function TabelInstansi() {
     const konfirmasi = confirm(`Yakin ingin menghapus ${name}?`)
     if (konfirmasi) {
       alert(`Berhasil menghapus ${name}`)
-      // Tambahkan logika delete di sini
     }
   }
 
-  const filteredData = data
-    .filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    .filter((item) => {
-      if (activeTab === 'Koordinator Utama') return item.status === 'Koordinator Utama'
-      if (activeTab === 'Koordinator Instansi') return item.status === 'Koordinator Instansi'
-      if (activeTab === 'Admin Instansi') return item.status === 'Admin Instansi'
-      if (activeTab === 'Enumerator') return item.status === 'Enumerator'
-      return true
-    })
+  const filteredData = data.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div className="flex min-h-screen">
       <Sidebar>
-        {/* Add any child components or content here */}
-        <></>
+        <> </>
       </Sidebar>
       <div className="flex-1 p-6 bg-gray-50">
         <Header />
@@ -86,7 +93,6 @@ export default function TabelInstansi() {
             </div>
           </div>
 
-          {/* Tab Navigation */}
           <div className="flex space-x-2 mb-4">
             {tabs.map((tab) => (
               <button
@@ -103,7 +109,6 @@ export default function TabelInstansi() {
             ))}
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             <table className="table-auto w-full border border-gray-300 rounded-lg shadow">
               <thead className="bg-gray-100">

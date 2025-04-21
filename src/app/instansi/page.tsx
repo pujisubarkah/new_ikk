@@ -1,32 +1,59 @@
 'use client'
 
 import { FaEdit } from 'react-icons/fa'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 import Header from '@/components/header'
 import Sidebar from '@/components/sidebar-admin'
 
-const data = [
-  { id: 1, nama: 'Dinas Komunikasi dan Informatika' },
-  { id: 2, nama: 'Badan Kepegawaian Negara' },
-  { id: 3, nama: 'Kementerian Pendidikan' },
-  { id: 4, nama: 'Dinas Kesehatan' },
-  { id: 5, nama: 'Kementerian Keuangan' },
-]
-
 export default function TabelInstansi() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [instansiData, setInstansiData] = useState<any[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20 // Update jumlah data per halaman menjadi 20
 
-  const filteredData = data.filter(item =>
-    item.nama.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    // Fungsi untuk mengambil data dari API
+    const fetchInstansiData = async () => {
+      try {
+        const response = await axios.get('/api/instansi')
+        setInstansiData(response.data) // Mengambil data instansi dari API
+      } catch (error) {
+        console.error('Error fetching instansi data:', error)
+      }
+    }
+
+    fetchInstansiData()
+  }, []) // Menjalankan sekali saat komponen pertama kali dirender
+
+  const filteredData = instansiData.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem)
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
 
   return (
     <div className="flex min-h-screen">
       {/* Sidebar sebagai kolom kiri */}
       <Sidebar>
-        <>
-        </>
-        {/* Add any children content here if needed */}
+        <></>
       </Sidebar>
 
       {/* Konten utama sebagai kolom kanan */}
@@ -63,13 +90,13 @@ export default function TabelInstansi() {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.map((item, index) => (
+                {currentItems.map((item, index) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2 border text-center">{index + 1}</td>
-                    <td className="px-4 py-2 border">{item.nama}</td>
+                    <td className="px-4 py-2 border">{item.name}</td>
                     <td className="px-4 py-2 border text-center">
                       <button
-                        onClick={() => alert(`Edit ${item.nama}`)}
+                        onClick={() => alert(`Edit ${item.name}`)}
                         className="text-blue-600 hover:text-blue-800"
                       >
                         <FaEdit />
@@ -80,8 +107,31 @@ export default function TabelInstansi() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={handlePrevPage}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span className="text-lg">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
   )
 }
+
+
