@@ -17,8 +17,11 @@ export default function TabelInstansi() {
     name: string
     username: string
     work_unit: string
-    agency_id: string
+    coordinator_type: string
     status: string
+    agencies: {
+      name: string
+    }
   }
 
   const [data, setData] = useState<User[]>([])
@@ -116,8 +119,8 @@ export default function TabelInstansi() {
                   <th className="px-4 py-2 border">No</th>
                   <th className="px-4 py-2 border">Nama</th>
                   <th className="px-4 py-2 border">NIP</th>
-                  <th className="px-4 py-2 border">Unit Kerja</th>
-                  <th className="px-4 py-2 border">ID Instansi</th>
+                  <th className="px-4 py-2 border">Nama Instansi</th>
+                  <th className="px-4 py-2 border">Wilayah Kerja</th>
                   <th className="px-4 py-2 border">Status</th>
                   <th className="px-4 py-2 border">Aksi</th>
                 </tr>
@@ -128,8 +131,8 @@ export default function TabelInstansi() {
                     <td className="px-4 py-2 border text-center">{index + 1}</td>
                     <td className="px-4 py-2 border">{item.name}</td>
                     <td className="px-4 py-2 border text-center">{item.username}</td>
-                    <td className="px-4 py-2 border">{item.work_unit}</td>
-                    <td className="px-4 py-2 border text-center">{item.agency_id}</td>
+                    <td className="px-4 py-2 border text-center">{item.agencies.name}</td>
+                    <td className="px-4 py-2 border text-center">{item.coordinator_type}</td>
                     <td className="px-4 py-2 border text-center">
                       <span
                         className={`px-2 py-1 text-xs font-semibold rounded-full ${
