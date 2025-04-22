@@ -126,43 +126,44 @@ export default function TabelInstansi() {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 border text-center">{index + 1}</td>
-                    <td className="px-4 py-2 border">{item.name}</td>
-                    <td className="px-4 py-2 border text-center">{item.username}</td>
-                    <td className="px-4 py-2 border text-center">{item.agencies.name}</td>
-                    <td className="px-4 py-2 border text-center">{item.coordinator_type}</td>
-                    <td className="px-4 py-2 border text-center">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          item.status.toLowerCase() === 'aktif'
-                            ? 'bg-green-200 text-green-800'
-                            : 'bg-red-200 text-red-800'
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 border text-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(item.name)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.name)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Hapus"
-                      >
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+  {filteredData.map((item, index) => (
+    <tr key={item.id} className="hover:bg-gray-50">
+      <td className="px-4 py-2 border text-center">{index + 1}</td>
+      <td className="px-4 py-2 border">{item.name}</td>
+      <td className="px-4 py-2 border text-center">{item.username}</td>
+      <td className="px-4 py-2 border text-center">{item.agencies?.name ?? '-'}</td>
+      <td className="px-4 py-2 border text-center">{item.coordinator_type}</td>
+      <td className="px-4 py-2 border text-center">
+        <span
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            item.status.toLowerCase() === 'aktif'
+              ? 'bg-green-200 text-green-800'
+              : 'bg-red-200 text-red-800'
+          }`}
+        >
+          {item.status}
+        </span>
+      </td>
+      <td className="px-4 py-2 border text-center space-x-2">
+        <button
+          onClick={() => handleEdit(item.name)}
+          className="text-blue-600 hover:text-blue-800"
+          title="Edit"
+        >
+          <FaEdit />
+        </button>
+        <button
+          onClick={() => handleDelete(item.name)}
+          className="text-red-600 hover:text-red-800"
+          title="Hapus"
+        >
+          <FaTrash />
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
             </table>
 
             {filteredData.length === 0 && (
