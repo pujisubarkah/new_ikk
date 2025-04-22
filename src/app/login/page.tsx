@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
+import { motion, AnimatePresence } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
@@ -26,7 +27,8 @@ export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [showSuccessModal, setShowSuccessModal] = useState(false)  // Modal visibility state
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -38,7 +40,8 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')  // Reset error state before attempting login
+    setError('')
+    setShowErrorModal(false)
 
     try {
       const response = await axios.post('/api/login', {
@@ -46,28 +49,21 @@ export default function Login() {
         password,
       })
 
-      console.log('Login successful:', response.data)
-
-      // Assuming role_id is returned in the response
       const { role_id } = response.data
-
-      // Store the role_id in localStorage
       localStorage.setItem('role_id', role_id.toString())
 
-      // Show success modal
       setShowSuccessModal(true)
 
-      // Redirect to dashboard after a short delay
       setTimeout(() => {
         router.push('/dashboard')
-      }, 2000)  // Redirect after 2 seconds
-
+      }, 2000)
     } catch (err: any) {
       if (err.response) {
         setError(err.response.data.error || 'Login failed')
       } else {
         setError('An unexpected error occurred')
       }
+      setShowErrorModal(true)
     }
   }
 
@@ -81,15 +77,14 @@ export default function Login() {
           zIndex: -2,
         }}
       />
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/30 z-[-1]" />
 
       <Navbar />
 
       <main className="flex-grow flex items-center justify-center px-4 py-16">
         <div className="flex flex-col md:flex-row items-center justify-center gap-8 max-w-6xl w-full">
-          
-          {/* Welcome Message */}
+
+          {/* Welcome Text */}
           <div className="flex-1 max-w-3xl text-center bg-white/90 backdrop-blur-sm shadow-xl p-10 rounded-2xl border border-[#16578d]/20 text-[#16578d]">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Selamat Datang di
@@ -107,11 +102,6 @@ export default function Login() {
           <div className="flex-1 max-w-md w-full bg-white/90 backdrop-blur-sm shadow-xl p-8 rounded-2xl border border-[#16578d]/30 text-[#16578d]">
             <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="text-red-500 text-center mb-4">
-                  <p>{error}</p>
-                </div>
-              )}
               <div>
                 <label htmlFor="username" className="block text-sm font-medium">
                   Username
@@ -152,14 +142,54 @@ export default function Login() {
       </main>
 
       {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl text-center">
-            <h2 className="text-lg font-semibold text-green-600">Login Berhasil!</h2>
-            <p className="text-sm text-gray-600 mt-4">Anda akan diarahkan ke Dashboard...</p>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white p-6 rounded-lg shadow-xl text-center"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+            >
+              <h2 className="text-lg font-semibold text-green-600">Login Berhasil!</h2>
+              <p className="text-sm text-gray-600 mt-4">Anda akan diarahkan ke Dashboard...</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Modal */}
+      <AnimatePresence>
+        {showErrorModal && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white p-6 rounded-lg shadow-xl text-center"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+            >
+              <h2 className="text-lg font-semibold text-red-600">Login Gagal!</h2>
+              <p className="text-sm text-gray-600 mt-4">{error}</p>
+              <button
+                className="mt-4 px-4 py-2 bg-[#16578d] text-white rounded-md"
+                onClick={() => setShowErrorModal(false)}
+              >
+                Coba Lagi
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>
