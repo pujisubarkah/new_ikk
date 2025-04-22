@@ -57,15 +57,22 @@ export default function Login() {
       setTimeout(() => {
         router.push('/dashboard')
       }, 2000)
-    } catch (err: any) {
-      if (err.response) {
-        setError(err.response.data.error || 'Login failed')
-      } else {
-        setError('An unexpected error occurred')
-      }
-      setShowErrorModal(true)
-    }
+    } catch (err: unknown) {
+  if (
+    typeof err === 'object' &&
+    err !== null &&
+    'response' in err &&
+    typeof (err as any).response === 'object' &&
+    (err as any).response !== null
+  ) {
+    const response = (err as any).response;
+    setError(response.data?.error || 'Login failed');
+  } else {
+    setError('An unexpected error occurred');
   }
+  setShowErrorModal(true);
+}
+
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
