@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { FileText, Users, LifeBuoy } from 'lucide-react'
+import { Users, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
