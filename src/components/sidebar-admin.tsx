@@ -1,25 +1,27 @@
-import React, { ReactNode } from 'react'
+'use client'
+
+import React, { ReactNode, useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { LayoutDashboard, FileText, Calendar, Users, LifeBuoy } from 'lucide-react' // Importing the necessary icons
+import { LayoutDashboard, FileText, Calendar, Users, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
-  children: ReactNode // Ensure children are included here
+  children: ReactNode
 }
 
 const sections = [
   {
     label: '',
     items: [
-      { name: 'Dashboard', icon: LayoutDashboard, href: '/admin-nasional/dashboard' }, // Changed icon
+      { name: 'Dashboard', icon: LayoutDashboard, href: '/admin-nasional/dashboard' },
       { name: 'Kebijakan', icon: FileText, href: '/admin-nasional/kebijakan' },
     ],
   },
   {
     label: 'Master Data',
     items: [
-      { name: 'Tahun Aktif', icon: Calendar, href: '/tahun-aktif' }, // Changed icon
+      { name: 'Tahun Aktif', icon: Calendar, href: '/tahun-aktif' },
       { name: 'Instansi', icon: Users, href: '/instansi' },
       { name: 'Wilayah Koordinasi', icon: Users, href: '/wilayah-koordinasi' },
       { name: 'Pengguna', icon: Users, href: '/pengguna' },
@@ -65,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                       'flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-white hover:text-[#16578D] transition-colors'
                     )}
                   >
-                    <item.icon className="w-5 h-5" /> {/* Render the icon */}
+                    <item.icon className="w-5 h-5" />
                     <span>{item.name}</span>
                   </Link>
                 ))}
@@ -75,9 +77,11 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </nav>
       </aside>
 
-      {/* Content */}
-      <main className="ml-64 flex-1 p-6 bg-gray-50 min-h-screen">
-        {children}
+      {/* Main Content without Header */}
+      <main className="ml-64 flex-1 min-h-screen bg-gray-50">
+        <div className="p-6">
+          {children}
+        </div>
       </main>
     </div>
   )

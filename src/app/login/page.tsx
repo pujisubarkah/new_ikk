@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import axios from 'axios'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
@@ -23,6 +25,9 @@ export default function Login() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [showSuccessModal, setShowSuccessModal] = useState(false)  // Modal visibility state
+  const router = useRouter()
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,9 +36,39 @@ export default function Login() {
     return () => clearInterval(interval)
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Login attempt with:', username, password)
+    setError('')  // Reset error state before attempting login
+
+    try {
+      const response = await axios.post('/api/login', {
+        username,
+        password,
+      })
+
+      console.log('Login successful:', response.data)
+
+      // Assuming role_id is returned in the response
+      const { role_id } = response.data
+
+      // Store the role_id in localStorage
+      localStorage.setItem('role_id', role_id.toString())
+
+      // Show success modal
+      setShowSuccessModal(true)
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)  // Redirect after 2 seconds
+
+    } catch (err: any) {
+      if (err.response) {
+        setError(err.response.data.error || 'Login failed')
+      } else {
+        setError('An unexpected error occurred')
+      }
+    }
   }
 
   return (
@@ -72,6 +107,11 @@ export default function Login() {
           <div className="flex-1 max-w-md w-full bg-white/90 backdrop-blur-sm shadow-xl p-8 rounded-2xl border border-[#16578d]/30 text-[#16578d]">
             <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="text-red-500 text-center mb-4">
+                  <p>{error}</p>
+                </div>
+              )}
               <div>
                 <label htmlFor="username" className="block text-sm font-medium">
                   Username
@@ -110,6 +150,16 @@ export default function Login() {
           </div>
         </div>
       </main>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+            <h2 className="text-lg font-semibold text-green-600">Login Berhasil!</h2>
+            <p className="text-sm text-gray-600 mt-4">Anda akan diarahkan ke Dashboard...</p>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
