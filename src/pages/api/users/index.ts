@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         modified_by: user.modified_by?.toString(),
         agency_id: user.agency_id?.toString(),
         coordinator_type_id: user.coordinator_type_id?.toString(),
-        agency_name: user.agencies?.name || null,  // Only the name of the agency
+        // agency_name: user.agencies?.name || null,  // Only the name of the agency
         role_user: user.role_user
           ? {
               ...user.role_user,
