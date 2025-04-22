@@ -8,7 +8,12 @@ import Sidebar from '@/components/sidebar-admin'
 
 export default function TabelInstansi() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [instansiData, setInstansiData] = useState<any[]>([])
+  interface Instansi {
+    id: number
+    name: string
+  }
+
+  const [instansiData, setInstansiData] = useState<Instansi[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20 // Update jumlah data per halaman menjadi 20
 
