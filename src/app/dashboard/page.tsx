@@ -5,6 +5,8 @@ import { User } from 'lucide-react'
 import SidebarAdmin from '@/components/sidebar-admin'
 import SidebarKoor from '@/components/sidebar-koor'
 import Sidebar from '@/components/sidebar'
+import SidebarInst from '@/components/sidebar-inst'
+import SidebarEnum from '@/components/sidebar-enum'
 
 export default function Dashboard() {
   const [roleId, setRoleId] = useState<number | null>(null)
@@ -22,13 +24,19 @@ export default function Dashboard() {
   }, [])
 
   const renderSidebar = () => {
-    if (roleId === 1) {
-      return <SidebarAdmin>Default Content</SidebarAdmin>
+    switch (roleId) {
+      case 1:
+        return <SidebarAdmin>Default Content</SidebarAdmin>
+      case 2:
+        return <SidebarKoor>Default Content</SidebarKoor>
+      case 3:
+        return <SidebarInst>Default Content</SidebarInst>
+      case 5:
+        return <SidebarEnum>Default Content</SidebarEnum>
+      case 4: // bisa jadi default juga
+      default:
+        return <Sidebar>Default Content</Sidebar>
     }
-    if (roleId === 2) {
-      return <SidebarKoor>Default Content</SidebarKoor>
-    }
-    return <Sidebar>Default Content</Sidebar>
   }
 
   return (
