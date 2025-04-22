@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           : undefined,
         include: {
           role_user: true,
-          agencies: true, // Ensure the 'agencies' data is included
+          // agencies: true, // Ensure the 'agencies' data is included
         },
       });
 
