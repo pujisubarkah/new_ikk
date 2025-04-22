@@ -1,142 +1,176 @@
-"use client";
-import React, { useState } from 'react';
-import { FaSignOutAlt } from 'react-icons/fa';
-import classNames from 'classnames';
+'use client'
 
-interface DataRow {
-    no: number;
-    nama: string;
-    nip: string;
-    wilayah: string;
-}
+import { FaEdit, FaTrash } from 'react-icons/fa'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import Header from '@/components/header'
+import Sidebar from '@/components/sidebar-admin'
 
-const dataKoordinator: DataRow[] = [
-    { no: 1, nama: 'John Doe', nip: '123456', wilayah: 'Jakarta' },
-    { no: 2, nama: 'Jane Smith', nip: '654321', wilayah: 'Bandung' },
-    { no: 3, nama: 'Alice Johnson', nip: '789012', wilayah: 'Surabaya' },
-];
+const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
 
-const dataAdmin: DataRow[] = [
-    { no: 1, nama: 'Michael Scott', nip: '987654', wilayah: 'Yogyakarta' },
-    { no: 2, nama: 'Dwight Schrute', nip: '112233', wilayah: 'Semarang' },
-];
+export default function TabelInstansi() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState('Koordinator Utama')
 
-const Page = () => {
-    const [search, setSearch] = useState('');
-    const [activeTab, setActiveTab] = useState<'koordinator' | 'admin'>('koordinator');
+  interface User {
+    id: number
+    name: string
+    username: string
+    work_unit: string
+    coordinator_type: string
+    status: string
+    agencies: {
+      name: string
+    }
+  }
 
-    const currentData = activeTab === 'koordinator' ? dataKoordinator : dataAdmin;
-    const filteredData = currentData.filter(
-        (row) =>
-            row?.nama?.toLowerCase().includes(search.toLowerCase()) ||
-            row?.nip?.includes(search) ||
-            row?.wilayah?.toLowerCase().includes(search.toLowerCase())
-    );
+  const [data, setData] = useState<User[]>([])
 
-    const handleKeluarkan = (nama: string) => {
-        alert(`Keluarkan ${nama}?`);
-        // Tambahkan logic API atau lainnya di sini
-    };
+  const getRoleIdFromTab = (tab: string): number => {
+    switch (tab) {
+      case 'Koordinator Utama':
+        return 2
+      case 'Koordinator Instansi':
+      case 'Admin Instansi':
+        return 3
+      case 'Enumerator':
+        return 4
+      default:
+        return 0
+    }
+  }
 
-    const handleTambah = () => {
-        alert(`Tambah ${activeTab === 'koordinator' ? 'Koordinator Instansi' : 'Admin Instansi'}`);
-        // Tambahkan logika tambah data di sini
-    };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const roleId = getRoleIdFromTab(activeTab)
+        const response = await axios.get(`/api/users?role_id=${roleId}`)
+        setData(response.data)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      }
+    }
 
-    return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">
-                    Daftar Pengguna -{' '}
-                    {activeTab === 'koordinator' ? 'Koordinator Instansi' : 'Admin Instansi'}
-                </h1>
-                <input
-                    type="text"
-                    placeholder="Cari..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-4 py-2 w-60 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
+    fetchData()
+  }, [activeTab]) // update data setiap kali tab berubah
+
+  const handleEdit = (name: string) => {
+    alert(`Edit ${name}`)
+  }
+
+  const handleDelete = (name: string) => {
+    const konfirmasi = confirm(`Yakin ingin menghapus ${name}?`)
+    if (konfirmasi) {
+      alert(`Berhasil menghapus ${name}`)
+    }
+  }
+
+  const filteredData = data.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar>
+        <> </>
+      </Sidebar>
+      <div className="flex-1 p-6 bg-gray-50">
+        <Header />
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">Data Pengguna</h1>
+            <div className="flex space-x-4 items-center">
+              <button
+                onClick={() => alert('Tambah Pengguna')}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Tambah Pengguna
+              </button>
+              <input
+                type="text"
+                placeholder="Cari Nama..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="p-2 border rounded-lg"
+              />
             </div>
+          </div>
 
-            {/* Tabs */}
-            <div className="flex space-x-4 mb-4">
-                <button
-                    onClick={() => setActiveTab('koordinator')}
-                    className={classNames(
-                        'px-4 py-2 rounded-lg font-medium transition duration-150',
-                        activeTab === 'koordinator'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    )}
-                >
-                    Koordinator Instansi
-                </button>
-                <button
-                    onClick={() => setActiveTab('admin')}
-                    className={classNames(
-                        'px-4 py-2 rounded-lg font-medium transition duration-150',
-                        activeTab === 'admin'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    )}
-                >
-                    Admin Instansi
-                </button>
-            </div>
+          <div className="flex space-x-2 mb-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  activeTab === tab
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
 
-            {/* Tombol Tambah */}
-            <div className="mb-4">
-                <button
-                    onClick={handleTambah}
-                    className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-150"
-                >
-                    Tambah {activeTab === 'koordinator' ? 'Koordinator Instansi' : 'Admin Instansi'}
-                </button>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="table-auto w-full border border-gray-300 rounded-lg shadow">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 border">No</th>
+                  <th className="px-4 py-2 border">Nama</th>
+                  <th className="px-4 py-2 border">NIP</th>
+                  <th className="px-4 py-2 border">Nama Instansi</th>
+                  <th className="px-4 py-2 border">Wilayah Kerja</th>
+                  <th className="px-4 py-2 border">Status</th>
+                  <th className="px-4 py-2 border">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((item, index) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 border text-center">{index + 1}</td>
+                    <td className="px-4 py-2 border">{item.name}</td>
+                    <td className="px-4 py-2 border text-center">{item.username}</td>
+                    <td className="px-4 py-2 border text-center">{item.agencies.name}</td>
+                    <td className="px-4 py-2 border text-center">{item.coordinator_type}</td>
+                    <td className="px-4 py-2 border text-center">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          item.status.toLowerCase() === 'aktif'
+                            ? 'bg-green-200 text-green-800'
+                            : 'bg-red-200 text-red-800'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 border text-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(item.name)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.name)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Hapus"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-            {/* Tabel */}
-            <div className="overflow-x-auto rounded-lg shadow-md bg-white">
-                <table className="min-w-full text-sm text-left text-gray-700">
-                    <thead className="bg-blue-100 text-gray-800 font-semibold">
-                        <tr>
-                            <th className="px-6 py-3 border-b">No</th>
-                            <th className="px-6 py-3 border-b">Nama</th>
-                            <th className="px-6 py-3 border-b">NIP</th>
-                            <th className="px-6 py-3 border-b">Wilayah Koordinasi</th>
-                            <th className="px-6 py-3 border-b text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredData.map((row) => (
-                            <tr key={row.no} className="hover:bg-blue-50 transition duration-150">
-                                <td className="px-6 py-4 border-b text-center">{row.no}</td>
-                                <td className="px-6 py-4 border-b">{row.nama}</td>
-                                <td className="px-6 py-4 border-b">{row.nip}</td>
-                                <td className="px-6 py-4 border-b">{row.wilayah}</td>
-                                <td className="px-6 py-4 border-b text-center">
-                                    <button
-                                        onClick={() => handleKeluarkan(row.nama)}
-                                        className="text-red-600 hover:text-red-800 flex items-center justify-center gap-1 transition duration-150"
-                                    >
-                                        <FaSignOutAlt className="text-lg" />
-                                        <span className="hidden sm:inline">Keluarkan</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                        {filteredData.length === 0 && (
-                            <tr>
-                                <td colSpan={5} className="text-center py-6 text-gray-500">
-                                    Tidak ada hasil yang ditemukan.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            {filteredData.length === 0 && (
+              <div className="text-center py-4 text-gray-500">Data tidak ditemukan.</div>
+            )}
+          </div>
         </div>
-    );
-};
-
-export default Page;
+      </div>
+    </div>
+  )
+}
