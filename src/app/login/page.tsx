@@ -38,7 +38,7 @@ export default function Login() {
     return () => clearInterval(interval)
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setShowErrorModal(false)
@@ -58,21 +58,14 @@ export default function Login() {
         router.push('/dashboard')
       }, 2000)
     } catch (err: unknown) {
-  if (
-    typeof err === 'object' &&
-    err !== null &&
-    'response' in err &&
-    typeof (err as any).response === 'object' &&
-    (err as any).response !== null
-  ) {
-    const response = (err as any).response;
-    setError(response.data?.error || 'Login failed');
-  } else {
-    setError('An unexpected error occurred');
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data?.error || 'Login failed')
+      } else {
+        setError('An unexpected error occurred')
+      }
+      setShowErrorModal(true)
+    }
   }
-  setShowErrorModal(true);
-}
-
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
@@ -90,7 +83,6 @@ export default function Login() {
 
       <main className="flex-grow flex items-center justify-center px-4 py-16">
         <div className="flex flex-col md:flex-row items-center justify-center gap-8 max-w-6xl w-full">
-
           {/* Welcome Text */}
           <div className="flex-1 max-w-3xl text-center bg-white/90 backdrop-blur-sm shadow-xl p-10 rounded-2xl border border-[#16578d]/20 text-[#16578d]">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -100,7 +92,11 @@ export default function Login() {
               Sistem Informasi Indeks Kualitas Kebijakan
             </h2>
             <p className="text-gray-600 text-lg md:text-xl leading-relaxed">
-              Membangun kualitas kebijakan <span className="text-[#16578d] font-semibold">berbasis bukti dan berdampak</span> untuk masa depan yang lebih baik.  
+              Membangun kualitas kebijakan{' '}
+              <span className="text-[#16578d] font-semibold">
+                berbasis bukti dan berdampak
+              </span>{' '}
+              untuk masa depan yang lebih baik.
               Sistem ini membantu Anda menilai, memantau, dan meningkatkan kualitas kebijakan dengan pendekatan analitik dan data yang solid.
             </p>
           </div>
