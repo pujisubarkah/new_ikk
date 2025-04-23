@@ -31,10 +31,11 @@ export default function TabelInstansi() {
       case 'Koordinator Utama':
         return 2
       case 'Koordinator Instansi':
-      case 'Admin Instansi':
         return 3
-      case 'Enumerator':
+      case 'Admin Instansi':
         return 4
+      case 'Enumerator':
+        return 5
       default:
         return 0
     }
