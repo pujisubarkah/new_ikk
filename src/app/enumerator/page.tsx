@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import Sidebar from "@/components/sidebar"
-import Header from "@/components/header"
 
 // Dummy data enumerator
 const dummyEnumerator = Array.from({ length: 23 }, (_, i) => ({
@@ -13,7 +12,7 @@ const dummyEnumerator = Array.from({ length: 23 }, (_, i) => ({
   nip: `19780${i + 1}321000${i + 1}`,
 }))
 
-export default function TabelEnumerator() {
+function TabelEnumerator() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
   const totalPages = Math.ceil(dummyEnumerator.length / itemsPerPage)
@@ -23,13 +22,10 @@ export default function TabelEnumerator() {
   const router = useRouter()
 
   return (
-    <Sidebar> {/* 👈 Ini dia si Sidebar pembungkus */}
-      <Header /> {/* Header di atas sidebar */}
-      {/* Konten utama */}
+    <Sidebar>
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">Daftar Enumerator</h2>
-
           <Button
             onClick={() => router.push("/enumerator/tambah")}
             className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -95,3 +91,4 @@ export default function TabelEnumerator() {
   )
 }
 
+export default TabelEnumerator
