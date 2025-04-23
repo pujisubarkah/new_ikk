@@ -3,7 +3,6 @@
 import { FaEdit } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import Header from '@/components/header'
 import Sidebar from '@/components/sidebar-admin'
 
 export default function TabelInstansi() {
