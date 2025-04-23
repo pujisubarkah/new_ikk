@@ -11,7 +11,6 @@ import {
   LifeBuoy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import Header from './header'
 
 interface SidebarProps {
   children: ReactNode
@@ -84,16 +83,24 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </nav>
       </aside>
 
-      {/* Main Content Area */}
-<div className="ml-64 flex-1 min-h-screen bg-gray-50 flex flex-col">
-  {/* Ini header, letaknya di atas konten, tapi masih dalam content area */}
-  <Header />
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="flex justify-between items-center px-6 py-4 bg-white shadow-md">
+          <div className="text-[#16578D] font-bold text-lg">
+           {userName}
+          </div>
+          <div className="flex items-center gap-2 text-[#16578D]">
+            <User className="w-6 h-6" />
+            <span>{userName}</span>
+          </div>
+        </header>
 
-  {/* Ini konten halaman */}
-  <main className="p-6 flex-1">
-    {children}
-  </main>
-</div>
+        {/* Page Content */}
+        <main className="py-8 px-6">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
