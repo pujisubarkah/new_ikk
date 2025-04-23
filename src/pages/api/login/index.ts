@@ -18,12 +18,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('Searching for user:', username); // Log username yang dicari
       const user = await prisma.user.findUnique({
         where: {
-          username: username, // Mencari user berdasarkan username
+          username: username, // Ensure username is unique in the schema
         },
         include: {
           role_user: {
             include: {
-              role: true, // Include role untuk mengetahui peran pengguna
+              role: true,
             },
           },
         },
