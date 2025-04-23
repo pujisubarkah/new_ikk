@@ -2,7 +2,6 @@
 
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
-import Header from '@/components/header'
 import Sidebar from '@/components/sidebar-admin'
 
 const dummyData = [
@@ -25,12 +24,6 @@ export default function TabelInstansi() {
   return (
     <div className="flex min-h-screen">
       <Sidebar>
-        <></>
-      </Sidebar>
-
-      <div className="flex-1 p-6 bg-gray-50">
-        <Header />
-
         <div className="mt-6 max-w-5xl bg-white p-6 rounded-lg shadow-md">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Daftar Instansi</h1>
@@ -73,7 +66,7 @@ export default function TabelInstansi() {
             </table>
           </div>
         </div>
-      </div>
+      </Sidebar>
     </div>
   )
 }
