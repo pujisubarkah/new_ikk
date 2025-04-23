@@ -32,12 +32,6 @@ export default function FilterTahun() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar>
-        <></>
-      </Sidebar>
-
-      <div className="flex-1 overflow-auto">
-        <Header />
-        
         <main className="p-6 max-w-6xl mx-auto">
           <div className="bg-white p-6 rounded-xl shadow-md">
        
@@ -75,7 +69,7 @@ export default function FilterTahun() {
             </button>
           </div>
         </main>
-      </div>
+      </Sidebar>
     </div>
   )
 }
