@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="py-8 px-6 mt-20">
+        <main className="py-8 px-6 mt-20 max-w-[calc(100%-16rem)]">
           {children}
         </main>
       </div>
