@@ -16,16 +16,12 @@ interface SidebarProps {
   children: ReactNode
 }
 
-const [roleId, setRoleId] = useState<number | null>(null)
   const [roleName, setRoleName] = useState<string>('')
   const [userName, setUserName] = useState<string>('')
 
   useEffect(() => {
-    const savedRoleId = localStorage.getItem('role_id')
     const savedRole = localStorage.getItem('role') || ''
     const savedName = localStorage.getItem('name') || ''
-
-    if (savedRoleId) setRoleId(Number(savedRoleId))
     setRoleName(savedRole)
     setUserName(savedName)
   }, [])
