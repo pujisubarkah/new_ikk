@@ -4,7 +4,6 @@ import { FaEdit, FaTrash } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
-import Header from '@/components/header'
 import Sidebar from '@/components/sidebar-admin'
 
 const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
@@ -78,7 +77,6 @@ export default function TabelInstansi() {
         <> </>
       </Sidebar>
       <div className="flex-1 p-6 bg-gray-50">
-        <Header />
         <div className="mt-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Data Pengguna</h1>
