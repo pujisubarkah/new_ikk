@@ -2,7 +2,6 @@
 
 import { FaEdit, FaTrash } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
-import Header from '@/components/header'
 import Sidebar from '@/components/sidebar-admin'
 import axios from 'axios'
 
@@ -54,12 +53,7 @@ export default function DaftarWilayah() {
   return (
     <div className="flex min-h-screen">
       <Sidebar>
-        {/* Add any valid children content here */}
-       <><></></>
-      </Sidebar>
-
-      <div className="flex-1 p-6 bg-gray-50">
-        <Header />
+      
 
         <div className="mt-6">
           <div className="flex justify-between items-center mb-4">
@@ -150,7 +144,7 @@ export default function DaftarWilayah() {
             )}
           </div>
         </div>
-      </div>
+      </Sidebar>
     </div>
   )
 }
