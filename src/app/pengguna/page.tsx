@@ -13,6 +13,8 @@ export default function TabelInstansi() {
   const [activeTab, setActiveTab] = useState('Koordinator Utama')
 
   interface User {
+    coordinator_type_name: string
+    agency_name: string
     id: number
     name: string
     username: string
