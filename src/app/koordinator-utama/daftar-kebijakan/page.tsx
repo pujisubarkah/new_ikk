@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import Sidebar from '@/components/sidebar-koor'
 
 interface DataRow {
     no: number;
@@ -25,6 +26,7 @@ const Page = () => {
 
     return (
         <div className="p-6">
+            <Sidebar>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">Daftar Koordinator Instansi</h1>
                 <input
@@ -64,6 +66,7 @@ const Page = () => {
                     </tbody>
                 </table>
             </div>
+                </Sidebar>
         </div>
     );
 };
