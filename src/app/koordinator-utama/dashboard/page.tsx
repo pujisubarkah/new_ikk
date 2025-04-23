@@ -14,7 +14,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import Sidebar from '@/components/sidebar-admin'
+import Sidebar from '@/components/sidebar-koor'
 
 ChartJS.register(
     CategoryScale,
