@@ -1,9 +1,15 @@
 'use client'
 
-import React, { ReactNode} from 'react'
+import React, { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { LayoutDashboard, FileText, Calendar, Users, LifeBuoy } from 'lucide-react'
+import {
+  LayoutDashboard,
+  FileText,
+  Calendar,
+  Users,
+  LifeBuoy,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Header from './header'
 
@@ -38,9 +44,6 @@ const sections = [
 
 const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   return (
-    <div className="min-h-screen">
-      {/* Header di atas */}
-      <Header />
     <div className="flex">
       {/* Sidebar */}
       <aside className="w-64 h-screen fixed top-0 left-0 bg-[#16578D] text-white p-6 shadow-lg">
@@ -81,14 +84,17 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </nav>
       </aside>
 
-      {/* Main Content without Header */}
-      <main className="ml-64 flex-1 min-h-screen bg-gray-50">
-        <div className="p-6">
+      {/* Main Content */}
+      <div className="ml-64 flex-1 min-h-screen bg-gray-50 flex flex-col">
+        {/* Header tetap di atas, tapi dalam layout Sidebar */}
+        <Header />
+
+        {/* Konten halaman */}
+        <main className="p-6 flex-1">
           {children}
-        </div>
-      </main>
-    </div>
+        </main>
       </div>
+    </div>
   )
 }
 
