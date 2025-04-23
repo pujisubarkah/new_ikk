@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { FaSignOutAlt } from 'react-icons/fa';
 import classNames from 'classnames';
+import Sidebar from '@/components/sidebar-admin'
 
 interface DataRow {
     no: number;
@@ -45,6 +46,7 @@ const Page = () => {
 
     return (
         <div className="p-6">
+            <Sidebar>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">
                     Daftar Pengguna -{' '}
@@ -135,6 +137,7 @@ const Page = () => {
                     </tbody>
                 </table>
             </div>
+                </Sidebar>
         </div>
     );
 };
