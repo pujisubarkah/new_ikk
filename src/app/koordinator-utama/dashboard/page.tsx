@@ -14,6 +14,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
+import Sidebar from '@/components/sidebar-admin'
 
 ChartJS.register(
     CategoryScale,
@@ -80,6 +81,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="p-6">
+            <Sidebar>
             <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
             {/* Filter Dropdown */}
@@ -111,6 +113,7 @@ const Dashboard: React.FC = () => {
                     <Radar data={radarData} />
                 </div>
             </div>
+                </Sidebar>
         </div>
     );
 };
