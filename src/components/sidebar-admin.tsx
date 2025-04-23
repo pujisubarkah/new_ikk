@@ -99,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         {/* Header */}
         <header className="flex justify-between items-center px-6 py-4 bg-white shadow-md">
           <div className="text-[#16578D] font-bold text-lg">
-           {userName}
+            {roleName} - {userName}
           </div>
           <div className="flex items-center gap-2 text-[#16578D]">
             <User className="w-6 h-6" />
