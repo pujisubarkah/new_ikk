@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
-import Sidebar from '@/components/sidebar-koor'
+import Sidebar from '@/components/sidebar-koor';
+import { useRouter } from 'next/navigation';
 
 interface DataRow {
     no: number;
@@ -17,6 +18,13 @@ const data: DataRow[] = [
 
 const Page = () => {
     const [search, setSearch] = useState('');
+    const router = useRouter();
+
+    const handleClick = (wilayah: string) => {
+        const wilayahId = encodeURIComponent(wilayah);
+        router.push(`/koordinator-utama/daftar-kebijakan/${wilayahId}`);
+    };
+
     const filteredData = data.filter(
         (row) =>
             row.nama.toLowerCase().includes(search.toLowerCase()) ||
@@ -27,46 +35,55 @@ const Page = () => {
     return (
         <div className="p-6">
             <Sidebar>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Daftar Koordinator Instansi</h1>
-                <input
-                    type="text"
-                    placeholder="Cari..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-4 py-2 w-60 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-            </div>
-            <div className="overflow-x-auto rounded-lg shadow-md bg-white">
-                <table className="min-w-full text-sm text-left text-gray-700">
-                    <thead className="bg-blue-100 text-gray-800 font-semibold">
-                        <tr>
-                            <th className="px-6 py-3 border-b">No</th>
-                            <th className="px-6 py-3 border-b">Nama</th>
-                            <th className="px-6 py-3 border-b">NIP</th>
-                            <th className="px-6 py-3 border-b">Wilayah Koordinasi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredData.map((row) => (
-                            <tr key={row.no} className="hover:bg-blue-50 transition duration-150">
-                                <td className="px-6 py-4 border-b text-center">{row.no}</td>
-                                <td className="px-6 py-4 border-b">{row.nama}</td>
-                                <td className="px-6 py-4 border-b">{row.nip}</td>
-                                <td className="px-6 py-4 border-b">{row.wilayah}</td>
-                            </tr>
-                        ))}
-                        {filteredData.length === 0 && (
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold text-gray-800">Daftar Koordinator Instansi</h1>
+                    <input
+                        type="text"
+                        placeholder="Cari..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="border border-gray-300 rounded-lg px-4 py-2 w-60 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                </div>
+                <div className="overflow-x-auto rounded-lg shadow-md bg-white">
+                    <table className="min-w-full text-sm text-left text-gray-700">
+                        <thead className="bg-blue-100 text-gray-800 font-semibold">
                             <tr>
-                                <td colSpan={4} className="text-center py-6 text-gray-500">
-                                    Tidak ada hasil yang ditemukan.
-                                </td>
+                                <th className="px-6 py-3 border-b">No</th>
+                                <th className="px-6 py-3 border-b">Nama</th>
+                                <th className="px-6 py-3 border-b">NIP</th>
+                                <th className="px-6 py-3 border-b">Wilayah Koordinasi</th>
+                                <th className="px-6 py-3 border-b text-center">Aksi</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-                </Sidebar>
+                        </thead>
+                        <tbody>
+                            {filteredData.map((row) => (
+                                <tr key={row.no} className="hover:bg-blue-50 transition duration-150">
+                                    <td className="px-6 py-4 border-b text-center">{row.no}</td>
+                                    <td className="px-6 py-4 border-b">{row.nama}</td>
+                                    <td className="px-6 py-4 border-b">{row.nip}</td>
+                                    <td className="px-6 py-4 border-b">{row.wilayah}</td>
+                                    <td className="px-6 py-4 border-b text-center">
+                                        <button
+                                            onClick={() => handleClick(row.wilayah)}
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-lg text-xs"
+                                        >
+                                            Lihat Wilayah
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {filteredData.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-6 text-gray-500">
+                                        Tidak ada hasil yang ditemukan.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </Sidebar>
         </div>
     );
 };
