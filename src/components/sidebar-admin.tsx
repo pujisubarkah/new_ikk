@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { LayoutDashboard, FileText, Calendar, Users, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Header from '@/components/header'
 
 interface SidebarProps {
   children: ReactNode
@@ -38,6 +39,7 @@ const sections = [
 const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   return (
     <div className="flex">
+      <Header />
       {/* Sidebar */}
       <aside className="w-64 h-screen fixed top-0 left-0 bg-[#16578D] text-white p-6 shadow-lg">
         <div className="mb-8 flex flex-col items-center">
