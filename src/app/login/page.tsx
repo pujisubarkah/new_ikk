@@ -44,33 +44,33 @@ export default function Login() {
     setShowErrorModal(false)
 
     try {
-  const response = await axios.post('/api/login', {
-    username,
-    password,
-  })
+      const response = await axios.post('/api/login', {
+        username,
+        password,
+      })
 
-  const { role_id, username, name, role } = response.data
+      const { role_id, username: resUsername, name, role } = response.data
 
-  // Simpan ke localStorage
-  localStorage.setItem('role_id', role_id.toString())
-  localStorage.setItem('username', username)
-  localStorage.setItem('name', name)
-  localStorage.setItem('role', role)
+      // Simpan ke localStorage
+      localStorage.setItem('role_id', role_id.toString())
+      localStorage.setItem('username', resUsername)
+      localStorage.setItem('name', name)
+      localStorage.setItem('role', role)
 
-  setShowSuccessModal(true)
+      setShowSuccessModal(true)
 
-  setTimeout(() => {
-    router.push('/dashboard')
-  }, 2000)
-} catch (err: unknown) {
-  if (axios.isAxiosError(err) && err.response) {
-    setError(err.response.data?.error || 'Login failed')
-  } else {
-    setError('An unexpected error occurred')
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data?.error || 'Login failed')
+      } else {
+        setError('An unexpected error occurred')
+      }
+      setShowErrorModal(true)
+    }
   }
-  setShowErrorModal(true)
-}
-
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
