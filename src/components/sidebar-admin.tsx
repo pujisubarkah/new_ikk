@@ -9,7 +9,14 @@ import {
   Calendar,
   Users,
   LifeBuoy,
+  User,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '../components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
@@ -26,6 +33,11 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     setRoleName(savedRole)
     setUserName(savedName)
   }, [])
+
+  const handleLogout = () => {
+    localStorage.clear()
+    window.location.href = '/login' // Sesuaikan dengan route login kamu
+  }
 
   const sections = [
     {
@@ -97,20 +109,31 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       <div className="flex-1 ml-64 flex flex-col min-h-screen bg-gray-50">
         {/* Header */}
         <header className="flex justify-between items-center px-6 py-4 bg-white shadow-md fixed top-0 left-64 w-[calc(100%-16rem)] z-10">
-          <div className="text-[#16578D] font-bold text-lg">
-            {roleName} - {userName}
-          </div>
-          <div className="flex items-center gap-2 text-[#16578D]">
-            <Users className="w-6 h-6" /> {/* Replace `User` with `Users` */}
-            <span>{userName}</span>
+          <div className="text-[#16578D] font-bold text-lg">{roleName}</div>
+          <div className="flex items-center space-x-3 text-[#16578D]">
+            <User className="w-8 h-8" />
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center space-x-2 cursor-pointer">
+                <span className="font-medium">{userName}</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48 bg-white text-[#16578D] shadow-md">
+                <DropdownMenuItem onClick={() => alert('Ubah Sandi Clicked')}>
+                  Ubah Sandi
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => alert('Ubah No Telepon Clicked')}>
+                  Ubah No Telepon
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
         {/* Page Content */}
-         <main className="mt-20 px-6 w-full max-w-full">
-    <div className="bg-white p-6 rounded-lg shadow w-full overflow-x-auto">
+        <main className="py-8 px-6 mt-20">
           {children}
-      </div>
         </main>
       </div>
     </div>
@@ -118,3 +141,4 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 }
 
 export default Sidebar
+
