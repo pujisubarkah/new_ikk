@@ -84,9 +84,9 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </nav>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div className="ml-64 flex-1 min-h-screen bg-gray-50 flex flex-col">
-        {/* Header tetap di atas, tapi dalam layout Sidebar */}
+        {/* Header hanya di atas main content */}
         <Header />
 
         {/* Konten halaman */}
