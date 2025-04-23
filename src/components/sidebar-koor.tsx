@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FileText, Users, LifeBuoy } from 'lucide-react'
@@ -8,7 +8,20 @@ interface SidebarProps {
   children: ReactNode // pastikan children ada di sini
 }
 
-const sections = [
+
+
+const Sidebar: React.FC<SidebarProps> = ({ children }) => {
+  const [roleName, setRoleName] = useState<string>('')
+  const [userName, setUserName] = useState<string>('')
+
+  useEffect(() => {
+    const savedRole = localStorage.getItem('role') || ''
+    const savedName = localStorage.getItem('name') || ''
+    setRoleName(savedRole)
+    setUserName(savedName)
+  }, [])
+
+  const sections = [
   {
     label: '',
     items: [
@@ -29,8 +42,7 @@ const sections = [
     ],
   },
 ]
-
-const Sidebar: React.FC<SidebarProps> = ({ children }) => {
+  
   return (
     <div className="flex">
       {/* Sidebar */}
@@ -72,10 +84,23 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </nav>
       </aside>
 
-      {/* Content */}
-      <main className="ml-64 flex-1 p-6 bg-gray-50 min-h-screen">
-        {children}
-      </main>
+      <div className="flex-1 ml-64 flex flex-col min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="flex justify-between items-center px-6 py-4 bg-white shadow-md fixed top-0 left-64 w-[calc(100%-16rem)] z-10">
+          <div className="text-[#16578D] font-bold text-lg">
+            {roleName} - {userName}
+          </div>
+          <div className="flex items-center gap-2 text-[#16578D]">
+            <Users className="w-6 h-6" /> {/* Replace `User` with `Users` */}
+            <span>{userName}</span>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="py-8 px-6 mt-20">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
