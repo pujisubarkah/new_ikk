@@ -2,6 +2,7 @@
 
 import { FaEdit, FaTrash } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import Header from '@/components/header'
 import Sidebar from '@/components/sidebar-admin'
@@ -9,12 +10,11 @@ import Sidebar from '@/components/sidebar-admin'
 const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
 
 export default function TabelInstansi() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('Koordinator Utama')
 
   interface User {
-    coordinator_type_name: string
-    agency_name: string
     id: number
     name: string
     username: string
@@ -55,7 +55,7 @@ export default function TabelInstansi() {
     }
 
     fetchData()
-  }, [activeTab]) // update data setiap kali tab berubah
+  }, [activeTab])
 
   const handleEdit = (name: string) => {
     alert(`Edit ${name}`)
@@ -84,7 +84,7 @@ export default function TabelInstansi() {
             <h1 className="text-2xl font-bold">Data Pengguna</h1>
             <div className="flex space-x-4 items-center">
               <button
-                onClick={() => alert('Tambah Pengguna')}
+                onClick={() => router.push('/pengguna/add')}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
               >
                 Tambah Pengguna
@@ -129,44 +129,43 @@ export default function TabelInstansi() {
                 </tr>
               </thead>
               <tbody>
-  {filteredData.map((item, index) => (
-    <tr key={item.id} className="hover:bg-gray-50">
-      <td className="px-4 py-2 border text-center">{index + 1}</td>
-      <td className="px-4 py-2 border">{item.name}</td>
-      <td className="px-4 py-2 border text-center">{item.username}</td>
-      <td className="px-4 py-2 border text-center">{item.agency_name ?? '-'}</td>
-      <td className="px-4 py-2 border text-center">{item.coordinator_type_name ?? '-'}</td>
-      <td className="px-4 py-2 border text-center">
-        <span
-          className={`px-2 py-1 text-xs font-semibold rounded-full ${
-            item.status.toLowerCase() === 'aktif'
-              ? 'bg-green-200 text-green-800'
-              : 'bg-red-200 text-red-800'
-          }`}
-        >
-          {item.status}
-        </span>
-      </td>
-      <td className="px-4 py-2 border text-center space-x-2">
-        <button
-          onClick={() => handleEdit(item.name)}
-          className="text-blue-600 hover:text-blue-800"
-          title="Edit"
-        >
-          <FaEdit />
-        </button>
-        <button
-          onClick={() => handleDelete(item.name)}
-          className="text-red-600 hover:text-red-800"
-          title="Hapus"
-        >
-          <FaTrash />
-        </button>
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+                {filteredData.map((item, index) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 border text-center">{index + 1}</td>
+                    <td className="px-4 py-2 border">{item.name}</td>
+                    <td className="px-4 py-2 border text-center">{item.username}</td>
+                    <td className="px-4 py-2 border text-center">{item.agencies?.name ?? '-'}</td>
+                    <td className="px-4 py-2 border text-center">{item.coordinator_type}</td>
+                    <td className="px-4 py-2 border text-center">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          item.status.toLowerCase() === 'aktif'
+                            ? 'bg-green-200 text-green-800'
+                            : 'bg-red-200 text-red-800'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 border text-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(item.name)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.name)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Hapus"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
 
             {filteredData.length === 0 && (
