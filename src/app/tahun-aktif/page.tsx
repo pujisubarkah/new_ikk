@@ -4,7 +4,6 @@ import { useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { Calendar } from 'lucide-react'
-import Header from '@/components/header'
 import Sidebar from '@/components/sidebar-admin'
 
 export default function FilterTahun() {
