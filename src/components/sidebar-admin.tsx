@@ -16,6 +16,7 @@ interface SidebarProps {
   children: ReactNode
 }
 
+const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const [roleName, setRoleName] = useState<string>('')
   const [userName, setUserName] = useState<string>('')
 
@@ -26,33 +27,31 @@ interface SidebarProps {
     setUserName(savedName)
   }, [])
 
+  const sections = [
+    {
+      label: '',
+      items: [
+        { name: 'Dashboard', icon: LayoutDashboard, href: '/admin-nasional/dashboard' },
+        { name: 'Kebijakan', icon: FileText, href: '/admin-nasional/kebijakan' },
+      ],
+    },
+    {
+      label: 'Master Data',
+      items: [
+        { name: 'Tahun Aktif', icon: Calendar, href: '/tahun-aktif' },
+        { name: 'Instansi', icon: Users, href: '/instansi' },
+        { name: 'Wilayah Koordinasi', icon: Users, href: '/wilayah-koordinasi' },
+        { name: 'Pengguna', icon: Users, href: '/pengguna' },
+      ],
+    },
+    {
+      label: 'Bantuan',
+      items: [
+        { name: 'Helpdesk', icon: LifeBuoy, href: '/helpdesk' },
+      ],
+    },
+  ]
 
-const sections = [
-  {
-    label: '',
-    items: [
-      { name: 'Dashboard', icon: LayoutDashboard, href: '/admin-nasional/dashboard' },
-      { name: 'Kebijakan', icon: FileText, href: '/admin-nasional/kebijakan' },
-    ],
-  },
-  {
-    label: 'Master Data',
-    items: [
-      { name: 'Tahun Aktif', icon: Calendar, href: '/tahun-aktif' },
-      { name: 'Instansi', icon: Users, href: '/instansi' },
-      { name: 'Wilayah Koordinasi', icon: Users, href: '/wilayah-koordinasi' },
-      { name: 'Pengguna', icon: Users, href: '/pengguna' },
-    ],
-  },
-  {
-    label: 'Bantuan',
-    items: [
-      { name: 'Helpdesk', icon: LifeBuoy, href: '/helpdesk' },
-    ],
-  },
-]
-
-const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   return (
     <div className="flex">
       {/* Sidebar */}
@@ -102,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             {roleName} - {userName}
           </div>
           <div className="flex items-center gap-2 text-[#16578D]">
-            <User className="w-6 h-6" />
+            <Users className="w-6 h-6" /> {/* Replace `User` with `Users` */}
             <span>{userName}</span>
           </div>
         </header>
