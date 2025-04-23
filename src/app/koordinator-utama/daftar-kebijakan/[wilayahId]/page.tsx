@@ -20,7 +20,7 @@ const Page = () => {
   const params = useParams();
   const wilayahId = params?.wilayahId || "Unknown";
   const [search, setSearch] = useState("");
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [expandedRow] = useState<number | null>(null);
   const router = useRouter(); // useRouter untuk navigasi
 
   const filteredData = mockData.filter(
