@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { LayoutDashboard, FileText, Calendar, Users, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import Header from '@/components/header'
+import Header from './header'
 
 interface SidebarProps {
   children: ReactNode
