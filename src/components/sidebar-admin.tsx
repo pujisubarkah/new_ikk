@@ -85,15 +85,15 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="ml-64 flex-1 min-h-screen bg-gray-50 flex flex-col">
-        {/* Header hanya di atas main content */}
-        <Header />
+<div className="ml-64 flex-1 min-h-screen bg-gray-50 flex flex-col">
+  {/* Ini header, letaknya di atas konten, tapi masih dalam content area */}
+  <Header />
 
-        {/* Konten halaman */}
-        <main className="p-6 flex-1">
-          {children}
-        </main>
-      </div>
+  {/* Ini konten halaman */}
+  <main className="p-6 flex-1">
+    {children}
+  </main>
+</div>
     </div>
   )
 }
