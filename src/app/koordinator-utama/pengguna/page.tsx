@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { FaSignOutAlt } from 'react-icons/fa';
 import classNames from 'classnames';
-import Sidebar from '@/components/sidebar-admin'
+import Sidebar from '@/components/sidebar-koor'
 
 interface DataRow {
     no: number;
