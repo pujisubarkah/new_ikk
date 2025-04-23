@@ -44,6 +44,7 @@ model agencies {
   kd_bkn      String?   @db.VarChar(100)
   kd_prov     String?   @db.VarChar(100)
   kd_kab      String?   @db.VarChar(100)
+  user        user[]
 
   @@schema("ikk")
 }
@@ -62,6 +63,7 @@ model agenda_setting {
   a2b         String?   @db.VarChar(255)
   a2c         String?   @db.VarChar(255)
   informasia3 String?
+  user        user?     @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("ikk")
 }
@@ -80,6 +82,7 @@ model agenda_setting_base_score {
   a2b         Float?
   a2c         Float?
   total_score Float?
+  user        user?     @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_created_by_user")
 
   @@schema("ikk")
 }
@@ -199,6 +202,7 @@ model coordinator_types {
   modified_by BigInt?
   updated_at  DateTime? @db.Timestamp(6)
   name        String?   @db.VarChar(255)
+  user        user[]
 
   @@schema("ikk")
 }
@@ -955,27 +959,31 @@ model role_user {
 }
 
 model user {
-  id                  BigInt @id @default(autoincrement()) @unique
-  created_at          DateTime?  @db.Timestamp(6)
-  created_by          BigInt?
-  modified_by         BigInt?
-  updated_at          DateTime?  @db.Timestamp(6)
-  coordinator_type    String?    @db.VarChar(255)
-  deleted             String?    @db.Bit(1)
-  deleted_at          DateTime?  @db.Timestamp(6)
-  deleted_by          BigInt?
-  email               String?    @db.VarChar(255)
-  name                String?    @db.VarChar(255)
-  nik                 String?    @db.VarChar(255)
-  password            String?    @db.VarChar(255)
-  phone               String?    @db.VarChar(255)
-  position            String?    @db.VarChar(255)
-  status              String?    @db.VarChar(255)
- username             String?    @db.VarChar(255) @unique 
-  work_unit           String?    @db.VarChar(255)
-  agency_id           BigInt?
-  coordinator_type_id BigInt?
-  role_user           role_user?
+  id                        BigInt                      @id
+  created_at                DateTime?                   @db.Timestamp(6)
+  created_by                BigInt?
+  modified_by               BigInt?
+  updated_at                DateTime?                   @db.Timestamp(6)
+  coordinator_type          String?                     @db.VarChar(255)
+  deleted                   String?                     @db.Bit(1)
+  deleted_at                DateTime?                   @db.Timestamp(6)
+  deleted_by                BigInt?
+  email                     String?                     @db.VarChar(255)
+  name                      String?                     @db.VarChar(255)
+  nik                       String?                     @db.VarChar(255)
+  password                  String?                     @db.VarChar(255)
+  phone                     String?                     @db.VarChar(255)
+  position                  String?                     @db.VarChar(255)
+  status                    String?                     @db.VarChar(255)
+  username                  String?                     @db.VarChar(255)
+  work_unit                 String?                     @db.VarChar(255)
+  agency_id                 BigInt?
+  coordinator_type_id       BigInt?
+  agenda_setting            agenda_setting[]
+  agenda_setting_base_score agenda_setting_base_score[]
+  role_user                 role_user?
+  agencies                  agencies?                   @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  coordinator_types         coordinator_types?          @relation(fields: [coordinator_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_coordinator_types_fk")
 
   @@schema("ikk")
 }

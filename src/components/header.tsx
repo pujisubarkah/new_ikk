@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 // Assuming you have a function to get user data from your backend or context
 const fetchUserData = async () => {
   try {
-    const response = await fetch('/api/user')  // Replace with your API endpoint
+    const response = await fetch('/api/users')  // Replace with your API endpoint
     const data = await response.json()
     return data
   } catch (error) {
