@@ -54,9 +54,8 @@ export default function DaftarWilayah() {
     <div className="flex min-h-screen">
       <Sidebar>
       
-        <div className="flex-1 p-6 bg-gray-50">
-        <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
+        <div className="flex-1 ml-64 p-6 mt-20">
+      <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Daftar Wilayah Koordinasi</h1>
             <div className="flex space-x-4 items-center">
               <button
@@ -144,7 +143,6 @@ export default function DaftarWilayah() {
             )}
           </div>
         </div>
-          </div>
       </Sidebar>
     </div>
   )
