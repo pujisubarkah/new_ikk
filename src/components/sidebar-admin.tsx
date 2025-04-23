@@ -38,8 +38,10 @@ const sections = [
 
 const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   return (
-    <div className="flex">
+    <div className="min-h-screen">
+      {/* Header di atas */}
       <Header />
+    <div className="flex">
       {/* Sidebar */}
       <aside className="w-64 h-screen fixed top-0 left-0 bg-[#16578D] text-white p-6 shadow-lg">
         <div className="mb-8 flex flex-col items-center">
@@ -86,6 +88,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </div>
       </main>
     </div>
+      </div>
   )
 }
 
