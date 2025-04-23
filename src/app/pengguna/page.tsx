@@ -14,15 +14,13 @@ export default function TabelInstansi() {
   const [activeTab, setActiveTab] = useState('Koordinator Utama')
 
   interface User {
+    coordinator_type_name: string
+    agency_name: string
     id: number
     name: string
     username: string
     work_unit: string
-    coordinator_type: string
     status: string
-    agencies: {
-      name: string
-    }
   }
 
   const [data, setData] = useState<User[]>([])
@@ -130,8 +128,8 @@ export default function TabelInstansi() {
                     <td className="px-4 py-2 border text-center">{index + 1}</td>
                     <td className="px-4 py-2 border">{item.name}</td>
                     <td className="px-4 py-2 border text-center">{item.username}</td>
-                    <td className="px-4 py-2 border text-center">{item.agencies?.name ?? '-'}</td>
-                    <td className="px-4 py-2 border text-center">{item.coordinator_type}</td>
+                    <td className="px-4 py-2 border text-center">{item.agency_name ?? '-'}</td>
+                    <td className="px-4 py-2 border text-center">{item.coordinator_type_name ?? '-'}</td>
                     <td className="px-4 py-2 border text-center">
                       <span
                         className={`px-2 py-1 text-xs font-semibold rounded-full ${
