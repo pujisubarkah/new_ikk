@@ -107,8 +107,10 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="py-8 px-6 mt-20 w-full">
+         <main className="mt-20 px-6 w-full max-w-full">
+    <div className="bg-white p-6 rounded-lg shadow w-full overflow-x-auto">
           {children}
+      </div>
         </main>
       </div>
     </div>
