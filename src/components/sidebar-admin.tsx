@@ -94,9 +94,9 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen bg-gray-50">
+      <div className="flex-1 ml-64 flex flex-col min-h-screen bg-gray-50">
         {/* Header */}
-        <header className="flex justify-between items-center px-6 py-4 bg-white shadow-md">
+        <header className="flex justify-between items-center px-6 py-4 bg-white shadow-md fixed top-0 left-64 w-full z-10">
           <div className="text-[#16578D] font-bold text-lg">
             {roleName} - {userName}
           </div>
@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="py-8 px-6">
+        <main className="py-8 px-6 mt-20">
           {children}
         </main>
       </div>
