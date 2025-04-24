@@ -22,7 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       })
 
-      res.status(200).json(serializeBigInt(data))
+      const serializedData = data.map(item => serializeBigInt(item));
+      res.status(200).json(serializedData)
     } catch (error) {
       console.error('Error:', error)
       res.status(500).json({ error: 'Internal Server Error' })
