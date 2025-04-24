@@ -61,7 +61,7 @@ export default function Dashboard() {
 
         {/* Page Content */}
         <main className="py-8 px-6">
-          <h1 className="text-3xl font-semibold text-[#16578D]">Dashboard</h1>
+          <h1 className="text-xl font-semibold text-[#16578D]">Lembaga Administrasi Negara mengembangkan indeks kualitas kebijakan sebagai Instrumen untuk menilai kualitas kebijakan pada Instansi Pemerintah. Partisipasi Bapak/Ibu untuk turut menilai kualitas kebijakan sangat kami harapkan.</h1>
           {/* Tambahkan konten dashboard lainnya di sini */}
         </main>
       </div>
