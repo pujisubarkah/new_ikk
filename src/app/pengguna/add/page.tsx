@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import Sidebar from "@/components/sidebar-admin"
+import { withRoleGuard } from '@/lib/withRoleGuard'
 
 interface FormData {
   nama: string
@@ -219,4 +220,5 @@ const TambahPengguna: React.FC = () => {
   )
 }
 
-export default TambahPengguna
+export default withRoleGuard(TambahPengguna, [1])
+
