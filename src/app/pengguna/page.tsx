@@ -7,6 +7,8 @@ import axios from 'axios'
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
 
+const ProtectedPage = withRoleGuard(TabelInstansi, [1])
+
 const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
 
 function TabelInstansi() {
@@ -186,4 +188,4 @@ function TabelInstansi() {
 }
 
 // ⛳ FIX: Ganti "Page" menjadi "TabelInstansi"
-export default withRoleGuard(TabelInstansi, [1])
+export default ProtectedPage
