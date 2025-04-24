@@ -91,7 +91,7 @@ const TambahPengguna: React.FC = () => {
   }
 
   const handleBack = () => {
-    router.push("/enumerator")
+    router.push("/pengguna")
   }
 
   return (
