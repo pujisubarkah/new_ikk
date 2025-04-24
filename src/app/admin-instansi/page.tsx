@@ -1,0 +1,244 @@
+"use client";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import classNames from "classnames";
+import Sidebar from "@/components/sidebar-inst";
+
+interface DataRow {
+    no: number;
+    nama: string;
+    nip: string;
+    wilayah: string;
+}
+
+const dataKoordinator: DataRow[] = [
+    { no: 1, nama: "John Doe", nip: "123456", wilayah: "Jakarta" },
+    { no: 2, nama: "Jane Smith", nip: "654321", wilayah: "Bandung" },
+    { no: 3, nama: "Alice Johnson", nip: "789012", wilayah: "Surabaya" },
+];
+
+const dataAdmin: DataRow[] = [
+    { no: 1, nama: "Michael Scott", nip: "987654", wilayah: "John Doe" },
+    { no: 2, nama: "Dwight Schrute", nip: "112233", wilayah: "Jane Smith" },
+];
+
+const Page = () => {
+    const [search, setSearch] = useState("");
+    const [activeTab, setActiveTab] = useState<"koordinator" | "admin">(
+        "koordinator"
+    );
+    const [selectedKoordinator, setSelectedKoordinator] = useState("");
+    const [showAdminTable, setShowAdminTable] = useState(false);
+    const router = useRouter();
+
+    const filteredKoordinatorData = dataKoordinator.filter(
+        (row) =>
+            row.nama.toLowerCase().includes(search.toLowerCase()) ||
+            row.nip.includes(search) ||
+            row.wilayah.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const koordinatorNamaList = dataKoordinator.map((item) => item.nama);
+
+    const filteredAdminData = dataAdmin
+        .filter((admin) =>
+            selectedKoordinator ? admin.wilayah === selectedKoordinator : true
+        )
+        .filter(
+            (row) =>
+                row.nama.toLowerCase().includes(search.toLowerCase()) ||
+                row.nip.includes(search)
+        );
+
+    const handleTampilkanAdmin = () => {
+        if (selectedKoordinator) {
+            setShowAdminTable(true);
+        }
+    };
+
+    return (
+        <div className="p-6">
+            <Sidebar>
+                <div className="flex justify-between items-center mb-2">
+                    <h1 className="text-2xl font-bold text-gray-800">
+                        Daftar Pengguna -{" "}
+                        {activeTab === "koordinator" ? "Admin Instansi" : "Enumerator"}
+                    </h1>
+                    <button
+                        onClick={() => router.push("/admin-instansi/tambah")}
+                        className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-150"
+                    >
+                        Tambah Admin Instansi
+                    </button>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex space-x-4 mb-4">
+                    <button
+                        onClick={() => {
+                            setActiveTab("koordinator");
+                            setSearch("");
+                        }}
+                        className={classNames(
+                            "px-4 py-2 rounded-lg font-medium transition duration-150",
+                            activeTab === "koordinator"
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        )}
+                    >
+                        Admin Instansi
+                    </button>
+                    <button
+                        onClick={() => {
+                            setActiveTab("admin");
+                            setSearch("");
+                            setShowAdminTable(false);
+                        }}
+                        className={classNames(
+                            "px-4 py-2 rounded-lg font-medium transition duration-150",
+                            activeTab === "admin"
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        )}
+                    >
+                        Enumerator
+                    </button>
+                </div>
+
+                {/* Tabel Koordinator */}
+                {activeTab === "koordinator" && (
+                    <div className="overflow-x-auto rounded-lg shadow-md bg-white">
+                        <table className="min-w-full text-sm text-left text-gray-700">
+                            <thead className="bg-blue-100 text-gray-800 font-semibold">
+                                <tr>
+                                    <th className="px-6 py-3 border-b">No</th>
+                                    <th className="px-6 py-3 border-b">Nama</th>
+                                    <th className="px-6 py-3 border-b">NIP</th>
+                                    <th className="px-6 py-3 border-b">Wilayah Koordinasi</th>
+                                    <th className="px-6 py-3 border-b text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredKoordinatorData.map((row) => (
+                                    <tr
+                                        key={row.no}
+                                        className="hover:bg-blue-50 transition duration-150"
+                                    >
+                                        <td className="px-6 py-4 border-b text-center">{row.no}</td>
+                                        <td className="px-6 py-4 border-b">{row.nama}</td>
+                                        <td className="px-6 py-4 border-b">{row.nip}</td>
+                                        <td className="px-6 py-4 border-b">{row.wilayah}</td>
+                                        <td className="px-6 py-4 border-b text-center">
+                                            <button
+                                                onClick={() => alert(`Edit data ${row.nama}`)}
+                                                className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-lg text-xs"
+                                            >
+                                                Ubah
+                                            </button>
+                                            <button
+                                                onClick={() => alert(`Hapus data ${row.nama}?`)}
+                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs"
+                                            >
+                                                Hapus
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredKoordinatorData.length === 0 && (
+                                    <tr>
+                                        <td
+                                            colSpan={5}
+                                            className="text-center py-6 text-gray-500"
+                                        >
+                                            Tidak ada hasil yang ditemukan.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {/* Tabel Admin */}
+                {activeTab === "admin" && (
+                    <>
+                        <div className="flex items-center gap-4 mb-4">
+                            <select
+                                value={selectedKoordinator}
+                                onChange={(e) => setSelectedKoordinator(e.target.value)}
+                                className="border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            >
+                                <option value="">Pilih Admin Instansi</option>
+                                {koordinatorNamaList.map((nama, idx) => (
+                                    <option key={idx} value={nama}>
+                                        {nama}
+                                    </option>
+                                ))}
+                            </select>
+                            <button
+                                onClick={handleTampilkanAdmin}
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-150"
+                            >
+                                Tampilkan
+                            </button>
+                        </div>
+
+                        {showAdminTable && (
+                            <>
+                                <div className="flex justify-end mb-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Cari..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="border border-gray-300 rounded-lg px-4 py-2 w-60 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    />
+                                </div>
+
+                                <div className="overflow-x-auto rounded-lg shadow-md bg-white">
+                                    <table className="min-w-full text-sm text-left text-gray-700">
+                                        <thead className="bg-blue-100 text-gray-800 font-semibold">
+                                            <tr>
+                                                <th className="px-6 py-3 border-b">No</th>
+                                                <th className="px-6 py-3 border-b">Nama Instansi</th>
+                                                <th className="px-6 py-3 border-b">Nama</th>
+                                                <th className="px-6 py-3 border-b">NIP</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredAdminData.map((row, index) => (
+                                                <tr
+                                                    key={index}
+                                                    className="hover:bg-blue-50 transition duration-150"
+                                                >
+                                                    <td className="px-6 py-4 border-b text-center">
+                                                        {row.no}
+                                                    </td>
+                                                    <td className="px-6 py-4 border-b">{row.wilayah}</td>
+                                                    <td className="px-6 py-4 border-b">{row.nama}</td>
+                                                    <td className="px-6 py-4 border-b">{row.nip}</td>
+                                                </tr>
+                                            ))}
+                                            {filteredAdminData.length === 0 && (
+                                                <tr>
+                                                    <td
+                                                        colSpan={4}
+                                                        className="text-center py-6 text-gray-500"
+                                                    >
+                                                        Tidak ada hasil yang ditemukan.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+                    </>
+                )}
+            </Sidebar>
+        </div>
+    );
+};
+
+export default Page;
