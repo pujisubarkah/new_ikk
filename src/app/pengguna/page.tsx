@@ -73,25 +73,27 @@ export default function TabelInstansi() {
     <div className="flex min-h-screen">
     <Sidebar>
     <div className="flex-1 p-6 bg-gray-50">
-        <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">Data Pengguna</h1>
-            <div className="flex space-x-4 items-center">
-              <button
-                onClick={() => router.push('/pengguna/add')}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Tambah Pengguna
-              </button>
-              <input
-                type="text"
-                placeholder="Cari Nama..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="p-2 border rounded-lg"
-              />
-            </div>
-          </div>
+    <div className="mt-6">
+  {/* Header dan tombol Tambah */}
+  <div className="flex justify-between items-start mb-4">
+    <h1 className="text-2xl font-bold">Data Pengguna</h1>
+    <div className="flex flex-col items-end space-y-2">
+      <button
+        onClick={() => router.push('/pengguna/add')}
+        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+      >
+        Tambah Pengguna
+      </button>
+      <input
+        type="text"
+        placeholder="Cari Nama..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="p-2 border rounded-lg w-60"
+      />
+    </div>
+  </div>
+
 
           <div className="flex space-x-2 mb-4">
             {tabs.map((tab) => (
