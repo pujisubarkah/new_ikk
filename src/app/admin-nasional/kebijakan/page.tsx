@@ -22,9 +22,9 @@ export default function TabelInstansi() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar>
-        <div className="mt-6 max-w-5xl bg-white p-6 rounded-lg shadow-md">
+    <Sidebar>
+      <div className="flex-1 p-6">
+        <div className="max-w-5xl bg-white p-6 rounded-lg shadow-md">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Daftar Instansi</h1>
             <button
@@ -66,7 +66,7 @@ export default function TabelInstansi() {
             </table>
           </div>
         </div>
-      </Sidebar>
-    </div>
+      </div>
+    </Sidebar>
   )
 }
