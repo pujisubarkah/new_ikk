@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-export function withRoleGuard(Component: React.FC, allowedRoles: number[]) {
-  return function RoleProtectedComponent(props: any) {
+export function withRoleGuard<P>(Component: React.FC<P>, allowedRoles: number[]) {
+  return function RoleProtectedComponent(props: P) {
     const router = useRouter()
     const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
