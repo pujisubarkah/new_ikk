@@ -1,15 +1,11 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/sidebar-koor';
 import { useRouter } from 'next/navigation';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationPrevious,
-    PaginationNext,
-} from "@/components/ui/pagination";
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
+import axios from 'axios';
 
 interface DataRow {
     no: number;
@@ -18,32 +14,52 @@ interface DataRow {
     wilayah: string;
 }
 
-const data: DataRow[] = [
-    { no: 1, nama: 'John Doe', nip: '123456', wilayah: 'Jakarta' },
-    { no: 2, nama: 'Jane Smith', nip: '654321', wilayah: 'Bandung' },
-    { no: 3, nama: 'Alice Johnson', nip: '789012', wilayah: 'Surabaya' },
-    { no: 4, nama: 'Bob Brown', nip: '345678', wilayah: 'Medan' },
-    { no: 5, nama: 'Charlie White', nip: '901234', wilayah: 'Bali' },
-    { no: 6, nama: 'Diana Green', nip: '567890', wilayah: 'Yogyakarta' },
-];
-
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 5;
 
 const Page = () => {
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [koordinatorData, setKoordinatorData] = useState<DataRow[]>([]);
     const router = useRouter();
 
+    // Function to handle click on wilayah
     const handleClick = (wilayah: string) => {
         const wilayahId = encodeURIComponent(wilayah);
         router.push(`/koordinator-utama/daftar-kebijakan/${wilayahId}`);
     };
 
-    const filteredData = data.filter(
+    useEffect(() => {
+        const fetchKoordinatorData = async () => {
+            const id = localStorage.getItem('id');
+            if (id) {
+                try {
+                    const response = await axios.get(`/api/koordinator_utama?id=${id}`);
+                    const data: Array<{ name: string; username: string; coordinator_type_name: string }> = response.data;
+
+                    // Format data sesuai dengan struktur yang diinginkan
+                    setKoordinatorData(
+                        data.map((item, index) => ({
+                            no: index + 1,
+                            nama: item.name,
+                            nip: item.username,
+                            wilayah: item.coordinator_type_name,
+                        }))
+                    );
+                } catch (error) {
+                    console.error('Error fetching koordinator data:', error);
+                }
+            }
+        };
+
+        fetchKoordinatorData();
+    }, []); // Empty dependency array ensures this runs once when the component mounts
+
+    // Filter data based on search input
+    const filteredData = koordinatorData.filter(
         (row) =>
-            row.nama.toLowerCase().includes(search.toLowerCase()) ||
-            row.nip.includes(search) ||
-            row.wilayah.toLowerCase().includes(search.toLowerCase())
+            (row.nama?.toLowerCase().includes(search.toLowerCase()) || '') ||
+            (row.nip?.includes(search) || '') ||
+            (row.wilayah?.toLowerCase().includes(search.toLowerCase()) || '')
     );
 
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
@@ -70,42 +86,42 @@ const Page = () => {
                     />
                 </div>
                 <div className="overflow-x-auto rounded-lg shadow-md bg-white">
-                    <table className="min-w-full text-sm text-left text-gray-700">
-                        <thead className="bg-blue-100 text-gray-800 font-semibold">
-                            <tr>
-                                <th className="px-6 py-3 border-b">No</th>
-                                <th className="px-6 py-3 border-b">Nama</th>
-                                <th className="px-6 py-3 border-b">NIP</th>
-                                <th className="px-6 py-3 border-b">Wilayah Koordinasi</th>
-                                <th className="px-6 py-3 border-b text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="text-center">No</TableHead>
+                                <TableHead>Nama</TableHead>
+                                <TableHead className="text-center">NIP</TableHead>
+                                <TableHead className="text-center">Wilayah Koordinasi</TableHead>
+                                <TableHead className="text-center">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {paginatedData.map((row) => (
-                                <tr key={row.no} className="hover:bg-blue-50 transition duration-150">
-                                    <td className="px-6 py-4 border-b text-center">{row.no}</td>
-                                    <td className="px-6 py-4 border-b">{row.nama}</td>
-                                    <td className="px-6 py-4 border-b">{row.nip}</td>
-                                    <td className="px-6 py-4 border-b">{row.wilayah}</td>
-                                    <td className="px-6 py-4 border-b text-center">
-                                        <button
+                                <TableRow key={row.no} className="hover:bg-blue-50 transition duration-150">
+                                    <TableCell className="text-center">{row.no}</TableCell>
+                                    <TableCell>{row.nama}</TableCell>
+                                    <TableCell className="text-center">{row.nip}</TableCell>
+                                    <TableCell className="text-center">{row.wilayah}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Button
                                             onClick={() => handleClick(row.wilayah)}
-                                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-lg text-xs"
+                                            className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
                                         >
                                             Lihat Wilayah
-                                        </button>
-                                    </td>
-                                </tr>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
                             ))}
                             {paginatedData.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} className="text-center py-6 text-gray-500">
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-6 text-gray-500">
                                         Tidak ada hasil yang ditemukan.
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             )}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 </div>
                 <div className="flex justify-center mt-4">
                     <Pagination>
@@ -141,4 +157,3 @@ const Page = () => {
 };
 
 export default Page;
-
