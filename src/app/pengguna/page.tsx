@@ -7,8 +7,6 @@ import axios from 'axios'
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
 
-const ProtectedPage = withRoleGuard(TabelInstansi, [1])
-
 const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
 
 function TabelInstansi() {
@@ -84,7 +82,6 @@ function TabelInstansi() {
       <Sidebar>
         <div className="flex-1 p-6 bg-gray-50">
           <div className="mt-6">
-            {/* Header dan tombol Tambah */}
             <div className="flex justify-between items-start mb-4">
               <h1 className="text-2xl font-bold">Data Pengguna</h1>
               <div className="flex flex-col items-end space-y-2">
@@ -187,5 +184,5 @@ function TabelInstansi() {
   )
 }
 
-// ⛳ FIX: Ganti "Page" menjadi "TabelInstansi"
-export default ProtectedPage
+// ✅ Pastikan komponen di-wrap setelah deklarasi utama
+export default withRoleGuard(TabelInstansi, [1])
