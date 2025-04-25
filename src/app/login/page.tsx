@@ -49,9 +49,10 @@ export default function Login() {
         password,
       })
 
-      const { role_id, username: resUsername, name, role } = response.data
+      const { id, role_id, username: resUsername, name, role } = response.data
 
       // Simpan ke localStorage
+      localStorage.setItem('id', id.toString())
       localStorage.setItem('role_id', role_id.toString())
       localStorage.setItem('username', resUsername)
       localStorage.setItem('name', name)
