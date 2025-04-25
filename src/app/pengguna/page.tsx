@@ -6,10 +6,21 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
-
-const ProtectedPage = withRoleGuard(TabelInstansi, [1])
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
 
 const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
+
+const USERS_PER_PAGE = 20
 
 function TabelInstansi() {
   const router = useRouter()
@@ -17,6 +28,7 @@ function TabelInstansi() {
   const [activeTab, setActiveTab] = useState('Koordinator Utama')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   interface User {
     coordinator_type_name: string
@@ -31,24 +43,20 @@ function TabelInstansi() {
   const [data, setData] = useState<User[]>([])
 
   const getRoleIdFromTab = (tab: string): number => {
-    switch (tab) {
-      case 'Koordinator Utama':
-        return 2
-      case 'Koordinator Instansi':
-        return 3
-      case 'Admin Instansi':
-        return 4
-      case 'Enumerator':
-        return 5
-      default:
-        return 0
+    const roleMap: Record<string, number> = {
+      'Koordinator Utama': 2,
+      'Koordinator Instansi': 3,
+      'Admin Instansi': 4,
+      'Enumerator': 5
     }
+    return roleMap[tab] || 0
   }
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       setError('')
+      setCurrentPage(1) // Reset page saat ganti tab
       try {
         const roleId = getRoleIdFromTab(activeTab)
         const response = await axios.get(`/api/users?role_id=${roleId}`)
@@ -75,117 +83,149 @@ function TabelInstansi() {
     }
   }
 
+  // Filter nama
   const filteredData = data.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredData.length / USERS_PER_PAGE)
+  const startIndex = (currentPage - 1) * USERS_PER_PAGE
+  const paginatedData = filteredData.slice(startIndex, startIndex + USERS_PER_PAGE)
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+  }
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1)
+  }
+
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar>
-        <div className="flex-1 p-6 bg-gray-50">
-          <div className="mt-6">
-            {/* Header dan tombol Tambah */}
-            <div className="flex justify-between items-start mb-4">
-              <h1 className="text-2xl font-bold">Data Pengguna</h1>
-              <div className="flex flex-col items-end space-y-2">
-                <button
-                  onClick={() => router.push('/pengguna/add')}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  Tambah Pengguna
-                </button>
-                <input
-                  type="text"
-                  placeholder="Cari Nama..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="p-2 border rounded-lg w-60"
-                />
-              </div>
-            </div>
-
-            <div className="flex space-x-2 mb-4">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-lg font-semibold transition ${
-                    activeTab === tab
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {loading && <div className="text-center py-4">Memuat data...</div>}
-            {error && <div className="text-center text-red-500 py-4">{error}</div>}
-
-            <div className="overflow-x-auto">
-              <table className="table-auto w-full border border-gray-300 rounded-lg shadow">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-4 py-2 border">No</th>
-                    <th className="px-4 py-2 border">Nama</th>
-                    <th className="px-4 py-2 border">NIP</th>
-                    <th className="px-4 py-2 border">Nama Instansi</th>
-                    <th className="px-4 py-2 border">Wilayah Kerja</th>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((item, index) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border text-center">{index + 1}</td>
-                      <td className="px-4 py-2 border">{item.name}</td>
-                      <td className="px-4 py-2 border text-center">{item.username}</td>
-                      <td className="px-4 py-2 border text-center">{item.agency_name ?? '-'}</td>
-                      <td className="px-4 py-2 border text-center">{item.coordinator_type_name ?? '-'}</td>
-                      <td className="px-4 py-2 border text-center">
-                        <span
-                          className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            item.status.toLowerCase() === 'aktif'
-                              ? 'bg-green-200 text-green-800'
-                              : 'bg-red-200 text-red-800'
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 border text-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(item.name)}
-                          className="text-blue-600 hover:text-blue-800"
-                          title="Edit"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.name)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Hapus"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {filteredData.length === 0 && !loading && (
-                <div className="text-center py-4 text-gray-500">Data tidak ditemukan.</div>
-              )}
+        <div className="flex-1 p-6 mt-20">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+            <h1 className="text-2xl font-bold">Data Pengguna</h1>
+            <div className="flex flex-col md:flex-row md:items-center gap-2">
+              <Button onClick={() => router.push('/pengguna/add')}>Tambah Pengguna</Button>
+              <Input
+                type="text"
+                placeholder="Cari Nama..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setCurrentPage(1) // reset ke halaman pertama saat mencari
+                }}
+                className="w-60"
+              />
             </div>
           </div>
+
+          <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val)} className="mb-4">
+            <TabsList className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab} value={tab}>
+                  {tab}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
+          {loading && <div className="text-center py-4">Memuat data...</div>}
+          {error && <div className="text-center text-red-500 py-4">{error}</div>}
+
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-center">No</TableHead>
+                  <TableHead>Nama</TableHead>
+                  <TableHead className="text-center">NIP</TableHead>
+                  <TableHead className="text-center">Nama Instansi</TableHead>
+                  <TableHead className="text-center">Wilayah Kerja</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedData.map((item, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="text-center">{startIndex + index + 1}</TableCell>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell className="text-center">{item.username}</TableCell>
+                    <TableCell className="text-center">{item.agency_name ?? '-'}</TableCell>
+                    <TableCell className="text-center">{item.coordinator_type_name ?? '-'}</TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          item.status.toLowerCase() === 'aktif'
+                            ? 'bg-green-200 text-green-800'
+                            : 'bg-red-200 text-red-800'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(item.name)}
+                        className="text-blue-600 hover:text-blue-800 variant-ghost"
+                      >
+                        <FaEdit />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(item.name)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <FaTrash />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {!loading && paginatedData.length === 0 && (
+              <div className="text-center py-4 text-gray-500">Data tidak ditemukan.</div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {filteredData.length > USERS_PER_PAGE && (
+            <div className="mt-6 flex justify-between items-center text-sm">
+              <span>
+                Halaman {currentPage} dari {totalPages}
+              </span>
+              <div className="space-x-2">
+                <Button
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={handlePrevPage}
+                >
+                  Sebelumnya
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={handleNextPage}
+                >
+                  Berikutnya
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </Sidebar>
     </div>
   )
 }
 
-// ⛳ FIX: Ganti "Page" menjadi "TabelInstansi"
-export default ProtectedPage
+const ProtectedPage = withRoleGuard(TabelInstansi, [1])
+export default function Page() {
+  return <ProtectedPage />
+}
