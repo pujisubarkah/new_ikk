@@ -169,16 +169,12 @@ function TabelInstansi() {
                     </TableCell>
                     <TableCell className="text-center space-x-2">
                       <Button
-                        variant="ghost"
-                        size="icon"
                         onClick={() => handleEdit(item.name)}
                         className="text-blue-600 hover:text-blue-800 variant-ghost"
                       >
                         <FaEdit />
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="icon"
                         onClick={() => handleDelete(item.name)}
                         className="text-red-600 hover:text-red-800"
                       >
@@ -203,14 +199,13 @@ function TabelInstansi() {
               </span>
               <div className="space-x-2">
                 <Button
-                  variant="outline"
+                  className="border border-gray-300"
                   disabled={currentPage === 1}
                   onClick={handlePrevPage}
                 >
                   Sebelumnya
                 </Button>
                 <Button
-                  variant="outline"
                   disabled={currentPage === totalPages}
                   onClick={handleNextPage}
                 >
