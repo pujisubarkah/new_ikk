@@ -104,8 +104,8 @@ function TabelInstansi() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar>
-        <div className="flex-1 p-6 mt-20">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+      <div className="w-full px-6 py-8">
+      <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Data Pengguna</h1>
             <div className="flex flex-col md:flex-row md:items-center gap-2">
               <Button onClick={() => router.push('/pengguna/add')}>Tambah Pengguna</Button>
@@ -131,10 +131,6 @@ function TabelInstansi() {
               ))}
             </TabsList>
           </Tabs>
-
-          {loading && <div className="text-center py-4">Memuat data...</div>}
-          {error && <div className="text-center text-red-500 py-4">{error}</div>}
-
           <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
@@ -148,6 +144,8 @@ function TabelInstansi() {
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
+              {loading && <div className="text-center py-4">Memuat data...</div>}
+          {error && <div className="text-center text-red-500 py-4">{error}</div>}
               <TableBody>
                 {paginatedData.map((item, index) => (
                   <TableRow key={item.id}>

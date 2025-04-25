@@ -82,7 +82,7 @@ export default function DaftarWilayah() {
           {loading ? (
             <div className="text-center py-4 text-gray-500">Memuat data...</div>
           ) : (
-            <>
+            <div className="overflow-x-auto rounded-lg border">
               <table className="w-full border border-gray-200 rounded-md overflow-hidden">
                 <thead className="bg-gray-100 text-sm font-semibold">
                   <tr>
@@ -142,7 +142,7 @@ export default function DaftarWilayah() {
                             </div>
                           </div>
                         )}
-            </>
+            </div>
           )}
 
           {!loading && filteredData.length === 0 && (
