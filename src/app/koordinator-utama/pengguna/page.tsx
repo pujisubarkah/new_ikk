@@ -1,9 +1,10 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSignOutAlt } from 'react-icons/fa';
 import classNames from 'classnames';
 import Sidebar from '@/components/sidebar-koor';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 interface DataRow {
     no: number;
@@ -12,42 +13,49 @@ interface DataRow {
     wilayah: string;
 }
 
-const dataKoordinator: DataRow[] = [
-    { no: 1, nama: 'John Doe', nip: '123456', wilayah: 'Jakarta' },
-    { no: 2, nama: 'Jane Smith', nip: '654321', wilayah: 'Bandung' },
-    { no: 3, nama: 'Alice Johnson', nip: '789012', wilayah: 'Surabaya' },
-];
-
-const dataAdmin: DataRow[] = [
-    { no: 1, nama: 'Michael Scott', nip: '987654', wilayah: 'John Doe' },
-    { no: 2, nama: 'Dwight Schrute', nip: '112233', wilayah: 'Jane Smith' },
-];
-
 const Page = () => {
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState<'koordinator' | 'admin'>('koordinator');
     const [selectedKoordinator, setSelectedKoordinator] = useState('');
     const [showAdminTable, setShowAdminTable] = useState(false);
+    const [koordinatorData, setKoordinatorData] = useState<DataRow[]>([]);
+    const [adminData] = useState<DataRow[]>([]);
     const router = useRouter();
 
-    const filteredKoordinatorData = dataKoordinator.filter(
+    useEffect(() => {
+        const fetchKoordinatorData = async () => {
+            const id = localStorage.getItem('id');
+            if (id) {
+                try {
+                    const response = await axios.get(`/api/koordinator_utama?id=${id}`);
+                    const data: Array<{ name: string; username: string; coordinator_type_name: string }> = response.data;
+
+                    // Format data sesuai dengan struktur yang diinginkan
+                    setKoordinatorData(
+                        data.map((item, index) => ({
+                            no: index + 1,
+                            nama: item.name,
+                            nip: item.username,
+                            wilayah: item.coordinator_type_name,
+                        }))
+                    );
+                } catch (error) {
+                    console.error('Error fetching koordinator data:', error);
+                }
+            }
+        };
+
+        fetchKoordinatorData();
+    }, []); // Empty dependency array ensures this runs once when the component mounts
+
+    
+
+    const filteredKoordinatorData = koordinatorData.filter(
         (row) =>
             row.nama.toLowerCase().includes(search.toLowerCase()) ||
             row.nip.includes(search) ||
-            row.wilayah.toLowerCase().includes(search.toLowerCase())
+            (row.wilayah || '').toLowerCase().includes(search.toLowerCase())
     );
-
-    const koordinatorNamaList = dataKoordinator.map((item) => item.nama);
-
-    const filteredAdminData = dataAdmin
-        .filter((admin) =>
-            selectedKoordinator ? admin.wilayah === selectedKoordinator : true
-        )
-        .filter(
-            (row) =>
-                row.nama.toLowerCase().includes(search.toLowerCase()) ||
-                row.nip.includes(search)
-        );
 
     const handleKeluarkan = (nama: string) => {
         alert(`Keluarkan ${nama}?`);
@@ -179,11 +187,7 @@ const Page = () => {
                                 className="border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                             >
                                 <option value="">Pilih Koordinator Instansi</option>
-                                {koordinatorNamaList.map((nama, idx) => (
-                                    <option key={idx} value={nama}>
-                                        {nama}
-                                    </option>
-                                ))}
+                                {/* Daftar koordinator akan diisi di sini */}
                             </select>
                             <button
                                 onClick={handleTampilkanAdmin}
@@ -216,7 +220,7 @@ const Page = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredAdminData.map((row, index) => (
+                                            {adminData.map((row, index) => (
                                                 <tr key={index} className="hover:bg-blue-50 transition duration-150">
                                                     <td className="px-6 py-4 border-b text-center">{row.no}</td>
                                                     <td className="px-6 py-4 border-b">{row.wilayah}</td>
@@ -224,7 +228,7 @@ const Page = () => {
                                                     <td className="px-6 py-4 border-b">{row.nip}</td>
                                                 </tr>
                                             ))}
-                                            {filteredAdminData.length === 0 && (
+                                            {adminData.length === 0 && (
                                                 <tr>
                                                     <td colSpan={4} className="text-center py-6 text-gray-500">
                                                         Tidak ada hasil yang ditemukan.
