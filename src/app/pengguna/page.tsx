@@ -154,8 +154,8 @@ function TabelInstansi() {
                     <TableCell className="text-center">{startIndex + index + 1}</TableCell>
                     <TableCell>{item.name}</TableCell>
                     <TableCell className="text-center">{item.username}</TableCell>
-                    <TableCell className="text-center">{item.agency_name ?? '-'}</TableCell>
-                    <TableCell className="text-center">{item.coordinator_type_name ?? '-'}</TableCell>
+                    <TableCell className="text-center space-x-3">{item.agency_name ?? '-'}</TableCell>
+                    <TableCell className="text-center space-x-3">{item.coordinator_type_name ?? '-'}</TableCell>
                     <TableCell className="text-center">
                       <span
                         className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -167,7 +167,7 @@ function TabelInstansi() {
                         {item.status}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center space-x-2">
+                    <TableCell className="text-center space-x-25">
                       <Button
                         onClick={() => handleEdit(item.name)}
                         className="text-blue-600 hover:text-blue-800 variant-ghost"
