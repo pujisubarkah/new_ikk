@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import Sidebar from "@/components/sidebar-admin"
 import { withRoleGuard } from '@/lib/withRoleGuard'
+
 
 interface FormData {
   nama: string
@@ -101,7 +103,7 @@ const TambahPengguna: React.FC = () => {
         <></>
       </Sidebar>
 
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-20">
         <h1 className="text-2xl font-bold mb-4">Tambah Pengguna</h1>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -220,5 +222,9 @@ const TambahPengguna: React.FC = () => {
   )
 }
 
-export default withRoleGuard(TambahPengguna, [1])
+const ProtectedPage = withRoleGuard(TambahPengguna, [1])
+export default function Page() {
+  return <ProtectedPage />
+}
+
 
