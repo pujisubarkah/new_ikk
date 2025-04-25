@@ -1,77 +1,56 @@
+"use client"
+
 import * as React from "react"
+import * as TabsPrimitive from "@radix-ui/react-tabs"
 import { cn } from "@/lib/utils"
 
-const Table = ({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) => (
-  <div className="w-full overflow-auto">
-    <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
-  </div>
-)
+const Tabs = TabsPrimitive.Root
 
-const TableHeader = React.forwardRef<
-  HTMLTableSectionElement,
-  React.HTMLAttributes<HTMLTableSectionElement>
+const TabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
-))
-TableHeader.displayName = "TableHeader"
-
-const TableBody = React.forwardRef<
-  HTMLTableSectionElement,
-  React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
-  <tbody ref={ref} className={cn("[&_tr:last-child]:border-0", className)} {...props} />
-))
-TableBody.displayName = "TableBody"
-
-const TableRow = React.forwardRef<
-  HTMLTableRowElement,
-  React.HTMLAttributes<HTMLTableRowElement>
->(({ className, ...props }, ref) => (
-  <tr
-    ref={ref}
-    className={cn("border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted", className)}
-    {...props}
-  />
-))
-TableRow.displayName = "TableRow"
-
-const TableHead = React.forwardRef<
-  HTMLTableCellElement,
-  React.ThHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, ref) => (
-  <th
+  <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
       className
     )}
     {...props}
   />
 ))
-TableHead.displayName = "TableHead"
+TabsList.displayName = TabsPrimitive.List.displayName
 
-const TableCell = React.forwardRef<
-  HTMLTableCellElement,
-  React.TdHTMLAttributes<HTMLTableCellElement>
+const TabsTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, ...props }, ref) => (
-  <td
+  <TabsPrimitive.Trigger
     ref={ref}
-    className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", className)}
+    className={cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all",
+      // Tambahkan latar belakang biru dan teks putih ketika aktif
+      "data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm",
+      // Tambahkan latar belakang biru muda ketika hover
+      "hover:bg-blue-400 hover:text-white",
+      className
+    )}
     {...props}
   />
 ))
-TableCell.displayName = "TableCell"
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
-const TableCaption = ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
-  <caption className={cn("mt-4 text-sm text-muted-foreground", className)} {...props} />
-)
+const TabsContent = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn("mt-2 focus:outline-none", className)}
+    {...props}
+  />
+))
+TabsContent.displayName = TabsPrimitive.Content.displayName
 
-export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-  TableCaption,
-}
+export { Tabs, TabsList, TabsTrigger, TabsContent }
+
