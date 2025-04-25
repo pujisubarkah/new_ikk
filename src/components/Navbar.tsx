@@ -9,7 +9,7 @@ const navItems = [
   { label: 'Tentang', href: '/tentang' },
   { label: 'Panduan', href: '/panduan' },
   { label: 'FAQ', href: '/faq' },
-  { label: 'Helpdesk', href: '/helpdesk' },
+  { label: 'Helpdesk', href: '/desk' },
   { label: 'Login', href: '/login' },
 ]
 
