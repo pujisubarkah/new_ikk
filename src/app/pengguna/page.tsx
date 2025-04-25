@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
-<<<<<<< HEAD
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -24,12 +23,6 @@ const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'En
 const USERS_PER_PAGE = 20
 
 function TabelInstansi() {
-=======
-
-const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
-
-function TabelInstansiContent() {
->>>>>>> 4d5da63af675aadfe48c398a36827925b54e871a
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('Koordinator Utama')
@@ -232,12 +225,7 @@ function TabelInstansiContent() {
   )
 }
 
-<<<<<<< HEAD
 const ProtectedPage = withRoleGuard(TabelInstansi, [1])
 export default function Page() {
   return <ProtectedPage />
 }
-=======
-const ProtectedTabelInstansi = withRoleGuard(TabelInstansiContent, [1])
-export default ProtectedTabelInstansi
->>>>>>> 4d5da63af675aadfe48c398a36827925b54e871a
