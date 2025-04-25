@@ -29,8 +29,10 @@ const TabsTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-      "data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-sm",
-      "hover:text-black",
+      // Tambahkan latar belakang biru dan teks putih ketika aktif
+      "data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm",
+      // Tambahkan latar belakang biru muda ketika hover
+      "hover:bg-blue-400 hover:text-white",
       className
     )}
     {...props}
@@ -51,3 +53,4 @@ const TabsContent = React.forwardRef<
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
 export { Tabs, TabsList, TabsTrigger, TabsContent }
+
