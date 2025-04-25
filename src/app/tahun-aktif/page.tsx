@@ -5,8 +5,9 @@ import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { Calendar } from 'lucide-react'
 import Sidebar from '@/components/sidebar-admin'
+import { withRoleGuard } from '@/lib/withRoleGuard';
 
-export default function FilterTahun() {
+function FilterTahun() {
   const [tahunAwal, setTahunAwal] = useState<Date | null>(null)
   const [tahunAkhir, setTahunAkhir] = useState<Date | null>(null)
 
@@ -71,4 +72,9 @@ export default function FilterTahun() {
       </Sidebar>
     </div>
   )
+}
+
+const ProtectedPage = withRoleGuard(FilterTahun, [1]);
+export default function Page() {
+  return <ProtectedPage />;
 }
