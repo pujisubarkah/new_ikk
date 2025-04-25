@@ -4,8 +4,9 @@ import { FaEdit } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Sidebar from '@/components/sidebar-admin'
+import { withRoleGuard } from '@/lib/withRoleGuard'
 
-export default function TabelInstansi() {
+function TabelInstansi() {
   const [searchQuery, setSearchQuery] = useState('')
   
   interface Instansi {
@@ -120,4 +121,9 @@ export default function TabelInstansi() {
       </div>
     </Sidebar>
   )
+}
+
+const ProtectedPage = withRoleGuard(TabelInstansi, [1])
+export default function Page() {
+  return <ProtectedPage />
 }
