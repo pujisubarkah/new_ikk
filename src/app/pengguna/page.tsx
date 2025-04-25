@@ -9,7 +9,7 @@ import { withRoleGuard } from '@/lib/withRoleGuard'
 
 const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
 
-function TabelInstansi() {
+function TabelInstansiContent() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('Koordinator Utama')
@@ -184,5 +184,5 @@ function TabelInstansi() {
   )
 }
 
-// ✅ Pastikan komponen di-wrap setelah deklarasi utama
-export default withRoleGuard(TabelInstansi, [1])
+const ProtectedTabelInstansi = withRoleGuard(TabelInstansiContent, [1])
+export default ProtectedTabelInstansi
