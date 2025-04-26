@@ -107,7 +107,7 @@ export default function DetailPolicyCard() {
                     <div className="flex justify-start mb-4">
                         <Button
                             variant="secondary"
-                            onClick={() => router.push(`/koordinator-utama/daftar-kebijakan-instansi/${router.query.id}`)}
+                            onClick={() => router.push(`/koordinator-utama/daftar-kebijakan-instansi`)}
                             className="border-gray-400"
                         >
                             ⬅️ Kembali
