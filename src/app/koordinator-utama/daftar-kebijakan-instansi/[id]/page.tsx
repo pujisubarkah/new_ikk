@@ -2,16 +2,8 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar-koor";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from "@/components/ui/pagination";
 
 interface KebijakanDetail {
   no: number;
@@ -22,51 +14,40 @@ interface KebijakanDetail {
   id: string;
 }
 
-const mockData: KebijakanDetail[] = [
-  {
-    no: 1,
-    nama: "Kebijakan Vaksinasi Lansia",
-    progress: 80,
-    enumerator: "Andi",
-    tanggal: "2024-11-01",
-    id: "kebijakan-001",
-  },
-  {
-    no: 2,
-    nama: "Kebijakan Pendidikan Gratis",
-    progress: 50,
-    enumerator: "Budi",
-    tanggal: "2024-12-15",
-    id: "kebijakan-002",
-  },
-  {
-    no: 3,
-    nama: "Kebijakan Transportasi Umum",
-    progress: 95,
-    enumerator: "Citra",
-    tanggal: "2025-01-10",
-    id: "kebijakan-003",
-  },
-  {
-    no: 4,
-    nama: "Kebijakan Energi Terbarukan",
-    progress: 70,
-    enumerator: "Dewi",
-    tanggal: "2025-02-18",
-    id: "kebijakan-004",
-  },
-];
-
-const itemsPerPage = 2;
-
 const Page = () => {
   const { id } = useParams() ?? { id: "" };
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [kebijakanData, setKebijakanData] = useState<KebijakanDetail[]>([]);
 
-  const totalPages = Math.ceil(mockData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = mockData.slice(startIndex, startIndex + itemsPerPage);
+  // Fetch data from API based on agency_id
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`/api/koordinator-instansi?agency_id=${id}`);
+        const data = await response.json();
+
+        const policies = data?.[0]?.agencies?.policies || [];
+
+        // Map the policies to match KebijakanDetail structure
+        const mappedData: KebijakanDetail[] = policies.map((policy: { name: string; progress: number; enumerator: string; tanggal_proses: string; id: string }, index: number) => ({
+          no: index + 1,
+          nama: policy.name,
+          progress: policy.progress,
+          enumerator: policy.enumerator,
+          tanggal: new Date(policy.tanggal_proses).toLocaleDateString(),
+          id: policy.id,
+        }));
+
+        setKebijakanData(mappedData);
+      } catch (error) {
+        console.error("Failed to fetch kebijakan data", error);
+      }
+    };
+
+    if (id) {
+      fetchData();
+    }
+  }, [id]);
 
   return (
     <div className="flex min-h-screen">
@@ -104,7 +85,7 @@ const Page = () => {
               </tr>
             </thead>
             <tbody>
-              {currentData.map((item) => (
+              {kebijakanData.map((item) => (
                 <tr
                   key={item.no}
                   className="hover:bg-blue-50 transition duration-150"
@@ -123,9 +104,7 @@ const Page = () => {
                   <td className="px-6 py-4 border-b text-center">
                     <button
                       onClick={() =>
-                        router.push(
-                          `/koordinator-utama/detail-kebijakan/${item.id}`
-                        )
+                        router.push(`/koordinator-utama/detail-kebijakan/${item.id}`)
                       }
                       className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-lg text-xs"
                     >
@@ -136,45 +115,6 @@ const Page = () => {
               ))}
             </tbody>
           </table>
-
-          {/* Pagination */}
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={
-                    currentPage === 1
-                      ? undefined
-                      : () => setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  className={
-                    currentPage === 1 ? "text-gray-400 cursor-not-allowed" : ""
-                  }
-                >
-                  Previous
-                </PaginationPrevious>
-              </PaginationItem>
-
-              <PaginationItem>
-                <PaginationLink>{currentPage}</PaginationLink>
-              </PaginationItem>
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  className={
-                    currentPage === totalPages
-                      ? "text-gray-400 cursor-not-allowed"
-                      : ""
-                  }
-                >
-                  Next
-                </PaginationNext>
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
         </div>
       </div>
     </div>
@@ -182,3 +122,4 @@ const Page = () => {
 };
 
 export default Page;
+
