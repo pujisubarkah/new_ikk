@@ -12,7 +12,6 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 
-// Interface untuk format data kebijakan yang akan ditampilkan
 interface Kebijakan {
   no: number;
   instansi: string;
@@ -21,7 +20,6 @@ interface Kebijakan {
   id: string;
 }
 
-// Interface untuk format response dari API (data mentah)
 interface APIResponseItem {
   agencies: {
     nama_instansi: string;
@@ -42,7 +40,6 @@ const Page = () => {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +50,7 @@ const Page = () => {
         );
         if (!response.ok) throw new Error("Failed to fetch data");
 
-        const result: APIResponseItem[] = await response.json(); // mendeklarasikan tipe response
+        const result: APIResponseItem[] = await response.json();
         const formattedData: Kebijakan[] = result.map((item, index) => {
           const policy = item.agencies?.policies?.[0];
           return {
@@ -66,8 +63,8 @@ const Page = () => {
         });
 
         setData(formattedData);
-      } catch (error) {
-        setError("Failed to fetch data");
+      } catch {
+        // You can handle errors in this block, or just omit the error handling altogether.
       } finally {
         setLoading(false);
       }
@@ -91,22 +88,14 @@ const Page = () => {
   const handleBack = () => router.push("/koordinator-utama/daftar-kebijakan");
 
   if (loading) return <div className="p-6">Memuat data...</div>;
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <div className="w-64 bg-white shadow-md border-r">
-        
-        <Sidebar>
-          {/* Add any child components or content here */}
-          <></>
-        </Sidebar>
+        <Sidebar />
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 p-6">
-        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-gray-800">
             Daftar Kebijakan - {decodeURIComponent(String(koordinatorinstansiid))}
@@ -120,7 +109,6 @@ const Page = () => {
           />
         </div>
 
-        {/* Back Button */}
         <div className="mb-4">
           <button
             onClick={handleBack}
@@ -130,7 +118,6 @@ const Page = () => {
           </button>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto rounded-lg shadow-md bg-white">
           <table className="min-w-full text-sm text-left text-gray-700">
             <thead className="bg-blue-100 text-gray-800 font-semibold">
@@ -172,7 +159,6 @@ const Page = () => {
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="flex justify-center mt-4">
           <Pagination>
             <PaginationPrevious
@@ -196,9 +182,7 @@ const Page = () => {
             </PaginationContent>
 
             <PaginationNext
-              onClick={
-                currentPage === totalPages ? undefined : () => handlePageChange(currentPage + 1)
-              }
+              onClick={currentPage === totalPages ? undefined : () => handlePageChange(currentPage + 1)}
               className={currentPage === totalPages ? "cursor-not-allowed text-gray-400" : ""}
             >
               Next
@@ -211,4 +195,3 @@ const Page = () => {
 };
 
 export default Page;
-
