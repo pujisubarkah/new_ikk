@@ -40,12 +40,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const serializedData: Record<string, unknown>[] = data.map(item => {
         const user = item.user_koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser;
         return user ? {
+          coordinator_instansi_id: item.koordinator_instansi_id,
           name: user.name,
           username: user.username,
           work_unit: user.work_unit,
           coordinator_type_id: user.coordinator_type_id,
           coordinator_type_name: user.coordinator_types && typeof user.coordinator_types === 'object' && 'name' in (user.coordinator_types as { name: string }) ? (user.coordinator_types as { name: string }).name : null,
         } : {
+          coordinator_instansi_id: item.koordinator_instansi_id,
           name: null,
           username: null,
           work_unit: null,
