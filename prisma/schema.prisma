@@ -47,26 +47,28 @@ model agencies {
   kd_prov                     String?                       @db.VarChar(100)
   kd_kab                      String?                       @db.VarChar(100)
   koordinator_instansi_agency koordinator_instansi_agency[]
+  policies                    policies[]
   user                        user[]
 
   @@schema("ikk")
 }
 
 model agenda_setting {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
+  id          BigInt     @id
+  created_at  DateTime?  @db.Timestamp(6)
   created_by  BigInt?
   modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  a1a         String?   @db.VarChar(255)
-  a1b         String?   @db.VarChar(255)
-  a1c         String?   @db.VarChar(255)
-  a1d         String?   @db.VarChar(255)
-  a2a         String?   @db.VarChar(255)
-  a2b         String?   @db.VarChar(255)
-  a2c         String?   @db.VarChar(255)
+  updated_at  DateTime?  @db.Timestamp(6)
+  a1a         String?    @db.VarChar(255)
+  a1b         String?    @db.VarChar(255)
+  a1c         String?    @db.VarChar(255)
+  a1d         String?    @db.VarChar(255)
+  a2a         String?    @db.VarChar(255)
+  a2b         String?    @db.VarChar(255)
+  a2c         String?    @db.VarChar(255)
   informasia3 String?
-  user        user?     @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user        user?      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  policies    policies[]
 
   @@schema("ikk")
 }
@@ -91,39 +93,40 @@ model agenda_setting_base_score {
 }
 
 model agenda_setting_file {
-  id                    BigInt    @id
-  created_at            DateTime? @db.Timestamp(6)
+  id                    BigInt     @id
+  created_at            DateTime?  @db.Timestamp(6)
   created_by            BigInt?
   modified_by           BigInt?
-  updated_at            DateTime? @db.Timestamp(6)
-  file_original_namea1a String?   @db.VarChar(255)
-  file_original_namea1b String?   @db.VarChar(255)
-  file_original_namea1c String?   @db.VarChar(255)
-  file_original_namea1d String?   @db.VarChar(255)
-  file_original_namea2a String?   @db.VarChar(255)
-  file_original_namea2b String?   @db.VarChar(255)
-  file_original_namea2c String?   @db.VarChar(255)
-  file_patha1a          String?   @db.VarChar(255)
-  file_patha1b          String?   @db.VarChar(255)
-  file_patha1c          String?   @db.VarChar(255)
-  file_patha1d          String?   @db.VarChar(255)
-  file_patha2a          String?   @db.VarChar(255)
-  file_patha2b          String?   @db.VarChar(255)
-  file_patha2c          String?   @db.VarChar(255)
-  file_sizea1a          String?   @db.VarChar(255)
-  file_sizea1b          String?   @db.VarChar(255)
-  file_sizea1c          String?   @db.VarChar(255)
-  file_sizea1d          String?   @db.VarChar(255)
-  file_sizea2a          String?   @db.VarChar(255)
-  file_sizea2b          String?   @db.VarChar(255)
-  file_sizea2c          String?   @db.VarChar(255)
-  file_typea1a          String?   @db.VarChar(255)
-  file_typea1b          String?   @db.VarChar(255)
-  file_typea1c          String?   @db.VarChar(255)
-  file_typea1d          String?   @db.VarChar(255)
-  file_typea2a          String?   @db.VarChar(255)
-  file_typea2b          String?   @db.VarChar(255)
-  file_typea2c          String?   @db.VarChar(255)
+  updated_at            DateTime?  @db.Timestamp(6)
+  file_original_namea1a String?    @db.VarChar(255)
+  file_original_namea1b String?    @db.VarChar(255)
+  file_original_namea1c String?    @db.VarChar(255)
+  file_original_namea1d String?    @db.VarChar(255)
+  file_original_namea2a String?    @db.VarChar(255)
+  file_original_namea2b String?    @db.VarChar(255)
+  file_original_namea2c String?    @db.VarChar(255)
+  file_patha1a          String?    @db.VarChar(255)
+  file_patha1b          String?    @db.VarChar(255)
+  file_patha1c          String?    @db.VarChar(255)
+  file_patha1d          String?    @db.VarChar(255)
+  file_patha2a          String?    @db.VarChar(255)
+  file_patha2b          String?    @db.VarChar(255)
+  file_patha2c          String?    @db.VarChar(255)
+  file_sizea1a          String?    @db.VarChar(255)
+  file_sizea1b          String?    @db.VarChar(255)
+  file_sizea1c          String?    @db.VarChar(255)
+  file_sizea1d          String?    @db.VarChar(255)
+  file_sizea2a          String?    @db.VarChar(255)
+  file_sizea2b          String?    @db.VarChar(255)
+  file_sizea2c          String?    @db.VarChar(255)
+  file_typea1a          String?    @db.VarChar(255)
+  file_typea1b          String?    @db.VarChar(255)
+  file_typea1c          String?    @db.VarChar(255)
+  file_typea1d          String?    @db.VarChar(255)
+  file_typea2a          String?    @db.VarChar(255)
+  file_typea2b          String?    @db.VarChar(255)
+  file_typea2c          String?    @db.VarChar(255)
+  policies              policies[]
 
   @@schema("ikk")
 }
@@ -836,24 +839,24 @@ model permission_role {
 }
 
 model policies {
-  id                                   BigInt    @id
-  created_at                           DateTime? @db.Timestamp(6)
+  id                                   BigInt               @id
+  created_at                           DateTime?            @db.Timestamp(6)
   created_by                           BigInt?
   modified_by                          BigInt?
-  updated_at                           DateTime? @db.Timestamp(6)
-  assigned_by_admin_at                 DateTime? @db.Timestamp(6)
+  updated_at                           DateTime?            @db.Timestamp(6)
+  assigned_by_admin_at                 DateTime?            @db.Timestamp(6)
   assigned_by_admin_id                 BigInt?
   enumerator_id                        BigInt?
   name                                 String?
-  processed_by_enumerator_at           DateTime? @db.Timestamp(6)
+  processed_by_enumerator_at           DateTime?            @db.Timestamp(6)
   processed_by_enumerator_id           BigInt?
-  sent_by_admin_at                     DateTime? @db.Timestamp(6)
+  sent_by_admin_at                     DateTime?            @db.Timestamp(6)
   sent_by_admin_id                     BigInt?
-  validated_by_koordinator_at          DateTime? @db.Timestamp(6)
+  validated_by_koordinator_at          DateTime?            @db.Timestamp(6)
   validated_by_koordinator_id          BigInt?
-  validated_by_koordinator_utama_at    DateTime? @db.Timestamp(6)
+  validated_by_koordinator_utama_at    DateTime?            @db.Timestamp(6)
   validated_by_koordinator_utama_id    BigInt?
-  verified_by_koordinator_at           DateTime? @db.Timestamp(6)
+  verified_by_koordinator_at           DateTime?            @db.Timestamp(6)
   verified_by_koordinator_id           BigInt?
   agency_id                            BigInt?
   agenda_setting_base_score_id         BigInt?
@@ -887,6 +890,10 @@ model policies {
   policy_details_id                    BigInt?
   policy_process_id                    BigInt?
   policy_status_id                     BigInt?
+  agencies                             agencies?            @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  agenda_setting_file                  agenda_setting_file? @relation(fields: [agenda_setting_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  agenda_setting                       agenda_setting?      @relation(fields: [agenda_setting_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user                                 user?                @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("ikk")
 }
@@ -983,7 +990,7 @@ model user {
   password                                                                                                    String?                                  @db.VarChar(255)
   phone                                                                                                       String?                                  @db.VarChar(255)
   position                                                                                                    String?                                  @db.VarChar(255)
-  status                                                                                                      String?                                  @db.VarChar(255)
+  status                                                                                                      String?                                  @db.VarChar(255) 
   username                                                                                                    String?                                  @db.VarChar(255) @unique
   work_unit                                                                                                   String?                                  @db.VarChar(255)
   agency_id                                                                                                   BigInt?
@@ -997,6 +1004,7 @@ model user {
   koordinator_instansi_agency                                                                                 koordinator_instansi_agency[]
   koordinator_utama_koordinator_instansi_koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser koordinator_utama_koordinator_instansi[] @relation("koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser")
   koordinator_utama_koordinator_instansi_koordinator_utama_koordinator_instansi_koordinator_utama_idTouser    koordinator_utama_koordinator_instansi[] @relation("koordinator_utama_koordinator_instansi_koordinator_utama_idTouser")
+  policies                                                                                                    policies[]
   role_user                                                                                                   role_user?
   agencies                                                                                                    agencies?                                @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   coordinator_types                                                                                           coordinator_types?                       @relation(fields: [coordinator_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_coordinator_types_fk")
