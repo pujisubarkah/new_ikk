@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { PrismaClient } from '@prisma/client'
+import { serializeBigInt } from '@/lib/serializeBigInt'
 
 const prisma = new PrismaClient()
 
@@ -17,13 +18,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     })
 
-    // Map agencies and convert BigInt to string
-    const agenciesWithStringIds = agencies.map((agency) => ({
-      ...agency,
-      id: agency.id.toString(), // Convert BigInt to string
-    }))
+    // Pakai serializeBigInt untuk handle BigInt
+    const serializedAgencies = agencies.map(agency => serializeBigInt(agency))
 
-    res.status(200).json(agenciesWithStringIds)
+    res.status(200).json(serializedAgencies)
   } catch (error) {
     console.error('Error fetching agencies:', error)
     res.status(500).json({ message: 'Internal server error' })
