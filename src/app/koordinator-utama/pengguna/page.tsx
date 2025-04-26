@@ -19,10 +19,9 @@ const Page = () => {
     const [selectedKoordinator, setSelectedKoordinator] = useState("");
     const [showAdminTable, setShowAdminTable] = useState(false);
     const [koordinatorData, setKoordinatorData] = useState<DataRow[]>([]);
-    const [koordinatorList, setKoordinatorList] = useState<
-        Array<{ username: string; name: string; work_unit: string }>
-    >([]);
-    const [loading, setLoading] = useState(true);
+    const [koordinatorList, setKoordinatorList] = useState<Array<{ username: string; name: string; work_unit: string }>>([]);
+
+    const [loading] = useState(true);
     const [adminData] = useState<DataRow[]>([]);
     const router = useRouter();
 
@@ -34,7 +33,7 @@ const Page = () => {
                     const response = await axios.get(`/api/koordinator_utama?id=${id}`);
                     const data: Array<{ name: string; username: string; coordinator_type_name: string }> =
                         response.data;
-
+    
                     setKoordinatorData(
                         data.map((item, index) => ({
                             no: index + 1,
@@ -43,14 +42,25 @@ const Page = () => {
                             wilayah: item.coordinator_type_name,
                         }))
                     );
+    
+                    // Ini bagian untuk mengisi koordinatorList
+                    setKoordinatorList(
+                        data.map((item) => ({
+                            username: item.username,
+                            name: item.name,
+                            work_unit: item.coordinator_type_name,
+                        }))
+                    );
+    
                 } catch (error) {
                     console.error("Error fetching koordinator data:", error);
                 }
             }
         };
-
+    
         fetchKoordinatorData();
     }, []);
+    
 
     const filteredKoordinatorData = koordinatorData.filter(
         (row) =>
