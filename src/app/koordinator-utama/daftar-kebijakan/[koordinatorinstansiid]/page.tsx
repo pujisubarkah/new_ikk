@@ -92,7 +92,10 @@ const Page = () => {
   return (
     <div className="flex min-h-screen">
       <div className="w-64 bg-white shadow-md border-r">
-        <Sidebar />
+        <Sidebar>
+          {/* Add any child elements or leave it empty if no children are needed */}
+          <></>
+        </Sidebar>
       </div>
 
       <div className="flex-1 p-6">
