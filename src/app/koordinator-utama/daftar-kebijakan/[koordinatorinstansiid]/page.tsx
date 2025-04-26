@@ -12,12 +12,23 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 
+// Interface untuk format data kebijakan yang akan ditampilkan
 interface Kebijakan {
   no: number;
   instansi: string;
   total: number;
   tanggal: string;
   id: string;
+}
+
+// Interface untuk format response dari API (data mentah)
+interface APIResponseItem {
+  agencies: {
+    nama_instansi: string;
+    Total_kebijakan: number;
+    policies: { tanggal_diajukan: string }[];
+  };
+  agency_id: string;
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -42,22 +53,20 @@ const Page = () => {
         );
         if (!response.ok) throw new Error("Failed to fetch data");
 
-        const result = await response.json();
-        const formattedData: Kebijakan[] = (result ?? []).map(
-          (item: any, index: number) => {
-            const policy = item.agencies?.policies?.[0];
-            return {
-              no: index + 1,
-              instansi: item.agencies?.nama_instansi || "-",
-              total: item.agencies?.Total_kebijakan || 0,
-              tanggal: policy?.tanggal_diajukan?.split("T")[0] || "-",
-              id: item.agency_id,
-            };
-          }
-        );
+        const result: APIResponseItem[] = await response.json(); // mendeklarasikan tipe response
+        const formattedData: Kebijakan[] = result.map((item, index) => {
+          const policy = item.agencies?.policies?.[0];
+          return {
+            no: index + 1,
+            instansi: item.agencies?.nama_instansi || "-",
+            total: item.agencies?.Total_kebijakan || 0,
+            tanggal: policy?.tanggal_diajukan?.split("T")[0] || "-",
+            id: item.agency_id,
+          };
+        });
 
         setData(formattedData);
-      } catch {
+      } catch (error) {
         setError("Failed to fetch data");
       } finally {
         setLoading(false);
