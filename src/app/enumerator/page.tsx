@@ -13,7 +13,7 @@ interface Enumerator {
   unit_kerja: string;
 }
 
-const EnumeratorPage = () => {
+function EnumeratorPage() {
   const [enumerators, setEnumerators] = useState<Enumerator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,4 +151,6 @@ const EnumeratorPage = () => {
 };
 
 const ProtectedPage = withRoleGuard(EnumeratorPage, [4]);
-export default ProtectedPage;
+export default function Page() {
+    return <ProtectedPage />
+  }
