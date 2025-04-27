@@ -117,7 +117,7 @@ function InstansiKebijakan() {
           <Pagination
             currentPage={page}
             totalPages={totalPages} // Menyediakan total halaman untuk pagination
-            onPageChange={(newPage) => setPage(newPage)} // Perubahan halaman
+            onPageChange={(newPage: number) => setPage(newPage)} // Perubahan halaman
           />
         </div>
       </div>
