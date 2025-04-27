@@ -5,25 +5,24 @@ import * as XLSX from 'xlsx'
 import Sidebar from '@/components/sidebar-admin'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Pagination } from '@/components/ui/pagination'  // Ganti dengan path yang sesuai
 
 export default function TabelInstansi() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
+  
   interface Instansi {
     instansi_id: { instansi_id: string };
     instansi_name: string;
   }
-  
-  const [instansiData, setInstansiData] = useState<Instansi[]>([]) // State untuk menyimpan data instansi
+
+  const [instansiData, setInstansiData] = useState<Instansi[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 25 // Menampilkan 5 data per halaman
+  const itemsPerPage = 25
 
-  // Fetch data instansi saat komponen pertama kali dimuat
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
@@ -34,7 +33,7 @@ export default function TabelInstansi() {
           throw new Error('Failed to fetch data')
         }
         const data = await res.json()
-        setInstansiData(data) // Update state dengan data yang diterima
+        setInstansiData(data)
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Unknown error')
       } finally {
@@ -45,18 +44,14 @@ export default function TabelInstansi() {
     fetchData()
   }, [])
 
-  // Filter data berdasarkan pencarian
   const filteredData = instansiData.filter(item =>
     item.instansi_name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Mendapatkan data untuk halaman saat ini
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem)
-
-  // Fungsi untuk menangani perubahan halaman
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   const handleUnduhExcel = () => {
     const aoaData = [['No', 'Nama Instansi'], ...filteredData.map((item, index) => [index + 1, item.instansi_name])]
@@ -72,16 +67,19 @@ export default function TabelInstansi() {
     router.push(`/admin-nasional/kebijakan/instansi/${id}`)
   }
 
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
   if (loading) {
-    return <div>Loading...</div> // Tampilkan loading spinner atau pesan
+    return <div>Loading...</div>
   }
 
   if (error) {
-    return <div>Error: {error}</div> // Tampilkan error jika ada
+    return <div>Error: {error}</div>
   }
-
-  // Menghitung jumlah halaman
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   return (
     <Sidebar>
@@ -108,6 +106,7 @@ export default function TabelInstansi() {
             />
           </div>
 
+          {/* Tabel */}
           <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-200">
               <thead className="bg-gray-100">
@@ -118,38 +117,65 @@ export default function TabelInstansi() {
                 </tr>
               </thead>
               <tbody>
-                {currentItems.map((item, index) => (
-                  <tr key={item.instansi_id.instansi_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 border">{index + 1}</td>
-                    <td className="px-4 py-2 border">{item.instansi_name}</td>
-                    <td className="px-4 py-2 border space-x-2">
-                      <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded">
-                        Reset Populasi
-                      </button>
-                      <button className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded">
-                        Reset Verifikasi
-                      </button>
-                      <button
-                        onClick={() => handleLihat(item.instansi_id.instansi_id)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-                      >
-                        Lihat
-                      </button>
+                {currentItems.length > 0 ? (
+                  currentItems.map((item, index) => (
+                    <tr key={item.instansi_id.instansi_id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border">{indexOfFirstItem + index + 1}</td>
+                      <td className="px-4 py-2 border">{item.instansi_name}</td>
+                      <td className="px-4 py-2 border space-x-2">
+                        <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded">
+                          Reset Populasi
+                        </button>
+                        <button className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded">
+                          Reset Verifikasi
+                        </button>
+                        <button
+                          onClick={() => handleLihat(item.instansi_id.instansi_id)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                        >
+                          Lihat
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="text-center py-4">
+                      Data tidak ditemukan.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
 
-         {/* Pagination - Komponen Pagination */}
-         <div className="mt-4">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={paginate}
-            />
+          {/* Pagination */}
+          <div className="flex justify-center items-center mt-6 space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                className={`px-3 py-1 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
+
         </div>
       </div>
     </Sidebar>
