@@ -53,7 +53,10 @@ const KebijakanTable = () => {
   return (
     <div className="flex">
       {/* Sidebar */}
-      <Sidebar children={undefined} />
+      <Sidebar>
+        {/* Add any valid children content here */}
+        <></>
+      </Sidebar>
 
       {/* Main Content */}
       <div className="flex-1 p-20 ml-60">
