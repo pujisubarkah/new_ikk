@@ -1,94 +1,199 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
 import Sidebar from "@/components/sidebar"
 
-// Dummy data enumerator
-const dummyEnumerator = Array.from({ length: 23 }, (_, i) => ({
-  id: i + 1,
-  nama: `Enumerator ${i + 1}`,
-  nip: `19780${i + 1}321000${i + 1}`,
-}))
+interface FormData {
+  nama: string
+  nip: string
+  nik: string
+  instansi: string
+  email: string
+  role: string
+  password: string
+  jabatan: string
+  telepon: string
+  status: string
+}
 
-function TabelEnumerator() {
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 5
-  const totalPages = Math.ceil(dummyEnumerator.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const currentData = dummyEnumerator.slice(startIndex, startIndex + itemsPerPage)
+interface Instansi {
+  id: string
+  name: string
+  category: string
+}
 
+const TambahPengguna: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
+    nama: "",
+    nip: "",
+    nik: "",
+    instansi: "",
+    email: "",
+    role: "Enumerator", // Default role Enumerator
+    password: "",
+    jabatan: "",
+    telepon: "",
+    status: "",
+  })
+
+  const [instansis, setInstansis] = useState<Instansi[]>([])
   const router = useRouter()
 
+  useEffect(() => {
+    const fetchInstansi = async () => {
+      try {
+        const res = await fetch("/api/instansi")
+        const data = await res.json()
+        setInstansis(data)
+      } catch (err) {
+        console.error("Failed to fetch instansi", err)
+      }
+    }
+
+    fetchInstansi()
+  }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log("Form Data:", formData)
+    // TODO: Kirim data ke backend
+  }
+
+  const handleBack = () => {
+    router.push("/admin-instansi")
+  }
+
   return (
-    <Sidebar>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Daftar Enumerator</h2>
-          <Button
-            onClick={() => router.push("/enumerator/tambah")}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            + Tambah Enumerator
-          </Button>
-        </div>
+    <div className="flex min-h-screen">
+      <Sidebar>
+        <></>
+      </Sidebar>
 
-        <div className="overflow-auto rounded-lg border mb-4">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">No</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Nama</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">NIP</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentData.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="text-center py-8 text-sm text-gray-500">
-                    Belum ada data enumerator.
-                  </td>
-                </tr>
-              ) : (
-                currentData.map((item, index) => (
-                  <tr key={item.id}>
-                    <td className="px-4 py-2">{startIndex + index + 1}</td>
-                    <td className="px-4 py-2">{item.nama}</td>
-                    <td className="px-4 py-2">{item.nip}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <main className="flex-1 p-6 md:p-20">
+        <h1 className="text-2xl font-bold mb-4">Tambah Enumerator</h1>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between mt-2">
-          <div className="text-sm text-gray-600">
-            Menampilkan {startIndex + 1} sampai {Math.min(startIndex + itemsPerPage, dummyEnumerator.length)} dari {dummyEnumerator.length} entri
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Section */}
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="nip">NIP</Label>
+              <Input id="nip" name="nip" value={formData.nip} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label htmlFor="nik">NIK</Label>
+              <Input id="nik" name="nik" value={formData.nik} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label htmlFor="instansi">Nama Instansi</Label>
+              <select
+                id="instansi"
+                name="instansi"
+                value={formData.instansi}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="" disabled>Pilih Instansi</option>
+                {instansis.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="email">Email Aktif</Label>
+              <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} required />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              className="text-sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            >
-              Sebelumnya
+
+          {/* Right Section */}
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="nama">Nama</Label>
+              <Input id="nama" name="nama" value={formData.nama} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label htmlFor="jabatan">Jabatan</Label>
+              <Input id="jabatan" name="jabatan" value={formData.jabatan} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label htmlFor="telepon">Nomor Telepon Aktif</Label>
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">+62</span>
+                <Input
+                  id="telepon"
+                  name="telepon"
+                  value={formData.telepon}
+                  onChange={handleChange}
+                  required
+                  className="pl-14"
+                  placeholder="Nomor Telepon"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="" disabled>Pilih Status</option>
+                <option value="Aktif">Aktif</option>
+                <option value="Non Aktif">Non Aktif</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Role Dropdown */}
+          <div className="grid gap-4 md:col-span-2">
+            <div>
+              <Label htmlFor="role">Role (Terkunci)</Label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                disabled
+                className="w-full max-w-xs border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700"
+              >
+                <option value="Enumerator">Enumerator</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Form Buttons */}
+          <div className="col-span-1 md:col-span-2 flex justify-between mt-4">
+            <Button type="button" onClick={handleBack}>
+              Kembali
             </Button>
-            <div className="text-sm text-gray-700 px-2 font-semibold">{currentPage}</div>
-            <Button
-              className="border border-gray-300 text-sm"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            >
-              Selanjutnya
+            <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">
+              Simpan
             </Button>
           </div>
-        </div>
-      </div>
-    </Sidebar>
+        </form>
+      </main>
+    </div>
   )
 }
 
-export default TabelEnumerator
+export default TambahPengguna
