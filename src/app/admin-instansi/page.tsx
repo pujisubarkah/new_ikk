@@ -49,7 +49,14 @@ const Page = () => {
                 return response.json();
             })
             .then((data) => {
-                const formattedData = data.admins.map((admin: any, index: number) => ({
+                interface AdminApiResponse {
+                    name: string;
+                    nip: string;
+                    instansi: string;
+                    admin_instansi_id: string;
+                }
+                
+                const formattedData = data.admins.map((admin: AdminApiResponse, index: number) => ({
                     no: index + 1,
                     nama: admin.name,
                     nip: admin.nip,
