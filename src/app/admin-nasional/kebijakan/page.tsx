@@ -1,104 +1,152 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
-} from "@/components/ui/table"
-import {
-  Pagination, PaginationContent, PaginationItem,
-  PaginationPrevious, PaginationNext
-} from "@/components/ui/pagination"
+import { saveAs } from 'file-saver'
+import * as XLSX from 'xlsx'
 import Sidebar from '@/components/sidebar-admin'
-import { withRoleGuard } from '@/lib/withRoleGuard'
+import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { Pagination } from '@/components/ui/pagination'  // Ganti dengan path yang sesuai
 
-const dataDummy = [
-  { id: 1, nama: 'Kebijakan A', enumerator: 'Budi', progress: 80, status: 'Aktif' },
-  { id: 2, nama: 'Kebijakan B', enumerator: 'Ani', progress: 50, status: 'Proses' },
-  { id: 3, nama: 'Kebijakan C', enumerator: 'Citra', progress: 100, status: 'Selesai' },
-]
+export default function TabelInstansi() {
+  const router = useRouter()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [instansiData, setInstansiData] = useState<any[]>([]) // State untuk menyimpan data instansi
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-function InstansiKebijakan() {
-  const [page, setPage] = useState(1)
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 25 // Menampilkan 5 data per halaman
+
+  // Fetch data instansi saat komponen pertama kali dimuat
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch('/api/policies/list_instansi')
+        if (!res.ok) {
+          throw new Error('Failed to fetch data')
+        }
+        const data = await res.json()
+        setInstansiData(data) // Update state dengan data yang diterima
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Filter data berdasarkan pencarian
+  const filteredData = instansiData.filter(item =>
+    item.instansi_name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // Mendapatkan data untuk halaman saat ini
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem)
+
+  // Fungsi untuk menangani perubahan halaman
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+
+  const handleUnduhExcel = () => {
+    const aoaData = [['No', 'Nama Instansi'], ...filteredData.map((item, index) => [index + 1, item.instansi_name])]
+    const worksheet = XLSX.utils.aoa_to_sheet(aoaData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Instansi')
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' })
+    saveAs(data, 'data_instansi.xlsx')
+  }
+
+  const handleLihat = (id: string) => {
+    router.push(`/admin-nasional/kebijakan/instansi/${id}`)
+  }
+
+  if (loading) {
+    return <div>Loading...</div> // Tampilkan loading spinner atau pesan
+  }
+
+  if (error) {
+    return <div>Error: {error}</div> // Tampilkan error jika ada
+  }
+
+  // Menghitung jumlah halaman
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar>
-        <></>
-
-      </Sidebar>
-
-      {/* Konten utama */}
+    <Sidebar>
       <div className="flex-1 p-6">
-        <h1 className="text-3xl font-semibold mb-6 text-gray-800">📋 Daftar Kebijakan</h1>
-        
-        <div className="rounded-xl shadow-md border bg-white overflow-hidden">
-          <Table>
-            <TableHeader className="bg-gray-100">
-              <TableRow>
-                <TableHead className="text-gray-600">No</TableHead>
-                <TableHead className="text-gray-600">Nama Kebijakan</TableHead>
-                <TableHead className="text-gray-600">Enumerator</TableHead>
-                <TableHead className="text-gray-600">Proses</TableHead>
-                <TableHead className="text-gray-600">Status</TableHead>
-                <TableHead className="text-gray-600">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {dataDummy.map((item, index) => (
-                <TableRow key={item.id} className="hover:bg-gray-50">
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{item.nama}</TableCell>
-                  <TableCell>{item.enumerator}</TableCell>
-                  <TableCell>
-                    <Progress value={item.progress} className="w-40" />
-                  </TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                      item.status === 'Aktif' ? 'bg-green-200 text-green-800' :
-                      item.status === 'Proses' ? 'bg-yellow-200 text-yellow-800' :
-                      'bg-gray-300 text-gray-800'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="space-x-2">
-                    <Button className="text-blue-600 border border-blue-600 hover:bg-blue-50">Ubah</Button>
-                    <Button className="bg-red-500 hover:bg-red-600 text-white">Hapus</Button>
-                    <Button className="text-purple-600 border border-purple-600 hover:bg-purple-50">Pindah</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <div className="max-w-20xl bg-white p-6 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">Daftar Instansi</h1>
+            <button
+              onClick={handleUnduhExcel}
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg"
+            >
+              Unduh Data
+            </button>
+          </div>
 
-        {/* Pagination */}
-        <div className="mt-6 flex justify-center">
-          <Pagination>
-            <div className="space-x-2">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious onClick={() => setPage((p) => Math.max(1, p - 1))} />
-                </PaginationItem>
-                <PaginationItem>
-                  <span className="px-3 py-1 text-sm border rounded bg-gray-100">{page}</span>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext onClick={() => setPage((p) => p + 1)} />
-                </PaginationItem>
-              </PaginationContent>
-            </div>
-          </Pagination>
+          {/* Pencarian */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Cari Instansi..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-80 px-4 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 border text-left">No</th>
+                  <th className="px-4 py-2 border text-left">Nama Instansi</th>
+                  <th className="px-4 py-2 border text-left">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentItems.map((item, index) => (
+                  <tr key={item.instansi_id.instansi_id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 border">{index + 1}</td>
+                    <td className="px-4 py-2 border">{item.instansi_name}</td>
+                    <td className="px-4 py-2 border space-x-2">
+                      <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded">
+                        Reset Populasi
+                      </button>
+                      <button className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded">
+                        Reset Verifikasi
+                      </button>
+                      <button
+                        onClick={() => handleLihat(item.instansi_id.instansi_id)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                      >
+                        Lihat
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+         {/* Pagination - Komponen Pagination */}
+         <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={paginate}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </Sidebar>
   )
-}
-
-const ProtectedPage = withRoleGuard(InstansiKebijakan, [1])
-export default function Page() {
-  return <ProtectedPage />
 }
