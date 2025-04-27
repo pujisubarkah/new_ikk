@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       return acc;
-    }, {} as Record<string, { admin_instansi_id: { id: string }, enumerator: any[] }>);
+    }, {} as Record<string, { admin_instansi_id: { id: string }, enumerator: { enumerator_id: string, name: string | null, nip: string | null, unit_kerja: string | null }[] }>);
 
     // Serialize BigInt jika ada
     const serializedData = Object.values(groupedData).map(group => serializeBigInt(group));
