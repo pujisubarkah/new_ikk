@@ -14,7 +14,17 @@ const tabs = [
 
 const KebijakanTable = () => {
   const [activeTab, setActiveTab] = useState('masuk')
-  const [policies, setPolicies] = useState<any[]>([])
+  interface Policy {
+    id: string;
+    name: string;
+    enumerator: string;
+    status_kebijakan: string;
+    tanggal_berlaku?: string;
+    tanggal_proses?: string;
+    progress_pengisian?: number;
+  }
+  
+  const [policies, setPolicies] = useState<Policy[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -104,7 +114,7 @@ const KebijakanTable = () => {
                     <td className="px-6 py-4">{index + 1}</td>
                     <td className="px-6 py-4">{policy.name}</td>
                     <td className="px-6 py-4">{policy.enumerator}</td>
-                    <td className="px-6 py-4">{new Date(policy.tanggal_berlaku).toLocaleDateString()}</td>
+                    <td className="px-6 py-4">{policy.tanggal_berlaku ? new Date(policy.tanggal_berlaku).toLocaleDateString() : '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -134,7 +144,7 @@ const KebijakanTable = () => {
                       <Progress value={policy.progress_pengisian} className="h-2 w-full" />
                       <span className="text-xs text-gray-500">{policy.progress_pengisian}%</span>
                     </td>
-                    <td className="px-6 py-4">{new Date(policy.tanggal_proses).toLocaleDateString()}</td>
+                    <td className="px-6 py-4">{policy.tanggal_proses ? new Date(policy.tanggal_proses).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => router.push(`/enum/kebijakan/detail?id=${policy.id}`)}
