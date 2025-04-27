@@ -9,13 +9,20 @@ import {
 import { Pagination } from "@/components/ui/pagination"
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 function InstansiKebijakan() {
   const [page, setPage] = useState(1)
-  const [data, setData] = useState<any[]>([])
-  const [paginatedData, setPaginatedData] = useState<any[]>([]) // State untuk data yang dipaginasi
-  const router = useRouter()
+  interface Policy {
+    id: string;
+    name: string;
+    enumerator: string;
+    progress_pengisian: number;
+    status_kebijakan: string;
+  }
+
+  const [data, setData] = useState<Policy[]>([])
+  const [paginatedData, setPaginatedData] = useState<Policy[]>([]) // State untuk data yang dipaginasi
   const pathname = usePathname()
   const id = pathname ? pathname.split('/').pop() : null
 
