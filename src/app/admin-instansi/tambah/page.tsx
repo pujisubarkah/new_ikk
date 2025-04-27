@@ -20,10 +20,7 @@ interface FormData {
   status: string
 }
 
-interface Role {
-  id: string
-  name: string
-}
+
 
 interface Instansi {
   id: string
@@ -68,7 +65,7 @@ const TambahPengguna: React.FC = () => {
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
+   
     setFormData((prev) => ({
       ...prev,
     // Removed fetchRoles call
