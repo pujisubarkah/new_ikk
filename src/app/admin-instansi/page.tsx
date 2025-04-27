@@ -21,7 +21,7 @@ interface EnumeratorData {
     unit_kerja: string;
 }
 
-const Page = () => {
+const Page: React.FC = () => {
     const [search, setSearch] = useState("");
     const [adminData, setAdminData] = useState<AdminData[]>([]);
     const [activeTab, setActiveTab] = useState<"admin" | "enumerator">("admin");
@@ -34,7 +34,7 @@ const Page = () => {
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
-    const koordinatorInstansiId = localStorage.getItem("id");
+    const koordinatorInstansiId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
 
     // Fetch admin data
     useEffect(() => {
