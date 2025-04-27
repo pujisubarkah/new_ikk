@@ -10,7 +10,12 @@ import { Pagination } from '@/components/ui/pagination'  // Ganti dengan path ya
 export default function TabelInstansi() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
-  const [instansiData, setInstansiData] = useState<any[]>([]) // State untuk menyimpan data instansi
+  interface Instansi {
+    instansi_id: { instansi_id: string };
+    instansi_name: string;
+  }
+  
+  const [instansiData, setInstansiData] = useState<Instansi[]>([]) // State untuk menyimpan data instansi
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
