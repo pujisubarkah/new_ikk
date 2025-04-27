@@ -1,199 +1,154 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import Sidebar from "@/components/sidebar"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import Sidebar from "@/components/sidebar";
+import { withRoleGuard } from '@/lib/withRoleGuard';
 
-interface FormData {
-  nama: string
-  nip: string
-  nik: string
-  instansi: string
-  email: string
-  role: string
-  password: string
-  jabatan: string
-  telepon: string
-  status: string
+interface Enumerator {
+  id: string;
+  name: string;
+  nip: string;
+  unit_kerja: string;
 }
 
-interface Instansi {
-  id: string
-  name: string
-  category: string
-}
-
-const TambahPengguna: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
-    nama: "",
-    nip: "",
-    nik: "",
-    instansi: "",
-    email: "",
-    role: "Enumerator", // Default role Enumerator
-    password: "",
-    jabatan: "",
-    telepon: "",
-    status: "",
-  })
-
-  const [instansis, setInstansis] = useState<Instansi[]>([])
-  const router = useRouter()
+const EnumeratorPage = () => {
+  const [enumerators, setEnumerators] = useState<Enumerator[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchInstansi = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+
       try {
-        const res = await fetch("/api/instansi")
-        const data = await res.json()
-        setInstansis(data)
+        const adminInstansiId = localStorage.getItem("id");
+        if (!adminInstansiId) {
+          throw new Error("Admin Instansi ID not found");
+        }
+
+        const response = await fetch(`/api/pengguna_enumerator?admin_instansi_id=${adminInstansiId}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error("Data enumerators is not an array or empty");
+        }
+
+        const enumeratorList = data[0]?.enumerator || [];
+
+        setEnumerators(enumeratorList);
       } catch (err) {
-        console.error("Failed to fetch instansi", err)
+        console.error("Fetch error:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
+        setEnumerators([]);
+      } finally {
+        setIsLoading(false);
       }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleEdit = (id: string) => {
+    router.push(`/enumerator/ubah/${id}`);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Apakah kamu yakin ingin menghapus enumerator ini?")) {
+      // Di sini bisa ditambahkan logika hapusnya (API call delete)
+      console.log(`Hapus enumerator dengan ID: ${id}`);
     }
+  };
 
-    fetchInstansi()
-  }, [])
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+  if (isLoading) {
+    return (
+      <Sidebar>
+        <div className="p-6">
+          <p>Loading data enumerator...</p>
+        </div>
+      </Sidebar>
+    );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Form Data:", formData)
-    // TODO: Kirim data ke backend
-  }
-
-  const handleBack = () => {
-    router.push("/admin-instansi")
+  if (error) {
+    return (
+      <Sidebar>
+        <div className="p-6">
+          <p className="text-red-500">Error: {error}</p>
+        </div>
+      </Sidebar>
+    );
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar>
-        <></>
-      </Sidebar>
+    <Sidebar>
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Daftar Enumerator</h2>
+          <Button
+            onClick={() => router.push("/enumerator/tambah")}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            + Tambah Enumerator
+          </Button>
+        </div>
 
-      <main className="flex-1 p-6 md:p-20">
-        <h1 className="text-2xl font-bold mb-4">Tambah Enumerator</h1>
+        <div className="overflow-auto rounded-lg border mb-4">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">No</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Nama</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Unit Kerja</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">NIP</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {enumerators.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-sm text-gray-500">
+                    Tidak ada data enumerator
+                  </td>
+                </tr>
+              ) : (
+                enumerators.map((enumerator, index) => (
+                  <tr key={enumerator.id}>
+                    <td className="px-4 py-2">{index + 1}</td>
+                    <td className="px-4 py-2">{enumerator.name}</td>
+                    <td className="px-4 py-2">{enumerator.unit_kerja || '-'}</td>
+                    <td className="px-4 py-2">{enumerator.nip}</td>
+                    <td className="px-4 py-2 space-x-2">
+                        <Button
+                        className="bg-yellow-400 hover:bg-yellow-500 text-white"
+                        onClick={() => handleEdit(enumerator.id)}
+                      >
+                        Ubah
+                      </Button>
+                      <Button
+                        className="bg-red-500 hover:bg-red-600 text-white"
+                        onClick={() => handleDelete(enumerator.id)}
+                      >
+                        Hapus
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Sidebar>
+  );
+};
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Section */}
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="nip">NIP</Label>
-              <Input id="nip" name="nip" value={formData.nip} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="nik">NIK</Label>
-              <Input id="nik" name="nik" value={formData.nik} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="instansi">Nama Instansi</Label>
-              <select
-                id="instansi"
-                name="instansi"
-                value={formData.instansi}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-md p-2"
-              >
-                <option value="" disabled>Pilih Instansi</option>
-                {instansis.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="email">Email Aktif</Label>
-              <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-            </div>
-          </div>
-
-          {/* Right Section */}
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="nama">Nama</Label>
-              <Input id="nama" name="nama" value={formData.nama} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="jabatan">Jabatan</Label>
-              <Input id="jabatan" name="jabatan" value={formData.jabatan} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="telepon">Nomor Telepon Aktif</Label>
-              <div className="relative">
-                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">+62</span>
-                <Input
-                  id="telepon"
-                  name="telepon"
-                  value={formData.telepon}
-                  onChange={handleChange}
-                  required
-                  className="pl-14"
-                  placeholder="Nomor Telepon"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-md p-2"
-              >
-                <option value="" disabled>Pilih Status</option>
-                <option value="Aktif">Aktif</option>
-                <option value="Non Aktif">Non Aktif</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Role Dropdown */}
-          <div className="grid gap-4 md:col-span-2">
-            <div>
-              <Label htmlFor="role">Role (Terkunci)</Label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                disabled
-                className="w-full max-w-xs border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700"
-              >
-                <option value="Enumerator">Enumerator</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Form Buttons */}
-          <div className="col-span-1 md:col-span-2 flex justify-between mt-4">
-            <Button type="button" onClick={handleBack}>
-              Kembali
-            </Button>
-            <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">
-              Simpan
-            </Button>
-          </div>
-        </form>
-      </main>
-    </div>
-  )
-}
-
-export default TambahPengguna
+const ProtectedPage = withRoleGuard(EnumeratorPage, [4]);
+export default ProtectedPage;
