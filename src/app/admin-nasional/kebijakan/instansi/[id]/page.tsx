@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table"
-import { Pagination } from "@/components/ui/pagination"
+import { Pagination } from "@/components/ui/pagination" // Hanya mengimpor Pagination
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
 import { usePathname } from 'next/navigation'
@@ -50,13 +50,6 @@ function InstansiKebijakan() {
 
   // Menghitung total halaman
   const totalPages = Math.ceil(data.length / 25)
-
-  // Pastikan PaginationProps sudah sesuai
-  const paginationProps = {
-    currentPage: page,
-    totalPages: totalPages,
-    onPageChange: (newPage: number) => setPage(newPage),
-  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -121,7 +114,11 @@ function InstansiKebijakan() {
 
         {/* Pagination */}
         <div className="mt-6 flex justify-center">
-          <Pagination {...paginationProps} /> {/* Menggunakan props yang sudah dipersiapkan */}
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages} // Menyediakan total halaman untuk pagination
+            onPageChange={(newPage: number) => setPage(newPage)} // Perubahan halaman
+          />
         </div>
       </div>
     </div>
