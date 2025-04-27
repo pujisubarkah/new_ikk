@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,23 +20,44 @@ interface FormData {
   status: string
 }
 
-const TambahEnumerator: React.FC = () => {
+interface Instansi {
+  id: string
+  name: string
+  category: string
+}
+
+const TambahPengguna: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     nama: "",
     nip: "",
     nik: "",
     instansi: "",
     email: "",
-    role: "",
+    role: "Enumerator", // Default role Enumerator
     password: "",
     jabatan: "",
     telepon: "",
     status: "",
   })
 
+  const [instansis, setInstansis] = useState<Instansi[]>([])
   const router = useRouter()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    const fetchInstansi = async () => {
+      try {
+        const res = await fetch("/api/instansi")
+        const data = await res.json()
+        setInstansis(data)
+      } catch (err) {
+        console.error("Failed to fetch instansi", err)
+      }
+    }
+
+    fetchInstansi()
+  }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
@@ -44,30 +65,27 @@ const TambahEnumerator: React.FC = () => {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log("Form Data:", formData)
-    // Kirim data ke backend di sini kalau sudah siap
+    // TODO: Kirim data ke backend
   }
 
   const handleBack = () => {
-    router.push("/enumerator")
+    router.push("/admin-instansi")
   }
 
   return (
     <div className="flex min-h-screen">
-      {/* SIDEBAR */}
       <Sidebar>
-        {/* Add any valid children content here */}
         <></>
       </Sidebar>
 
-      {/* KONTEN UTAMA */}
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 md:p-20">
         <h1 className="text-2xl font-bold mb-4">Tambah Enumerator</h1>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* KIRI */}
+          {/* Left Section */}
           <div className="grid gap-4">
             <div>
               <Label htmlFor="nip">NIP</Label>
@@ -79,15 +97,25 @@ const TambahEnumerator: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="instansi">Nama Instansi</Label>
-              <Input id="instansi" name="instansi" value={formData.instansi} onChange={handleChange} required />
+              <select
+                id="instansi"
+                name="instansi"
+                value={formData.instansi}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="" disabled>Pilih Instansi</option>
+                {instansis.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <Label htmlFor="email">Email Aktif</Label>
               <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="role">Role</Label>
-              <Input id="role" name="role" value={formData.role} onChange={handleChange} required />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
@@ -95,7 +123,7 @@ const TambahEnumerator: React.FC = () => {
             </div>
           </div>
 
-          {/* KANAN */}
+          {/* Right Section */}
           <div className="grid gap-4">
             <div>
               <Label htmlFor="nama">Nama</Label>
@@ -107,21 +135,59 @@ const TambahEnumerator: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="telepon">Nomor Telepon Aktif</Label>
-              <Input id="telepon" name="telepon" value={formData.telepon} onChange={handleChange} required />
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">+62</span>
+                <Input
+                  id="telepon"
+                  name="telepon"
+                  value={formData.telepon}
+                  onChange={handleChange}
+                  required
+                  className="pl-14"
+                  placeholder="Nomor Telepon"
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
-              <Input id="status" name="status" value={formData.status} onChange={handleChange} required />
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="" disabled>Pilih Status</option>
+                <option value="Aktif">Aktif</option>
+                <option value="Non Aktif">Non Aktif</option>
+              </select>
             </div>
           </div>
 
-          {/* TOMBOL SUBMIT & KEMBALI */}
+          {/* Role Dropdown */}
+          <div className="grid gap-4 md:col-span-2">
+            <div>
+              <Label htmlFor="role">Role (Terkunci)</Label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                disabled
+                className="w-full max-w-xs border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700"
+              >
+                <option value="Enumerator">Enumerator</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Form Buttons */}
           <div className="col-span-1 md:col-span-2 flex justify-between mt-4">
             <Button type="button" onClick={handleBack}>
               Kembali
             </Button>
             <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">
-              Simpan Enumerator
+              Simpan
             </Button>
           </div>
         </form>
@@ -130,4 +196,4 @@ const TambahEnumerator: React.FC = () => {
   )
 }
 
-export default TambahEnumerator
+export default TambahPengguna
