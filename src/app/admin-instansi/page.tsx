@@ -21,7 +21,7 @@ interface EnumeratorData {
     unit_kerja: string;
 }
 
-function admininstansipage() {
+function AdminInstansiPage() {
     const [search, setSearch] = useState("");
     const [adminData, setAdminData] = useState<AdminData[]>([]);
     const [activeTab, setActiveTab] = useState<"admin" | "enumerator">("admin");
@@ -305,7 +305,7 @@ function admininstansipage() {
     );
 };
 
-const ProtectedPage = withRoleGuard(admininstansipage, [3]);
+const ProtectedPage = withRoleGuard(AdminInstansiPage, [3]);
 export default function Page() {
     return <ProtectedPage />
   }
