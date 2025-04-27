@@ -45,21 +45,13 @@ const TambahPengguna: React.FC = () => {
     status: "",
   })
 
-  const [roles, setRoles] = useState<Role[]>([])
+  // Removed unused roles state
   const [instansis, setInstansis] = useState<Instansi[]>([])
 
   const router = useRouter()
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const res = await fetch("/api/role")
-        const data = await res.json()
-        setRoles(data)
-      } catch (err) {
-        console.error("Failed to fetch roles", err)
-      }
-    }
+    // Removed unused fetchRoles function
 
     const fetchInstansi = async () => {
       try {
@@ -71,7 +63,7 @@ const TambahPengguna: React.FC = () => {
       }
     }
 
-    fetchRoles()
+    // Removed fetchRoles call
     fetchInstansi()
   }, [])
 
@@ -79,7 +71,7 @@ const TambahPengguna: React.FC = () => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+    // Removed fetchRoles call
     }))
   }
 
