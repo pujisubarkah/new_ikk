@@ -21,7 +21,7 @@ interface EnumeratorData {
     unit_kerja: string;
 }
 
-const admininstansipage: React.FC = () => {
+function admininstansipage() {
     const [search, setSearch] = useState("");
     const [adminData, setAdminData] = useState<AdminData[]>([]);
     const [activeTab, setActiveTab] = useState<"admin" | "enumerator">("admin");
