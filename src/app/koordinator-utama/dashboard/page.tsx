@@ -80,8 +80,9 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="p-6">
             <Sidebar>
+                <div className="w-full px-6 py-8">
+                <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
             {/* Filter Dropdown */}
@@ -113,8 +114,9 @@ const Dashboard: React.FC = () => {
                     <Radar data={radarData} />
                 </div>
             </div>
+                </div>
+                </div>
                 </Sidebar>
-        </div>
     );
 };
 
