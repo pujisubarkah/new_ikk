@@ -51,14 +51,11 @@ function InstansiKebijakan() {
   const totalPages = Math.ceil(data.length / 25)
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar>
-        <></>
-      </Sidebar>
-
+      <div className="w-full px-6 py-8">
+      <div className="flex justify-between items-center mb-4">
       {/* Main Content */}
-      <div className="flex-1 p-8 sm:p-20">
+      <div className="flex-1 p-8 sm:p-5">
         {/* Title */}
         <h1 className="text-3xl font-semibold mb-6 text-gray-800">📋 Daftar Kebijakan</h1>
 
@@ -141,7 +138,9 @@ function InstansiKebijakan() {
         </div>
 
       </div>
-    </div>
+      </div>
+      </div>
+      </Sidebar>
   )
 }
 
