@@ -83,9 +83,8 @@ export default function TabelInstansi() {
 
   return (
     <Sidebar>
-      <div className="flex-1 p-6">
-        <div className="max-w-20xl bg-white p-6 rounded-lg shadow-md">
-          <div className="flex justify-between items-center mb-4">
+      <div className="w-full px-6 py-8">
+      <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Daftar Instansi</h1>
             <button
               onClick={handleUnduhExcel}
@@ -122,20 +121,20 @@ export default function TabelInstansi() {
                     <tr key={item.instansi_id.instansi_id} className="hover:bg-gray-50">
                       <td className="px-4 py-2 border">{indexOfFirstItem + index + 1}</td>
                       <td className="px-4 py-2 border">{item.instansi_name}</td>
-                      <td className="px-4 py-2 border space-x-2">
-                        <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded">
+                        <td className="px-4 py-2 border space-x-1 text-sm">
+                        <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs">
                           Reset Populasi
                         </button>
-                        <button className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded">
+                        <button className="bg-orange-400 hover:bg-orange-500 text-white px-2 py-1 rounded text-xs">
                           Reset Verifikasi
                         </button>
                         <button
                           onClick={() => handleLihat(item.instansi_id.instansi_id)}
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
                         >
                           Lihat
                         </button>
-                      </td>
+                        </td>
                     </tr>
                   ))
                 ) : (
@@ -177,7 +176,6 @@ export default function TabelInstansi() {
           </div>
 
         </div>
-      </div>
     </Sidebar>
   )
 }
