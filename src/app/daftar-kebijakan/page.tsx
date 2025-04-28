@@ -97,41 +97,42 @@ export default function KebijakanTable() {
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => setOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                + Tambah Kebijakan
+                + Tambah Populasi
               </Button>
             </DialogTrigger>
 
-            <DialogContent>
-              <div className="bg-white rounded-lg shadow-xl p-6">
-                <DialogTitle className="text-xl font-semibold mb-4">Tambah Kebijakan</DialogTitle>
-                <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="nama">Nama Kebijakan</Label>
-                    <Input id="nama" name="nama" required />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="sektor">Sektor Kebijakan</Label>
-                    <Input id="sektor" name="sektor" required />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="tanggal">Tanggal Berlaku</Label>
-                    <Input id="tanggal" name="tanggal" type="date" required />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="dokumen">Dokumen</Label>
-                    <Input id="dokumen" name="dokumen" type="file" />
-                  </div>
-                  <div className="flex justify-between mt-4">
-                    <Button type="button" onClick={() => setOpen(false)} className="bg-gray-600 hover:bg-gray-700 text-white">
-                      Kembali
-                    </Button>
-                    <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">
-                      Tambah
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </DialogContent>
+            <DialogContent className="max-w-md mx-auto">
+  <div className="bg-white rounded-lg  p-4">
+    <DialogTitle className="text-xl font-semibold mb-4">Tambah Populasi (Kebijakan)</DialogTitle>
+    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+      <div className="grid gap-2">
+        <Label htmlFor="nama">Nama Kebijakan</Label>
+        <Input id="nama" name="nama" required />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="sektor">Sektor Kebijakan</Label>
+        <Input id="sektor" name="sektor" required />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="tanggal">Tanggal Berlaku</Label>
+        <Input id="tanggal" name="tanggal" type="date" required />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="dokumen">Dokumen</Label>
+        <Input id="dokumen" name="dokumen" type="file" />
+      </div>
+      <div className="flex justify-between mt-4">
+        <Button type="button" onClick={() => setOpen(false)} className="bg-gray-600 hover:bg-gray-700 text-white">
+          Kembali
+        </Button>
+        <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">
+          Tambah
+        </Button>
+      </div>
+    </form>
+  </div>
+</DialogContent>
+
           </Dialog>
         </div>
 
