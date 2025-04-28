@@ -102,7 +102,7 @@ const TambahPengguna: React.FC = () => {
       <Sidebar>
       <div className="w-full px-6 py-8">
       <div className="flex justify-between items-center mb-4">
-      <main className="flex-1 p-20">
+      <main className="flex-1 p-5">
         <h1 className="text-2xl font-bold mb-4">Tambah Pengguna</h1>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
