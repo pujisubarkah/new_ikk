@@ -5,6 +5,8 @@ import classNames from "classnames";
 import Sidebar from "@/components/sidebar-koor";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface DataRow {
     no: number;
@@ -86,29 +88,22 @@ const Page = () => {
     return (
             <Sidebar>
                 <div className="w-full px-6 py-8">
-                <div className="flex justify-between items-center mb-4">
-                        <h1 className="text-2xl font-bold text-gray-800">
-                            Daftar Pengguna -{" "}
-                            {activeTab === "koordinator" ? "Koordinator Instansi" : "Admin Instansi"}
-                        </h1>
-                        <button
-                            onClick={handleTambah}
-                            className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-150"
-                        >
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-2xl font-bold text-gray-800">
+                        Daftar {activeTab === "koordinator" ? "Koordinator Instansi" : "Admin Instansi"}
+                    </h1>
+                    <div className="flex items-center gap-4">
+                        <Button onClick={handleTambah} className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md">
                             Tambah {activeTab === "koordinator" ? "Koordinator Instansi" : "Admin Instansi"}
-                        </button>
+                        </Button>
+                        <Input
+                            type="text"
+                            placeholder="Cari Nama..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-60"
+                        />
                     </div>
-                    {activeTab === "koordinator" && (
-                        <div className="flex justify-end">
-                            <input
-                                type="text"
-                                placeholder="Cari..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="border border-gray-300 rounded-lg px-4 py-2 w-60 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            />
-                        </div>
-                    )}
                 </div>
 
                 {/* Tabs */}
@@ -119,7 +114,7 @@ const Page = () => {
                             setSearch("");
                         }}
                         className={classNames(
-                            "px-4 py-2 rounded-lg font-medium transition duration-150",
+                            "px-4 py-2 rounded-lg transition duration-150",
                             activeTab === "koordinator"
                                 ? "bg-blue-500 text-white"
                                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -134,7 +129,7 @@ const Page = () => {
                             setShowAdminTable(false);
                         }}
                         className={classNames(
-                            "px-4 py-2 rounded-lg font-medium transition duration-150",
+                            "px-4 py-2 rounded-lg transition duration-150",
                             activeTab === "admin"
                                 ? "bg-blue-500 text-white"
                                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -260,6 +255,7 @@ const Page = () => {
                         )}
                     </>
                 )}
+                </div>
             </Sidebar>
     );
 };
