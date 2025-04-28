@@ -81,40 +81,46 @@ const Dashboard: React.FC = () => {
 
     return (
             <Sidebar>
-                <div className="w-full px-6 py-8">
-                <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+                <div className="w-full px-8 py-10 bg-gray-50 min-h-screen">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
+                            <p className="text-base text-gray-600 mt-1">Overview of key metrics and performance</p>
+                        </div>
 
-            {/* Filter Dropdown */}
-            <div className="mb-6">
-                <label htmlFor="filter" className="mr-2">Filter by:</label>
-                <select
-                    id="filter"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="border border-gray-300 rounded-lg p-2"
-                >
-                    <option value="Sales">Sales</option>
-                    <option value="Profit">Profit</option>
-                </select>
-            </div>
+                        {/* Filter Dropdown */}
+                        <div className="flex items-center space-x-4">
+                            <label htmlFor="filter" className="text-gray-700 font-medium">Filter by:</label>
+                            <select
+                                id="filter"
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
+                                className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value="Sales">Sales</option>
+                                <option value="Profit">Profit</option>
+                            </select>
+                        </div>
+                    </div>
 
-            {/* Bar Chart */}
-            <div className="mb-10">
-                <h2 className="text-lg font-semibold mb-4">Bar Chart</h2>
-                <div className="bg-white rounded-lg shadow-md p-4">
-                    <Bar data={horizontalBarData} />
-                </div>
-            </div>
+                    {/* Charts Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        {/* Bar Chart */}
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Bar Chart</h2>
+                            <div className="bg-white rounded-lg shadow-lg p-6">
+                                <Bar data={horizontalBarData} />
+                            </div>
+                        </div>
 
-            {/* Radar Chart */}
-            <div>
-                <h2 className="text-lg font-semibold mb-4">Radar Chart</h2>
-                <div className="bg-white rounded-lg shadow-md p-4">
-                    <Radar data={radarData} />
-                </div>
-            </div>
-                </div>
+                        {/* Radar Chart */}
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Radar Chart</h2>
+                            <div className="bg-white rounded-lg shadow-lg p-6">
+                                <Radar data={radarData} />
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 </Sidebar>
     );
