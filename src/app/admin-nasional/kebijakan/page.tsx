@@ -25,8 +25,6 @@ export default function TabelInstansi() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
-      setError(null)
       try {
         const res = await fetch('/api/policies/list_instansi')
         if (!res.ok) {
@@ -73,14 +71,6 @@ export default function TabelInstansi() {
     }
   }
 
-  if (loading) {
-    return <div>Loading...</div>
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>
-  }
-
   return (
     <Sidebar>
       <div className="w-full px-6 py-8">
@@ -115,6 +105,8 @@ export default function TabelInstansi() {
                   <th className="px-4 py-2 border text-left">Aksi</th>
                 </tr>
               </thead>
+              {loading && <div className="text-center py-4">Memuat data...</div>}
+          {error && <div className="text-center text-red-500 py-4">{error}</div>}
               <tbody>
                 {currentItems.length > 0 ? (
                   currentItems.map((item, index) => (
