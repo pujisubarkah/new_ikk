@@ -100,9 +100,8 @@ const TambahPengguna: React.FC = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar>
-        <></>
-      </Sidebar>
-
+      <div className="w-full px-6 py-8">
+      <div className="flex justify-between items-center mb-4">
       <main className="flex-1 p-20">
         <h1 className="text-2xl font-bold mb-4">Tambah Pengguna</h1>
 
@@ -218,6 +217,9 @@ const TambahPengguna: React.FC = () => {
           </div>
         </form>
       </main>
+      </div>
+      </div>
+      </Sidebar>
     </div>
   )
 }
