@@ -102,7 +102,6 @@ function TabelInstansi() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
       <Sidebar>
       <div className="w-full px-6 py-8">
       <div className="flex justify-between items-center mb-4">
@@ -214,7 +213,6 @@ function TabelInstansi() {
           )}
         </div>
       </Sidebar>
-    </div>
   )
 }
 
