@@ -9,19 +9,7 @@ import Sidebar from "@/components/sidebar"
 import { FaHourglassHalf, FaCheckCircle, FaTimesCircle, FaEye, FaPaperPlane } from "react-icons/fa"
 import axios from "axios"; // pakai axios biar simpel
 
-// Dummy data
-const initialData = Array.from({ length: 25 }, (_, i) => ({
-  id: i + 1,
-  nama: `Kebijakan ${i + 1}`,
-  sektor: "Umum",
-  tanggal: "2025-04-18",
-  file: "-",
-  enumerator: "Enumerator 1",
-  progress: "50%",
-  tanggalAssign: "2025-04-20",
-  nilai: "85",
-  status: "Diajukan",
-}))
+
 
 function countByStatus(status: string): number {
   return initialData.filter((item) => item.status === status).length;
