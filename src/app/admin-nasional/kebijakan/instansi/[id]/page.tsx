@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table"
+import { FaEdit, FaTrash, FaArrowRight } from 'react-icons/fa'
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
 import { usePathname } from 'next/navigation'
@@ -94,16 +95,16 @@ function InstansiKebijakan() {
                         {item.status_kebijakan}
                       </span>
                     </TableCell>
-                    <TableCell className="space-x-2">
-                      <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200">
-                        Ubah
-                      </Button>
-                      <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200">
-                        Hapus
-                      </Button>
-                      <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200">
-                        Pindah
-                      </Button>
+                    <TableCell className="space-x-2 flex">
+                        <Button className="flex justify-center items-center bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200">
+                        <FaEdit />
+                        </Button>
+                        <Button className="flex justify-center items-center bg-red-600 text-white hover:bg-red-700 rounded-md py-2 px-4 transition duration-200">
+                        <FaTrash />
+                        </Button>
+                        <Button className="flex justify-center items-center bg-green-600 text-white hover:bg-green-700 rounded-md py-2 px-4 transition duration-200">
+                        <FaArrowRight />
+                        </Button>
                     </TableCell>
                   </TableRow>
                 ))
