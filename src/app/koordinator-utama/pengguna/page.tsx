@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 interface DataRow {
+    koordinatorinstansiid?: string | number | readonly string[] | undefined; // Made optional
     no: number;
     nama: string;
     nip: string;
@@ -21,10 +22,9 @@ const Page = () => {
     const [selectedKoordinator, setSelectedKoordinator] = useState("");
     const [showAdminTable, setShowAdminTable] = useState(false);
     const [koordinatorData, setKoordinatorData] = useState<DataRow[]>([]);
-    const [koordinatorList, setKoordinatorList] = useState<Array<{ username: string; name: string; work_unit: string }>>([]);
-
+    
     const [loading] = useState(true);
-    const [adminData] = useState<DataRow[]>([]);
+    const [adminData, setAdminData] = useState<DataRow[]>([]);
     const router = useRouter();
 
     useEffect(() => {
@@ -33,7 +33,7 @@ const Page = () => {
             if (id) {
                 try {
                     const response = await axios.get(`/api/koordinator_utama?id=${id}`);
-                    const data: Array<{ name: string; username: string; coordinator_type_name: string }> =
+                    const data: Array<{ name: string; username: string; coordinator_type_name: string; coordinator_instansi_id:string; }> =
                         response.data;
     
                     setKoordinatorData(
@@ -42,15 +42,7 @@ const Page = () => {
                             nama: item.name,
                             nip: item.username,
                             wilayah: item.coordinator_type_name,
-                        }))
-                    );
-    
-                    // Ini bagian untuk mengisi koordinatorList
-                    setKoordinatorList(
-                        data.map((item) => ({
-                            username: item.username,
-                            name: item.name,
-                            work_unit: item.coordinator_type_name,
+                            koordinatorinstansiid: item.coordinator_instansi_id, // <-- Ambil ID-nya
                         }))
                     );
     
@@ -62,6 +54,31 @@ const Page = () => {
     
         fetchKoordinatorData();
     }, []);
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            if (selectedKoordinator) {
+                try {
+                    const response = await axios.get(`/api/pengguna_koor_instansi?koordinator_instansi_id=${selectedKoordinator}`);
+                    const data: Array<{ admin_instansi_id: string; name: string; nip: string; instansi: string }> = response.data.admins;
+
+                    setAdminData(
+                        data.map((item, index) => ({
+                            no: index + 1,
+                            nama: item.name,
+                            nip: item.nip,
+                            wilayah: item.instansi,
+                            koordinatorinstansiid: undefined, // Added to match DataRow structure
+                        }))
+                    );
+                } catch (error) {
+                    console.error("Error fetching admin data:", error);
+                }
+            }
+        };
+
+        fetchAdminData();
+    }, [selectedKoordinator]);
     
 
     const filteredKoordinatorData = koordinatorData.filter(
@@ -192,15 +209,11 @@ const Page = () => {
                                 className="border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                             >
                                 <option value="">Pilih Koordinator Instansi</option>
-                                {loading ? (
-                                    <option disabled>Loading...</option>
-                                ) : (
-                                    koordinatorList.map((item, idx) => (
-                                        <option key={idx} value={item.username}>
-                                            {item.name} - {item.work_unit}
-                                        </option>
-                                    ))
-                                )}
+                                {koordinatorData.map((item) => (
+                                    <option key={item.nip} value={item.koordinatorinstansiid}>
+                                        {item.nama} - {item.wilayah}
+                                    </option>
+                                ))}
                             </select>
                             <button
                                 onClick={handleTampilkanAdmin}

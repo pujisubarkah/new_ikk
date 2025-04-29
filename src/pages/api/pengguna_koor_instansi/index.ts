@@ -52,7 +52,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    const admins = adminInstansis.map((item) => ({
+    type AdminInstansi = {
+      admin_instansi_id: bigint | null;
+      user_koordinator_instansi_admin_instansi_admin_instansi_idTouser: {
+        name: string | null;
+        username: string | null;
+        agency_id: bigint | null;
+        agencies: {
+          name: string | null;
+        } | null;
+      } | null;
+    };
+
+    const admins = adminInstansis.map((item: AdminInstansi) => ({
       admin_instansi_id: item.admin_instansi_id?.toString() || null,
       name: item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser?.name || null,
       nip: item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser?.username || null,
