@@ -4,12 +4,21 @@ import { serializeBigInt } from "@/lib/serializeBigInt";
 
 const prisma = new PrismaClient();
 
-
-// Function untuk menghitung jumlah status proses kebijakan
+// Type untuk data dari Prisma
 type PolicyData = {
   user_koordinator_instansi_admin_instansi_admin_instansi_idTouser?: {
+    name?: string;
+    username?: string;
+    agency_id?: bigint | number | string;
     agencies?: {
+      name?: string;
       policies?: {
+        id: string;
+        name: string;
+        policy_details?: {
+          progress?: number;
+          effective_date?: string;
+        };
         policy_process?: {
           name?: string;
         };
@@ -18,6 +27,21 @@ type PolicyData = {
   };
 };
 
+// Type untuk hasil formatted policy
+type FormattedPolicy = {
+  id: string;
+  nama: string;
+  sektor: string;
+  tanggal_berlaku: string;
+  file: string;
+  enumerator: string;
+  progress: string;
+  tanggalAssign: string;
+  nilai: string;
+  status: string;
+};
+
+// Fungsi untuk menghitung jumlah status proses kebijakan
 const countPolicyProcessNames = (data: PolicyData[]) => {
   const counts: Record<string, number> = {};
 
@@ -25,7 +49,7 @@ const countPolicyProcessNames = (data: PolicyData[]) => {
     const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
     const policies = user?.agencies?.policies || [];
 
-    policies.forEach((policy: { policy_process?: { name?: string } }) => {
+    policies.forEach(policy => {
       const processName = policy.policy_process?.name || 'UNKNOWN';
       counts[processName] = (counts[processName] || 0) + 1;
     });
@@ -34,7 +58,10 @@ const countPolicyProcessNames = (data: PolicyData[]) => {
   return counts;
 };
 
-export async function getKoordinatorInstansiAdminInstansi(req: NextApiRequest, res: NextApiResponse) {
+export async function getKoordinatorInstansiAdminInstansi(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     const { admin_instansi_id } = req.query;
 
@@ -82,15 +109,14 @@ export async function getKoordinatorInstansiAdminInstansi(req: NextApiRequest, r
       },
     });
 
-    const records = rawRecords.map(record => serializeBigInt(record));
+    const records = rawRecords.map(record => serializeBigInt(record)) as PolicyData[];
     const policyProcessCounts = countPolicyProcessNames(records);
 
-    const formattedPolicies = records.flatMap((item) => {
+    const formattedPolicies: FormattedPolicy[] = records.flatMap(item => {
       const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
-      // Removed unused variable instansiName (already addressed)
       const policies = user?.agencies?.policies || [];
 
-      return policies.map((policy: { id: string; name: string; policy_details?: { progress?: number; effective_date?: string }; policy_process?: { name?: string } }) => ({
+      return policies.map(policy => ({
         id: policy.id,
         nama: policy.name,
         sektor: "Umum",
@@ -101,7 +127,6 @@ export async function getKoordinatorInstansiAdminInstansi(req: NextApiRequest, r
         tanggalAssign: "-",
         nilai: "-",
         status: policy.policy_process?.name || "UNKNOWN",
-        
       }));
     });
 
