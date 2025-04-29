@@ -6,14 +6,26 @@ const prisma = new PrismaClient();
 
 
 // Function untuk menghitung jumlah status proses kebijakan
-const countPolicyProcessNames = (data: any[]) => {
+type PolicyData = {
+  user_koordinator_instansi_admin_instansi_admin_instansi_idTouser?: {
+    agencies?: {
+      policies?: {
+        policy_process?: {
+          name?: string;
+        };
+      }[];
+    };
+  };
+};
+
+const countPolicyProcessNames = (data: PolicyData[]) => {
   const counts: Record<string, number> = {};
 
   data.forEach(item => {
     const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
     const policies = user?.agencies?.policies || [];
 
-    policies.forEach((policy: any) => {
+    policies.forEach((policy: { policy_process?: { name?: string } }) => {
       const processName = policy.policy_process?.name || 'UNKNOWN';
       counts[processName] = (counts[processName] || 0) + 1;
     });
@@ -75,7 +87,7 @@ export async function getKoordinatorInstansiAdminInstansi(req: NextApiRequest, r
 
     const formattedPolicies = records.flatMap((item) => {
       const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
-      const instansiName = user?.agencies?.name || "-";
+      // Removed unused variable instansiName (already addressed)
       const policies = user?.agencies?.policies || [];
 
       return policies.map((policy: { id: string; name: string; policy_details?: { progress?: number; effective_date?: string }; policy_process?: { name?: string } }) => ({
