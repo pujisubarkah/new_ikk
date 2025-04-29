@@ -1,9 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "../../components/ui/input"
-import { Label } from "../../components/ui/label"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "../../components/ui/button"
 import Sidebar from "@/components/sidebar"
 import { FaHourglassHalf, FaCheckCircle, FaTimesCircle, FaEye, FaPaperPlane } from "react-icons/fa"
@@ -145,7 +143,24 @@ export default function KebijakanTable() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md mx-auto">
-              {/* Dialog content remains the same */}
+              <form onSubmit={handleSubmit}>
+                <div className="mb-4">
+                  <label htmlFor="dokumen" className="block text-sm font-medium text-gray-700">
+                    Unggah Dokumen
+                  </label>
+                  <input
+                    type="file"
+                    id="dokumen"
+                    name="dokumen"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    Submit
+                  </Button>
+                </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
