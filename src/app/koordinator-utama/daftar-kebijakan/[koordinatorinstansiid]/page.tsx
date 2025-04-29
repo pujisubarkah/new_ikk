@@ -87,19 +87,10 @@ const Page = () => {
   const handlePageChange = (page: number) => setCurrentPage(page);
   const handleBack = () => router.push("/koordinator-utama/daftar-kebijakan");
 
-  if (loading) return <div className="p-6">Memuat data...</div>;
-
   return (
-    <div className="flex min-h-screen">
-      <div className="w-64 bg-white shadow-md border-r">
         <Sidebar>
-          {/* Add any child elements or leave it empty if no children are needed */}
-          <></>
-        </Sidebar>
-      </div>
-
-      <div className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="w-full px-6 py-8">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-800">
             Daftar Kebijakan - {decodeURIComponent(String(koordinatorinstansiid))}
           </h1>
@@ -132,6 +123,43 @@ const Page = () => {
                 <th className="px-6 py-3 border-b text-center">Detail</th>
               </tr>
             </thead>
+            {loading ? (
+              <tbody>
+                <tr>
+                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                    Memuat data...
+                  </td>
+                </tr>
+              </tbody>
+            ) : (
+              <tbody>
+                {paginatedData.map((item) => (
+                  <tr key={item.no} className="hover:bg-blue-50 transition duration-150">
+                    <td className="px-6 py-4 border-b text-center">{item.no}</td>
+                    <td className="px-6 py-4 border-b">{item.instansi}</td>
+                    <td className="px-6 py-4 border-b text-center">{item.total}</td>
+                    <td className="px-6 py-4 border-b text-center">{item.tanggal}</td>
+                    <td className="px-6 py-4 border-b text-center">
+                      <button
+                        onClick={() =>
+                          router.push(`/koordinator-utama/daftar-kebijakan-instansi/${item.id}`)
+                        }
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-lg text-xs"
+                      >
+                        Lihat
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {paginatedData.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-6 text-gray-500">
+                      Tidak ada hasil yang ditemukan.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            )}
             <tbody>
               {paginatedData.map((item) => (
                 <tr key={item.no} className="hover:bg-blue-50 transition duration-150">
@@ -193,7 +221,7 @@ const Page = () => {
           </Pagination>
         </div>
       </div>
-    </div>
+      </Sidebar>
   );
 };
 
