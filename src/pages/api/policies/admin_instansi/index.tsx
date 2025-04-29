@@ -1,28 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
+import { serializeBigInt } from "@/lib/serializeBigInt"; 
 
 const prisma = new PrismaClient();
 
-// Function untuk serialize BigInt
-const serializeBigIntInData = (data: any): any => {
-  if (Array.isArray(data)) {
-    return data.map(item => serializeBigIntInData(item));
-  } else if (data !== null && typeof data === 'object') {
-    const serializedData: any = {};
-    for (const [key, value] of Object.entries(data)) {
-      serializedData[key] = typeof value === 'bigint' ? value.toString() : serializeBigIntInData(value);
-    }
-    return serializedData;
-  }
-  return data;
-};
 
-// Function untuk menghitung policy_process.name
+// Function untuk menghitung jumlah status proses kebijakan
 const countPolicyProcessNames = (data: any[]) => {
   const counts: Record<string, number> = {};
 
-  data.forEach(record => {
-    const policies = record.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser?.agencies?.policies || [];
+  data.forEach(item => {
+    const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
+    const policies = user?.agencies?.policies || [];
+
     policies.forEach((policy: any) => {
       const processName = policy.policy_process?.name || 'UNKNOWN';
       counts[processName] = (counts[processName] || 0) + 1;
@@ -40,7 +30,7 @@ export async function getKoordinatorInstansiAdminInstansi(req: NextApiRequest, r
       return res.status(400).json({ error: "admin_instansi_id is required" });
     }
 
-    const records = await prisma.koordinator_instansi_admin_instansi.findMany({
+    const rawRecords = await prisma.koordinator_instansi_admin_instansi.findMany({
       where: {
         admin_instansi_id: BigInt(admin_instansi_id as string),
       },
@@ -51,6 +41,7 @@ export async function getKoordinatorInstansiAdminInstansi(req: NextApiRequest, r
         user_koordinator_instansi_admin_instansi_admin_instansi_idTouser: {
           select: {
             name: true,
+            username: true,
             agency_id: true,
             agencies: {
               select: {
@@ -79,12 +70,32 @@ export async function getKoordinatorInstansiAdminInstansi(req: NextApiRequest, r
       },
     });
 
-    const serializedRecords = serializeBigIntInData(records);
-    const policyProcessCounts = countPolicyProcessNames(serializedRecords);
+    const records = rawRecords.map(record => serializeBigInt(record));
+    const policyProcessCounts = countPolicyProcessNames(records);
 
-    res.status(200).json({ 
-      data: serializedRecords, 
-      policyProcessCounts 
+    const formattedPolicies = records.flatMap((item) => {
+      const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
+      const instansiName = user?.agencies?.name || "-";
+      const policies = user?.agencies?.policies || [];
+
+      return policies.map((policy: { id: string; name: string; policy_details?: { progress?: number; effective_date?: string }; policy_process?: { name?: string } }) => ({
+        id: policy.id,
+        nama: policy.name,
+        sektor: "Umum",
+        tanggal_berlaku: policy.policy_details?.effective_date || "-",
+        file: "-",
+        enumerator: "-",
+        progress: (policy.policy_details?.progress ?? "-") + "%",
+        tanggalAssign: "-",
+        nilai: "-",
+        status: policy.policy_process?.name || "UNKNOWN",
+        
+      }));
+    });
+
+    res.status(200).json({
+      data: formattedPolicies,
+      policyProcessCounts,
     });
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -92,7 +103,7 @@ export async function getKoordinatorInstansiAdminInstansi(req: NextApiRequest, r
   }
 }
 
-// Default API Handler
+// Default API handler
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
     await getKoordinatorInstansiAdminInstansi(req, res);
@@ -100,5 +111,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).json({ error: "Method Not Allowed" });
   }
 }
-
-
