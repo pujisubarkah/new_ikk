@@ -49,7 +49,20 @@ export default function KebijakanTable() {
         const fetchedData = res.data.data;
         const counts = res.data.policyProcessCounts || {};
 
-        const mappedData = fetchedData.map((item: any) => ({
+        interface FetchedPolicy {
+          id: number;
+          nama: string;
+          sektor?: string;
+          tanggal_berlaku?: string;
+          file?: string;
+          enumerator?: string;
+          progress?: number;
+          tanggalAssign?: string;
+          nilai?: string;
+          status: string;
+        }
+
+        const mappedData = fetchedData.map((item: FetchedPolicy) => ({
           id: item.id,
           nama: item.nama,
           sektor: item.sektor || "Umum",
