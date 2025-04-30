@@ -111,41 +111,58 @@ export default function Login() {
           <div className="flex-1 max-w-md w-full bg-white/90 backdrop-blur-sm shadow-xl p-8 rounded-2xl border border-[#16578d]/30 text-[#16578d]">
             <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  className="mt-2 p-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#16578d]"
-                  placeholder="yourusername"
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="mt-2 p-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#16578d]"
-                  placeholder="Your password"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#16578d] text-white font-semibold rounded-md hover:bg-[#12466f] focus:outline-none focus:ring-2 focus:ring-[#16578d]"
-              >
-                Login
-              </button>
-            </form>
+  {/* Username Input */}
+  <div>
+    <label htmlFor="username" className="block text-sm font-medium">
+      Username
+    </label>
+    <input
+      type="text"
+      id="username"
+      value={username}
+      onChange={(e) => setUsername(e.target.value)}
+      required
+      className="mt-2 p-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#16578d]"
+      placeholder="yourusername"
+    />
+  </div>
+
+  {/* Password Input */}
+  <div>
+    <label htmlFor="password" className="block text-sm font-medium">
+      Password
+    </label>
+    <input
+      type="password"
+      id="password"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      required
+      className="mt-2 p-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#16578d]"
+      placeholder="Your password"
+    />
+  </div>
+
+  {/* Login Button */}
+  <button
+    type="submit"
+    className="w-full py-3 bg-[#16578d] text-white font-semibold rounded-md hover:bg-[#12466f] focus:outline-none focus:ring-2 focus:ring-[#16578d]"
+  >
+    Login
+  </button>
+
+  {/* Tambahkan ini */}
+  <p className="text-center text-sm text-gray-600 mt-4">
+    Koordinator Instansi?{' '}
+    <a
+      href="/register"
+      className="text-[#16578d] font-semibold hover:underline"
+    >
+      Daftar di sini
+    </a>
+  </p>
+</form>
+
           </div>
         </div>
       </main>
