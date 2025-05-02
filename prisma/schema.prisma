@@ -11,30 +11,34 @@ datasource db {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model active_year {
-  id                                         BigInt     @id(map: "active_year_pk")
-  active_year                                BigInt?    @unique(map: "active_year_unique")
-  agencies_agencies_active_yearToactive_year agencies[] @relation("agencies_active_yearToactive_year")
-  user_user_active_yearToactive_year         user[]     @relation("user_active_yearToactive_year")
+  id                                                             BigInt               @id(map: "active_year_pk")
+  active_year                                                    BigInt?              @unique(map: "active_year_unique")
+  agencies_agencies_active_yearToactive_year                     agencies[]           @relation("agencies_active_yearToactive_year")
+  ikk_instansi_score_ikk_instansi_score_active_yearToactive_year ikk_instansi_score[] @relation("ikk_instansi_score_active_yearToactive_year") @ignore
+  ikk_verif_score_ikk_verif_score_active_yearToactive_year       ikk_verif_score[]    @relation("ikk_verif_score_active_yearToactive_year") @ignore
+  user_user_active_yearToactive_year                             user[]               @relation("user_active_yearToactive_year")
 
   @@schema("ikk_new")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model agencies {
-  id                                            BigInt       @id
-  created_at                                    DateTime?    @db.Timestamp(6)
+  id                                            BigInt               @id
+  created_at                                    DateTime?            @db.Timestamp(6)
   created_by                                    BigInt?
   modified_by                                   BigInt?
-  updated_at                                    DateTime?    @db.Timestamp(6)
-  name                                          String?      @db.VarChar(255)
-  category                                      String?      @db.VarChar(255)
-  kd_bkn                                        String?      @db.VarChar(100)
-  kd_prov                                       String?      @db.VarChar(100)
-  kd_kab                                        String?      @db.VarChar(100)
+  updated_at                                    DateTime?            @db.Timestamp(6)
+  name                                          String?              @db.VarChar(255)
+  category                                      String?              @db.VarChar(255)
+  kd_bkn                                        String?              @db.VarChar(100)
+  kd_prov                                       String?              @db.VarChar(100)
+  kd_kab                                        String?              @db.VarChar(100)
   agency_id_panrb                               BigInt?
   active_year                                   BigInt?
-  active_year_agencies_active_yearToactive_year active_year? @relation("agencies_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "agencies_active_year_fk")
-  instansi                                      instansi?    @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "agencies_instansi_fk")
+  active_year_agencies_active_yearToactive_year active_year?         @relation("agencies_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "agencies_active_year_fk")
+  instansi                                      instansi?            @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "agencies_instansi_fk")
+  ikk_instansi_score                            ikk_instansi_score[] @ignore
+  ikk_verif_score                               ikk_verif_score[]    @ignore
   policies                                      policies[]
   user                                          user[]
 
@@ -44,23 +48,27 @@ model agencies {
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model ikk_instansi_score {
-  id          BigInt?
-  agency_id   BigInt?
-  policy_id   BigInt?
-  active_year BigInt?
-  a1          BigInt?
-  a2          BigInt?
-  a3          BigInt?
-  b1          BigInt?
-  b2          BigInt?
-  b3          BigInt?
-  c1          BigInt?
-  c2          BigInt?
-  c3          BigInt?
-  d1          BigInt?
-  d2          BigInt?
-  jf          Boolean?
-  created_by  BigInt?
+  id                                                      BigInt?
+  agency_id                                               BigInt?
+  policy_id                                               BigInt?
+  active_year                                             BigInt?
+  a1                                                      BigInt?
+  a2                                                      BigInt?
+  a3                                                      BigInt?
+  b1                                                      BigInt?
+  b2                                                      BigInt?
+  b3                                                      BigInt?
+  c1                                                      BigInt?
+  c2                                                      BigInt?
+  c3                                                      BigInt?
+  d1                                                      BigInt?
+  d2                                                      BigInt?
+  jf                                                      Boolean?
+  created_by                                              BigInt?
+  active_year_ikk_instansi_score_active_yearToactive_year active_year? @relation("ikk_instansi_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_active_year_fk")
+  agencies                                                agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_agencies_fk")
+  policies                                                policies?    @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_policies_fk")
+  user                                                    user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_user_fk")
 
   @@ignore
   @@schema("ikk_new")
@@ -68,23 +76,27 @@ model ikk_instansi_score {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model ikk_verif_score {
-  id          BigInt?
-  agency_id   BigInt?
-  policy_id   BigInt?
-  active_year BigInt?
-  a1          BigInt?
-  a2          BigInt?
-  a3          BigInt?
-  b1          BigInt?
-  b2          BigInt?
-  b3          BigInt?
-  c1          BigInt?
-  c2          BigInt?
-  c3          BigInt?
-  d1          BigInt?
-  d2          BigInt?
-  jf          Boolean?
-  created_by  BigInt?
+  id                                                   BigInt?
+  agency_id                                            BigInt?
+  policy_id                                            BigInt?
+  active_year                                          BigInt?
+  a1                                                   BigInt?
+  a2                                                   BigInt?
+  a3                                                   BigInt?
+  b1                                                   BigInt?
+  b2                                                   BigInt?
+  b3                                                   BigInt?
+  c1                                                   BigInt?
+  c2                                                   BigInt?
+  c3                                                   BigInt?
+  d1                                                   BigInt?
+  d2                                                   BigInt?
+  jf                                                   Boolean?
+  created_by                                           BigInt?
+  active_year_ikk_verif_score_active_yearToactive_year active_year? @relation("ikk_verif_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_active_year_fk")
+  agencies                                             agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_agencies_fk")
+  policies                                             policies?    @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_policies_fk")
+  user                                                 user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_user_fk")
 
   @@ignore
   @@schema("ikk_new")
@@ -167,19 +179,21 @@ model koor_nasional_validator {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model policies {
-  id                               BigInt    @id(map: "policies_pk")
-  created_at                       DateTime? @db.Timestamp(6)
+  id                               BigInt               @id(map: "policies_pk")
+  created_at                       DateTime?            @db.Timestamp(6)
   created_by                       BigInt?
   name                             String?
   agency_id                        BigInt?
   validated_by                     BigInt?
   is_valid                         Boolean?
-  sector                           String?   @db.VarChar
-  file_url                         String?   @db.VarChar
-  type                             String?   @db.VarChar
-  agencies                         agencies? @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_agencies_fk")
-  user_policies_created_byTouser   user?     @relation("policies_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_user_created_by_FK")
-  user_policies_validated_byTouser user?     @relation("policies_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_user_validated_by_FK")
+  sector                           String?              @db.VarChar
+  file_url                         String?              @db.VarChar
+  type                             String?              @db.VarChar
+  ikk_instansi_score               ikk_instansi_score[] @ignore
+  ikk_verif_score                  ikk_verif_score[]    @ignore
+  agencies                         agencies?            @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_agencies_fk")
+  user_policies_created_byTouser   user?                @relation("policies_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_user_created_by_FK")
+  user_policies_validated_byTouser user?                @relation("policies_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_user_validated_by_FK")
 
   @@schema("ikk_new")
 }
@@ -215,34 +229,36 @@ model surat_penunjukkan {
 }
 
 model user {
-  id                                        BigInt             @id
-  created_at                                DateTime?          @db.Timestamp(6)
+  id                                        BigInt               @id
+  created_at                                DateTime?            @db.Timestamp(6)
   created_by                                BigInt?
   modified_by                               BigInt?
-  updated_at                                DateTime?          @db.Timestamp(6)
-  deleted                                   String?            @db.Bit(1)
-  deleted_at                                DateTime?          @db.Timestamp(6)
+  updated_at                                DateTime?            @db.Timestamp(6)
+  deleted                                   String?              @db.Bit(1)
+  deleted_at                                DateTime?            @db.Timestamp(6)
   deleted_by                                BigInt?
-  email                                     String?            @db.VarChar(255)
-  name                                      String?            @db.VarChar(255)
-  nik                                       String?            @db.VarChar(255)
-  password                                  String?            @db.VarChar(255)
-  phone                                     String?            @db.VarChar(255)
-  position                                  String?            @db.VarChar(255)
-  status                                    String?            @db.VarChar(255)
-  username                                  String?            @db.VarChar(255)
-  work_unit                                 String?            @db.VarChar(255)
+  email                                     String?              @db.VarChar(255)
+  name                                      String?              @db.VarChar(255)
+  nik                                       String?              @db.VarChar(255)
+  password                                  String?              @db.VarChar(255)
+  phone                                     String?              @db.VarChar(255)
+  position                                  String?              @db.VarChar(255)
+  status                                    String?              @db.VarChar(255)
+  username                                  String?              @db.VarChar(255)
+  work_unit                                 String?              @db.VarChar(255)
   agency_id                                 BigInt?
   agency_id_panrb                           BigInt?
   active_year                               BigInt?
   penunjukkan_id                            BigInt?
-  policies_policies_created_byTouser        policies[]         @relation("policies_created_byTouser")
-  policies_policies_validated_byTouser      policies[]         @relation("policies_validated_byTouser")
+  ikk_instansi_score                        ikk_instansi_score[] @ignore
+  ikk_verif_score                           ikk_verif_score[]    @ignore
+  policies_policies_created_byTouser        policies[]           @relation("policies_created_byTouser")
+  policies_policies_validated_byTouser      policies[]           @relation("policies_validated_byTouser")
   role_user                                 role_user?
-  active_year_user_active_yearToactive_year active_year?       @relation("user_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "user_active_year_fk")
-  agencies                                  agencies?          @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  instansi                                  instansi?          @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction)
-  surat_penunjukkan                         surat_penunjukkan? @relation(fields: [penunjukkan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  active_year_user_active_yearToactive_year active_year?         @relation("user_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "user_active_year_fk")
+  agencies                                  agencies?            @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  instansi                                  instansi?            @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction)
+  surat_penunjukkan                         surat_penunjukkan?   @relation(fields: [penunjukkan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("ikk_new")
 }
