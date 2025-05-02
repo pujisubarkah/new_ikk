@@ -15,17 +15,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         select: {
           id: true,
           name: true,
+          username: true,
           email: true,
           position: true,
-          agencies: {
-            select: {
-              name: true
-            }
-          },
+          work_unit: true,
+          active_year: true,
+          status: true,
           instansi: {
             select: {
               // Replace 'name' with an existing field or remove this block if no fields are needed
-              id: true // Example: Replace with a valid field from the 'instansi' model
+              agency_id: true, // Example: Replace with a valid field from the 'instansi' model
+              agency_name: true,
+              instansi_kategori: {
+                select: {
+                  id: true,
+                  kat_instansi: true
+                }
+              }
             }
           },
           surat_penunjukkan: {

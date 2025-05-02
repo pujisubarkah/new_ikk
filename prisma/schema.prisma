@@ -104,12 +104,21 @@ model ikk_verif_score {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model instansi {
-  id                 BigInt     @id(map: "instansi_pk")
-  agency_id          BigInt?    @unique(map: "instansi_unique")
-  agency_name        String?    @db.VarChar(226)
+  id                 BigInt             @id(map: "instansi_pk")
+  agency_id          BigInt?            @unique(map: "instansi_unique")
+  agency_name        String?            @db.VarChar(226)
   agency_category_id Int?
   agencies           agencies[]
+  instansi_kategori  instansi_kategori? @relation(fields: [agency_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "instansi_instansi_kategori_fk")
   user               user[]
+
+  @@schema("ikk_new")
+}
+
+model instansi_kategori {
+  id           Int        @id(map: "instansi_kategori_pk")
+  kat_instansi String?    @db.VarChar
+  instansi     instansi[]
 
   @@schema("ikk_new")
 }

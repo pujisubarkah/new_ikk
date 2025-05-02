@@ -18,14 +18,14 @@ import {
   TableRow
 } from '@/components/ui/table'
 
-const tabs = ['Koordinator Utama', 'Koordinator Instansi', 'Admin Instansi', 'Enumerator']
+const tabs = ['Koordinator Nasional', 'Tim Verifikator', 'Koordinator Instansi', 'Analis Instansi']
 
 const USERS_PER_PAGE = 20
 
 function TabelInstansi() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState('Koordinator Utama')
+  const [activeTab, setActiveTab] = useState('Koordinator Nasional')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -44,10 +44,10 @@ function TabelInstansi() {
 
   const getRoleIdFromTab = (tab: string): number => {
     const roleMap: Record<string, number> = {
-      'Koordinator Utama': 2,
-      'Koordinator Instansi': 3,
-      'Admin Instansi': 4,
-      'Enumerator': 5
+      'Koordinator Nasional': 2,
+      'Tim Verifikator': 3,
+      'Koordinator Instansi': 4,
+      'Analis Instansi': 5
     }
     return roleMap[tab] || 0
   }
@@ -143,10 +143,15 @@ function TabelInstansi() {
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
-              {loading && <div className="text-center py-4">Memuat data...</div>}
-          {error && <div className="text-center text-red-500 py-4">{error}</div>}
               <TableBody>
-                {paginatedData.map((item, index) => (
+              {loading ? (
+    <TableRow>
+      <TableCell colSpan={7} className="text-center">
+        Memuat data...
+      </TableCell>
+    </TableRow>
+  ) : (
+    paginatedData.map((item, index) => (
                   <TableRow key={item.id}>
                     <TableCell className="text-center">{startIndex + index + 1}</TableCell>
                     <TableCell>{item.name}</TableCell>
@@ -154,15 +159,15 @@ function TabelInstansi() {
                     <TableCell className="text-center space-x-3">{item.agency_name ?? '-'}</TableCell>
                     <TableCell className="text-center space-x-3">{item.coordinator_type_name ?? '-'}</TableCell>
                     <TableCell className="text-center">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          item.status.toLowerCase() === 'aktif'
-                            ? 'bg-green-200 text-green-800'
-                            : 'bg-red-200 text-red-800'
-                        }`}
-                      >
-                        {item.status}
-                      </span>
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        item.status?.toLowerCase() === 'aktif'
+                          ? 'bg-green-200 text-green-800'
+                          : 'bg-red-200 text-red-800'
+                      }`}
+                    >
+                      {item.status || 'Tidak Diketahui'}
+                    </span>
                     </TableCell>
                     <TableCell className="text-center space-x-25">
                       <Button
@@ -179,7 +184,8 @@ function TabelInstansi() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+    ))
+  )}
               </TableBody>
             </Table>
 
@@ -190,8 +196,8 @@ function TabelInstansi() {
 
           {/* Pagination Controls */}
           {filteredData.length > USERS_PER_PAGE && (
-            <div className="mt-6 flex justify-between items-center text-sm">
-              <span>
+          <div className="mt-6 flex justify-between items-center text-sm">
+            <span>
                 Halaman {currentPage} dari {totalPages}
               </span>
               <div className="space-x-2">
