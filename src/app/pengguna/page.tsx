@@ -27,7 +27,6 @@ function TabelInstansi() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('Koordinator Nasional')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
 
   interface User {
@@ -55,7 +54,6 @@ function TabelInstansi() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      setError('')
       setCurrentPage(1) // Reset page saat ganti tab
       try {
         const roleId = getRoleIdFromTab(activeTab)
@@ -63,7 +61,6 @@ function TabelInstansi() {
         setData(response.data)
       } catch (err) {
         console.error('Error fetching data:', err)
-        setError('Gagal mengambil data pengguna.')
       } finally {
         setLoading(false)
       }

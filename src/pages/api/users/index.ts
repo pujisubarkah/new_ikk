@@ -5,12 +5,19 @@ import { serializeBigInt } from '@/lib/serializeBigInt';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
+      const { role_id } = req.query;
+
       const users = await prisma.user.findMany({
         where: {
           OR: [
             { deleted: null },
             { deleted: '0' },
-          ]
+          ],
+          ...(role_id && {
+            role_user: {
+                role_id: BigInt(role_id as string),
+            } as any, // Add 'as any' to bypass type-checking issues
+          }),
         },
         select: {
           id: true,
@@ -41,6 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
           role_user: {
             select: {
+              role_id: true,
               role: {
                 select: {
                   id: true,
