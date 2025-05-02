@@ -364,42 +364,30 @@ const TambahPengguna: React.FC = () => {
               <Input
                 id="suratPenunjukkan"
                 name="suratPenunjukkan"
-                type="url"
                 value={formData.suratPenunjukkan}
                 onChange={handleChange}
                 required
                 placeholder="https://drive.google.com/..."
                 className={errors.suratPenunjukkan ? "border-red-500" : ""}
               />
-              {errors.suratPenunjukkan && <p className="text-red-500 text-sm mt-1">{errors.suratPenunjukkan}</p>}
+              {errors.suratPenunjukkan && (
+                <p className="text-red-500 text-sm mt-1">{errors.suratPenunjukkan}</p>
+              )}
               <p className="text-sm text-gray-500 mt-1">
                 Cara membuat link shareable: Buka file di Google Drive → Klik "Bagikan" → Pilih "Siapa saja dengan link" → Salin link
               </p>
             </div>
 
             {/* BUTTONS */}
-            <div className="col-span-1 md:col-span-2 flex justify-between mt-8">
-              <Button 
-                type="button" 
-                onClick={handleBack}
-                variant="secondary"
-                disabled={isLoading}
-              >
+            <div className="md:col-span-2 flex justify-between">
+              <Button type="button" variant="secondary" onClick={handleBack}>
                 Kembali
               </Button>
-              <Button 
-                type="submit" 
-                className="bg-green-600 hover:bg-green-700 text-white"
-                disabled={isLoading}
-              >
-                {isLoading ? "Menyimpan..." : "Simpan"}
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Menyimpan..." : "Simpan Pengguna"}
               </Button>
             </div>
           </form>
-          
-          <div className="mt-4 text-sm text-gray-500">
-            <p>* Field dengan tanda bintang wajib diisi</p>
-          </div>
         </div>
       </main>
 

@@ -6,966 +6,186 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["ikk"]
+  schemas  = ["ikk_new"]
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model active_year {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  end_year    DateTime? @db.Timestamp(6)
-  start_year  DateTime? @db.Timestamp(6)
+  id                                         BigInt     @id(map: "active_year_pk")
+  active_year                                BigInt?    @unique(map: "active_year_unique")
+  agencies_agencies_active_yearToactive_year agencies[] @relation("agencies_active_yearToactive_year")
+  user_user_active_yearToactive_year         user[]     @relation("user_active_yearToactive_year")
 
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
-model admin_instansi_enumerator {
-  id                                                     BigInt    @id
-  created_at                                             DateTime? @db.Timestamp(6)
-  created_by                                             BigInt?
-  modified_by                                            BigInt?
-  updated_at                                             DateTime? @db.Timestamp(6)
-  admin_instansi_id                                      BigInt?
-  enumerator_id                                          BigInt?
-  user_admin_instansi_enumerator_admin_instansi_idTouser user?     @relation("admin_instansi_enumerator_admin_instansi_idTouser", fields: [admin_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user_admin_instansi_enumerator_enumerator_idTouser     user?     @relation("admin_instansi_enumerator_enumerator_idTouser", fields: [enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@schema("ikk")
-}
-
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model agencies {
-  id                          BigInt                        @id
-  created_at                  DateTime?                     @db.Timestamp(6)
-  created_by                  BigInt?
-  modified_by                 BigInt?
-  updated_at                  DateTime?                     @db.Timestamp(6)
-  name                        String?                       @db.VarChar(255)
-  category                    String?                       @db.VarChar(255)
-  kd_bkn                      String?                       @db.VarChar(100)
-  kd_prov                     String?                       @db.VarChar(100)
-  kd_kab                      String?                       @db.VarChar(100)
-  koordinator_instansi_agency koordinator_instansi_agency[]
-  policies                    policies[]
-  user                        user[]
+  id                                            BigInt       @id
+  created_at                                    DateTime?    @db.Timestamp(6)
+  created_by                                    BigInt?
+  modified_by                                   BigInt?
+  updated_at                                    DateTime?    @db.Timestamp(6)
+  name                                          String?      @db.VarChar(255)
+  category                                      String?      @db.VarChar(255)
+  kd_bkn                                        String?      @db.VarChar(100)
+  kd_prov                                       String?      @db.VarChar(100)
+  kd_kab                                        String?      @db.VarChar(100)
+  agency_id_panrb                               BigInt?
+  active_year                                   BigInt?
+  active_year_agencies_active_yearToactive_year active_year? @relation("agencies_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "agencies_active_year_fk")
+  instansi                                      instansi?    @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "agencies_instansi_fk")
+  policies                                      policies[]
+  user                                          user[]
 
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
-model agenda_setting {
-  id          BigInt     @id
-  created_at  DateTime?  @db.Timestamp(6)
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ikk_instansi_score {
+  id          BigInt?
+  agency_id   BigInt?
+  policy_id   BigInt?
+  active_year BigInt?
+  a1          BigInt?
+  a2          BigInt?
+  a3          BigInt?
+  b1          BigInt?
+  b2          BigInt?
+  b3          BigInt?
+  c1          BigInt?
+  c2          BigInt?
+  c3          BigInt?
+  d1          BigInt?
+  d2          BigInt?
+  jf          Boolean?
   created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime?  @db.Timestamp(6)
-  a1a         String?    @db.VarChar(255)
-  a1b         String?    @db.VarChar(255)
-  a1c         String?    @db.VarChar(255)
-  a1d         String?    @db.VarChar(255)
-  a2a         String?    @db.VarChar(255)
-  a2b         String?    @db.VarChar(255)
-  a2c         String?    @db.VarChar(255)
-  informasia3 String?
-  user        user?      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  policies    policies[]
 
-  @@schema("ikk")
+  @@ignore
+  @@schema("ikk_new")
 }
 
-model agenda_setting_base_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model ikk_verif_score {
+  id          BigInt?
+  agency_id   BigInt?
+  policy_id   BigInt?
+  active_year BigInt?
+  a1          BigInt?
+  a2          BigInt?
+  a3          BigInt?
+  b1          BigInt?
+  b2          BigInt?
+  b3          BigInt?
+  c1          BigInt?
+  c2          BigInt?
+  c3          BigInt?
+  d1          BigInt?
+  d2          BigInt?
+  jf          Boolean?
   created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  a1a         Float?
-  a1b         Float?
-  a1c         Float?
-  a1d         Float?
-  a2a         Float?
-  a2b         Float?
-  a2c         Float?
-  total_score Float?
-  user        user?     @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_created_by_user")
 
-  @@schema("ikk")
+  @@ignore
+  @@schema("ikk_new")
 }
 
-model agenda_setting_file {
-  id                    BigInt     @id
-  created_at            DateTime?  @db.Timestamp(6)
-  created_by            BigInt?
-  modified_by           BigInt?
-  updated_at            DateTime?  @db.Timestamp(6)
-  file_original_namea1a String?    @db.VarChar(255)
-  file_original_namea1b String?    @db.VarChar(255)
-  file_original_namea1c String?    @db.VarChar(255)
-  file_original_namea1d String?    @db.VarChar(255)
-  file_original_namea2a String?    @db.VarChar(255)
-  file_original_namea2b String?    @db.VarChar(255)
-  file_original_namea2c String?    @db.VarChar(255)
-  file_patha1a          String?    @db.VarChar(255)
-  file_patha1b          String?    @db.VarChar(255)
-  file_patha1c          String?    @db.VarChar(255)
-  file_patha1d          String?    @db.VarChar(255)
-  file_patha2a          String?    @db.VarChar(255)
-  file_patha2b          String?    @db.VarChar(255)
-  file_patha2c          String?    @db.VarChar(255)
-  file_sizea1a          String?    @db.VarChar(255)
-  file_sizea1b          String?    @db.VarChar(255)
-  file_sizea1c          String?    @db.VarChar(255)
-  file_sizea1d          String?    @db.VarChar(255)
-  file_sizea2a          String?    @db.VarChar(255)
-  file_sizea2b          String?    @db.VarChar(255)
-  file_sizea2c          String?    @db.VarChar(255)
-  file_typea1a          String?    @db.VarChar(255)
-  file_typea1b          String?    @db.VarChar(255)
-  file_typea1c          String?    @db.VarChar(255)
-  file_typea1d          String?    @db.VarChar(255)
-  file_typea2a          String?    @db.VarChar(255)
-  file_typea2b          String?    @db.VarChar(255)
-  file_typea2c          String?    @db.VarChar(255)
-  policies              policies[]
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model instansi {
+  id                 BigInt     @id(map: "instansi_pk")
+  agency_id          BigInt?    @unique(map: "instansi_unique")
+  agency_name        String?    @db.VarChar(226)
+  agency_category_id Int?
+  agencies           agencies[]
+  user               user[]
 
-  @@schema("ikk")
-}
-
-model agenda_setting_ki {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  a1a         String?   @db.VarChar(255)
-  a1b         String?   @db.VarChar(255)
-  a1c         String?   @db.VarChar(255)
-  a1d         String?   @db.VarChar(255)
-  a2a         String?   @db.VarChar(255)
-  a2b         String?   @db.VarChar(255)
-  a2c         String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model agenda_setting_ki_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  a1a         Float?
-  a1b         Float?
-  a1c         Float?
-  a1d         Float?
-  a2a         Float?
-  a2b         Float?
-  a2c         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model agenda_setting_ku {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  a1a         String?   @db.VarChar(255)
-  a1b         String?   @db.VarChar(255)
-  a1c         String?   @db.VarChar(255)
-  a1d         String?   @db.VarChar(255)
-  a2a         String?   @db.VarChar(255)
-  a2b         String?   @db.VarChar(255)
-  a2c         String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model agenda_setting_ku_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  a1a         Float?
-  a1b         Float?
-  a1c         Float?
-  a1d         Float?
-  a2a         Float?
-  a2b         Float?
-  a2c         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model coordinator_types {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  name        String?   @db.VarChar(255)
-  user        user[]
-
-  @@schema("ikk")
-}
-
-model evaluasi_kebijakan {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  d1a         String?   @db.VarChar(255)
-  d1b         String?   @db.VarChar(255)
-  d2a         String?   @db.VarChar(255)
-  d2b         String?   @db.VarChar(255)
-  d3a         String?   @db.VarChar(255)
-  d3b         String?   @db.VarChar(255)
-  d3c         String?   @db.VarChar(255)
-  d3d         String?   @db.VarChar(255)
-  d3e         String?   @db.VarChar(255)
-  informasid4 String?
-
-  @@schema("ikk")
-}
-
-model evaluasi_kebijakan_base_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  d1a         Float?
-  d1b         Float?
-  d2a         Float?
-  d2b         Float?
-  d3a         Float?
-  d3b         Float?
-  d3c         Float?
-  d3d         Float?
-  d3e         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model evaluasi_kebijakan_file {
-  id                    BigInt    @id
-  created_at            DateTime? @db.Timestamp(6)
-  created_by            BigInt?
-  modified_by           BigInt?
-  updated_at            DateTime? @db.Timestamp(6)
-  file_original_named1a String?   @db.VarChar(255)
-  file_original_named1b String?   @db.VarChar(255)
-  file_original_named2a String?   @db.VarChar(255)
-  file_original_named2b String?   @db.VarChar(255)
-  file_original_named3a String?   @db.VarChar(255)
-  file_original_named3b String?   @db.VarChar(255)
-  file_original_named3c String?   @db.VarChar(255)
-  file_original_named3d String?   @db.VarChar(255)
-  file_original_named3e String?   @db.VarChar(255)
-  file_pathd1a          String?   @db.VarChar(255)
-  file_pathd1b          String?   @db.VarChar(255)
-  file_pathd2a          String?   @db.VarChar(255)
-  file_pathd2b          String?   @db.VarChar(255)
-  file_pathd3a          String?   @db.VarChar(255)
-  file_pathd3b          String?   @db.VarChar(255)
-  file_pathd3c          String?   @db.VarChar(255)
-  file_pathd3d          String?   @db.VarChar(255)
-  file_pathd3e          String?   @db.VarChar(255)
-  file_sized1a          String?   @db.VarChar(255)
-  file_sized1b          String?   @db.VarChar(255)
-  file_sized2a          String?   @db.VarChar(255)
-  file_sized2b          String?   @db.VarChar(255)
-  file_sized3a          String?   @db.VarChar(255)
-  file_sized3b          String?   @db.VarChar(255)
-  file_sized3c          String?   @db.VarChar(255)
-  file_sized3d          String?   @db.VarChar(255)
-  file_sized3e          String?   @db.VarChar(255)
-  file_typed1a          String?   @db.VarChar(255)
-  file_typed1b          String?   @db.VarChar(255)
-  file_typed2a          String?   @db.VarChar(255)
-  file_typed2b          String?   @db.VarChar(255)
-  file_typed3a          String?   @db.VarChar(255)
-  file_typed3b          String?   @db.VarChar(255)
-  file_typed3c          String?   @db.VarChar(255)
-  file_typed3d          String?   @db.VarChar(255)
-  file_typed3e          String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model evaluasi_kebijakan_ki {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  d1a         String?   @db.VarChar(255)
-  d1b         String?   @db.VarChar(255)
-  d2a         String?   @db.VarChar(255)
-  d2b         String?   @db.VarChar(255)
-  d3a         String?   @db.VarChar(255)
-  d3b         String?   @db.VarChar(255)
-  d3c         String?   @db.VarChar(255)
-  d3d         String?   @db.VarChar(255)
-  d3e         String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model evaluasi_kebijakan_ki_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  d1a         Float?
-  d1b         Float?
-  d2a         Float?
-  d2b         Float?
-  d3a         Float?
-  d3b         Float?
-  d3c         Float?
-  d3d         Float?
-  d3e         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model evaluasi_kebijakan_ku {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  d1a         String?   @db.VarChar(255)
-  d1b         String?   @db.VarChar(255)
-  d2a         String?   @db.VarChar(255)
-  d2b         String?   @db.VarChar(255)
-  d3a         String?   @db.VarChar(255)
-  d3b         String?   @db.VarChar(255)
-  d3c         String?   @db.VarChar(255)
-  d3d         String?   @db.VarChar(255)
-  d3e         String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model evaluasi_kebijakan_ku_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  d1a         Float?
-  d1b         Float?
-  d2a         Float?
-  d2b         Float?
-  d3a         Float?
-  d3b         Float?
-  d3c         Float?
-  d3d         Float?
-  d3e         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model formulasi_kebijakan {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  b1a         String?   @db.VarChar(255)
-  b1b         String?   @db.VarChar(255)
-  b2a         String?   @db.VarChar(255)
-  b2b         String?   @db.VarChar(255)
-  b3a         String?   @db.VarChar(255)
-  b3b         String?   @db.VarChar(255)
-  b3c         String?   @db.VarChar(255)
-  b4a         String?   @db.VarChar(255)
-  b4b         String?   @db.VarChar(255)
-  b4c         String?   @db.VarChar(255)
-  b5a         String?   @db.VarChar(255)
-  b5b         String?   @db.VarChar(255)
-  b5c         String?   @db.VarChar(255)
-  informasib6 String?
-
-  @@schema("ikk")
-}
-
-model formulasi_kebijakan_base_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  b1a         Float?
-  b1b         Float?
-  b2a         Float?
-  b2b         Float?
-  b3a         Float?
-  b3b         Float?
-  b3c         Float?
-  b4a         Float?
-  b4b         Float?
-  b4c         Float?
-  b5a         Float?
-  b5b         Float?
-  b5c         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model formulasi_kebijakan_file {
-  id                    BigInt    @id
-  created_at            DateTime? @db.Timestamp(6)
-  created_by            BigInt?
-  modified_by           BigInt?
-  updated_at            DateTime? @db.Timestamp(6)
-  file_original_nameb1a String?   @db.VarChar(255)
-  file_original_nameb1b String?   @db.VarChar(255)
-  file_original_nameb2a String?   @db.VarChar(255)
-  file_original_nameb2b String?   @db.VarChar(255)
-  file_original_nameb3a String?   @db.VarChar(255)
-  file_original_nameb3b String?   @db.VarChar(255)
-  file_original_nameb3c String?   @db.VarChar(255)
-  file_original_nameb4a String?   @db.VarChar(255)
-  file_original_nameb4b String?   @db.VarChar(255)
-  file_original_nameb4c String?   @db.VarChar(255)
-  file_original_nameb5a String?   @db.VarChar(255)
-  file_original_nameb5b String?   @db.VarChar(255)
-  file_original_nameb5c String?   @db.VarChar(255)
-  file_pathb1a          String?   @db.VarChar(255)
-  file_pathb1b          String?   @db.VarChar(255)
-  file_pathb2a          String?   @db.VarChar(255)
-  file_pathb2b          String?   @db.VarChar(255)
-  file_pathb3a          String?   @db.VarChar(255)
-  file_pathb3b          String?   @db.VarChar(255)
-  file_pathb3c          String?   @db.VarChar(255)
-  file_pathb4a          String?   @db.VarChar(255)
-  file_pathb4b          String?   @db.VarChar(255)
-  file_pathb4c          String?   @db.VarChar(255)
-  file_pathb5a          String?   @db.VarChar(255)
-  file_pathb5b          String?   @db.VarChar(255)
-  file_pathb5c          String?   @db.VarChar(255)
-  file_sizeb1a          String?   @db.VarChar(255)
-  file_sizeb1b          String?   @db.VarChar(255)
-  file_sizeb2a          String?   @db.VarChar(255)
-  file_sizeb2b          String?   @db.VarChar(255)
-  file_sizeb3a          String?   @db.VarChar(255)
-  file_sizeb3b          String?   @db.VarChar(255)
-  file_sizeb3c          String?   @db.VarChar(255)
-  file_sizeb4a          String?   @db.VarChar(255)
-  file_sizeb4b          String?   @db.VarChar(255)
-  file_sizeb4c          String?   @db.VarChar(255)
-  file_sizeb5a          String?   @db.VarChar(255)
-  file_sizeb5b          String?   @db.VarChar(255)
-  file_sizeb5c          String?   @db.VarChar(255)
-  file_typeb1a          String?   @db.VarChar(255)
-  file_typeb1b          String?   @db.VarChar(255)
-  file_typeb2a          String?   @db.VarChar(255)
-  file_typeb2b          String?   @db.VarChar(255)
-  file_typeb3a          String?   @db.VarChar(255)
-  file_typeb3b          String?   @db.VarChar(255)
-  file_typeb3c          String?   @db.VarChar(255)
-  file_typeb4a          String?   @db.VarChar(255)
-  file_typeb4b          String?   @db.VarChar(255)
-  file_typeb4c          String?   @db.VarChar(255)
-  file_typeb5a          String?   @db.VarChar(255)
-  file_typeb5b          String?   @db.VarChar(255)
-  file_typeb5c          String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model formulasi_kebijakan_ki {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  b1a         String?   @db.VarChar(255)
-  b1b         String?   @db.VarChar(255)
-  b2a         String?   @db.VarChar(255)
-  b2b         String?   @db.VarChar(255)
-  b3a         String?   @db.VarChar(255)
-  b3b         String?   @db.VarChar(255)
-  b3c         String?   @db.VarChar(255)
-  b4a         String?   @db.VarChar(255)
-  b4b         String?   @db.VarChar(255)
-  b4c         String?   @db.VarChar(255)
-  b5a         String?   @db.VarChar(255)
-  b5b         String?   @db.VarChar(255)
-  b5c         String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model formulasi_kebijakan_ki_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  b1a         Float?
-  b1b         Float?
-  b2a         Float?
-  b2b         Float?
-  b3a         Float?
-  b3b         Float?
-  b3c         Float?
-  b4a         Float?
-  b4b         Float?
-  b4c         Float?
-  b5a         Float?
-  b5b         Float?
-  b5c         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model formulasi_kebijakan_ku {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  b1a         String?   @db.VarChar(255)
-  b1b         String?   @db.VarChar(255)
-  b2a         String?   @db.VarChar(255)
-  b2b         String?   @db.VarChar(255)
-  b3a         String?   @db.VarChar(255)
-  b3b         String?   @db.VarChar(255)
-  b3c         String?   @db.VarChar(255)
-  b4a         String?   @db.VarChar(255)
-  b4b         String?   @db.VarChar(255)
-  b4c         String?   @db.VarChar(255)
-  b5a         String?   @db.VarChar(255)
-  b5b         String?   @db.VarChar(255)
-  b5c         String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model formulasi_kebijakan_ku_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  b1a         Float?
-  b1b         Float?
-  b2a         Float?
-  b2b         Float?
-  b3a         Float?
-  b3b         Float?
-  b3c         Float?
-  b4a         Float?
-  b4b         Float?
-  b4c         Float?
-  b5a         Float?
-  b5b         Float?
-  b5c         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model implementasi_kebijakan {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  c1a         String?   @db.VarChar(255)
-  c1b         String?   @db.VarChar(255)
-  c1c         String?   @db.VarChar(255)
-  c1d         String?   @db.VarChar(255)
-  c2a         String?   @db.VarChar(255)
-  c2b         String?   @db.VarChar(255)
-  c2c         String?   @db.VarChar(255)
-  c3a         String?   @db.VarChar(255)
-  c3b         String?   @db.VarChar(255)
-  c3c         String?   @db.VarChar(255)
-  informasic4 String?
-
-  @@schema("ikk")
-}
-
-model implementasi_kebijakan_base_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  c1a         Float?
-  c1b         Float?
-  c1c         Float?
-  c1d         Float?
-  c2a         Float?
-  c2b         Float?
-  c2c         Float?
-  c3a         Float?
-  c3b         Float?
-  c3c         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model implementasi_kebijakan_file {
-  id                    BigInt    @id
-  created_at            DateTime? @db.Timestamp(6)
-  created_by            BigInt?
-  modified_by           BigInt?
-  updated_at            DateTime? @db.Timestamp(6)
-  file_original_namec1a String?   @db.VarChar(255)
-  file_original_namec1b String?   @db.VarChar(255)
-  file_original_namec1c String?   @db.VarChar(255)
-  file_original_namec1d String?   @db.VarChar(255)
-  file_original_namec2a String?   @db.VarChar(255)
-  file_original_namec2b String?   @db.VarChar(255)
-  file_original_namec2c String?   @db.VarChar(255)
-  file_original_namec3a String?   @db.VarChar(255)
-  file_original_namec3b String?   @db.VarChar(255)
-  file_original_namec3c String?   @db.VarChar(255)
-  file_pathc1a          String?   @db.VarChar(255)
-  file_pathc1b          String?   @db.VarChar(255)
-  file_pathc1c          String?   @db.VarChar(255)
-  file_pathc1d          String?   @db.VarChar(255)
-  file_pathc2a          String?   @db.VarChar(255)
-  file_pathc2b          String?   @db.VarChar(255)
-  file_pathc2c          String?   @db.VarChar(255)
-  file_pathc3a          String?   @db.VarChar(255)
-  file_pathc3b          String?   @db.VarChar(255)
-  file_pathc3c          String?   @db.VarChar(255)
-  file_sizec1a          String?   @db.VarChar(255)
-  file_sizec1b          String?   @db.VarChar(255)
-  file_sizec1c          String?   @db.VarChar(255)
-  file_sizec1d          String?   @db.VarChar(255)
-  file_sizec2a          String?   @db.VarChar(255)
-  file_sizec2b          String?   @db.VarChar(255)
-  file_sizec2c          String?   @db.VarChar(255)
-  file_sizec3a          String?   @db.VarChar(255)
-  file_sizec3b          String?   @db.VarChar(255)
-  file_sizec3c          String?   @db.VarChar(255)
-  file_typec1a          String?   @db.VarChar(255)
-  file_typec1b          String?   @db.VarChar(255)
-  file_typec1c          String?   @db.VarChar(255)
-  file_typec1d          String?   @db.VarChar(255)
-  file_typec2a          String?   @db.VarChar(255)
-  file_typec2b          String?   @db.VarChar(255)
-  file_typec2c          String?   @db.VarChar(255)
-  file_typec3a          String?   @db.VarChar(255)
-  file_typec3b          String?   @db.VarChar(255)
-  file_typec3c          String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model implementasi_kebijakan_ki {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  c1a         String?   @db.VarChar(255)
-  c1b         String?   @db.VarChar(255)
-  c1c         String?   @db.VarChar(255)
-  c1d         String?   @db.VarChar(255)
-  c2a         String?   @db.VarChar(255)
-  c2b         String?   @db.VarChar(255)
-  c2c         String?   @db.VarChar(255)
-  c3a         String?   @db.VarChar(255)
-  c3b         String?   @db.VarChar(255)
-  c3c         String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model implementasi_kebijakan_ki_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  c1a         Float?
-  c1b         Float?
-  c1c         Float?
-  c1d         Float?
-  c2a         Float?
-  c2b         Float?
-  c2c         Float?
-  c3a         Float?
-  c3b         Float?
-  c3c         Float?
-  total_score Float?
-
-  @@schema("ikk")
-}
-
-model implementasi_kebijakan_ku {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  c1a         String?   @db.VarChar(255)
-  c1b         String?   @db.VarChar(255)
-  c1c         String?   @db.VarChar(255)
-  c1d         String?   @db.VarChar(255)
-  c2a         String?   @db.VarChar(255)
-  c2b         String?   @db.VarChar(255)
-  c2c         String?   @db.VarChar(255)
-  c3a         String?   @db.VarChar(255)
-  c3b         String?   @db.VarChar(255)
-  c3c         String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model implementasi_kebijakan_ku_score {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  c1a         Float?
-  c1b         Float?
-  c1c         Float?
-  c1d         Float?
-  c2a         Float?
-  c2b         Float?
-  c2c         Float?
-  c3a         Float?
-  c3b         Float?
-  c3c         Float?
-  total_score Float?
-
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
 model instrument_answer {
-  id     String  @id @db.VarChar(12)
-  answer String? @db.VarChar(255)
+  id                  BigInt               @id(map: "instrument_answer_pk")
+  question_id         BigInt?
+  level_id            BigInt?
+  level_description   String?              @db.VarChar
+  level_score         BigInt?
+  instrument_question instrument_question? @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "instrument_answer_instrument_question_fk")
 
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
-model koordinator_instansi_admin_instansi {
-  id                                                                     BigInt    @id
-  created_at                                                             DateTime? @db.Timestamp(6)
-  created_by                                                             BigInt?
-  modified_by                                                            BigInt?
-  updated_at                                                             DateTime? @db.Timestamp(6)
-  admin_instansi_id                                                      BigInt?
-  koordinator_instansi_id                                                BigInt?
-  user_koordinator_instansi_admin_instansi_koordinator_instansi_idTouser user?     @relation("koordinator_instansi_admin_instansi_koordinator_instansi_idTouser", fields: [koordinator_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "koordinator_instansi_admin_instans_koordinator_instansi_id_fkey")
-  user_koordinator_instansi_admin_instansi_admin_instansi_idTouser       user?     @relation("koordinator_instansi_admin_instansi_admin_instansi_idTouser", fields: [admin_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model instrument_question {
+  id                    BigInt              @id(map: "instrument_question_pk")
+  dimension_id          BigInt?
+  dimension_name        String?             @db.VarChar
+  indicator_id          String?             @db.VarChar
+  indicator_column_code String?             @db.VarChar
+  indicator_question    String?             @db.VarChar
+  indicator_weight      Float?              @db.Real
+  dimension_weight      Float?              @db.Real
+  final_weight          Float?              @db.Real
+  instrument_answer     instrument_answer[]
 
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
-model koordinator_instansi_agency {
-  id                      BigInt    @id
-  created_at              DateTime? @db.Timestamp(6)
-  created_by              BigInt?
-  modified_by             BigInt?
-  updated_at              DateTime? @db.Timestamp(6)
-  agency_id               BigInt?
-  koordinator_instansi_id BigInt?
-  agencies                agencies? @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user                    user?     @relation(fields: [koordinator_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+model koor_instansi_analis {
+  id                 BigInt    @id
+  created_at         DateTime? @db.Timestamp(6)
+  created_by         BigInt?
+  modified_by        BigInt?
+  updated_at         DateTime? @db.Timestamp(6)
+  koor_instansi_id   BigInt?
+  analis_instansi_id BigInt?
 
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
-model koordinator_utama_koordinator_instansi {
-  id                                                                        BigInt    @id
-  created_at                                                                DateTime? @db.Timestamp(6)
-  created_by                                                                BigInt?
-  modified_by                                                               BigInt?
-  updated_at                                                                DateTime? @db.Timestamp(6)
-  koordinator_instansi_id                                                   BigInt?
-  koordinator_utama_id                                                      BigInt?
-  user_koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser user?     @relation("koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser", fields: [koordinator_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "koordinator_utama_koordinator_inst_koordinator_instansi_id_fkey")
-  user_koordinator_utama_koordinator_instansi_koordinator_utama_idTouser    user?     @relation("koordinator_utama_koordinator_instansi_koordinator_utama_idTouser", fields: [koordinator_utama_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "koordinator_utama_koordinator_instans_koordinator_utama_id_fkey")
+model koor_instansi_validator {
+  id               BigInt    @id
+  created_at       DateTime? @db.Timestamp(6)
+  created_by       BigInt?
+  modified_by      BigInt?
+  updated_at       DateTime? @db.Timestamp(6)
+  koor_instansi_id BigInt?
+  validator_id     BigInt?
 
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
-model oauth_client_details {
-  client_id               String  @id @db.VarChar(255)
-  client_secret           String? @db.VarChar(255)
-  resource_ids            String? @db.VarChar(255)
-  SCOPE                   String? @db.VarChar(255)
-  authorized_grant_types  String? @db.VarChar(255)
-  web_server_redirect_uri String? @db.VarChar(255)
-  authorities             String? @db.VarChar(255)
-  access_token_validity   Int?
-  refresh_token_validity  Int?
-  additional_information  String? @db.VarChar(4096)
-  autoapprove             String? @db.VarChar(255)
+model koor_nasional_validator {
+  id               BigInt    @id
+  created_at       DateTime? @db.Timestamp(6)
+  created_by       BigInt?
+  modified_by      BigInt?
+  updated_at       DateTime? @db.Timestamp(6)
+  validator_id     BigInt?
+  koor_nasional_id BigInt?
 
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
-model permission {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  name        String?   @db.VarChar(255)
-
-  @@schema("ikk")
-}
-
-model permission_role {
-  role_id       BigInt @id
-  permission_id BigInt
-
-  @@schema("ikk")
-}
-
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model policies {
-  id                                                        BigInt               @id
-  created_at                                                DateTime?            @db.Timestamp(6)
-  created_by                                                BigInt?
-  modified_by                                               BigInt?
-  updated_at                                                DateTime?            @db.Timestamp(6)
-  assigned_by_admin_at                                      DateTime?            @db.Timestamp(6)
-  assigned_by_admin_id                                      BigInt?
-  enumerator_id                                             BigInt?
-  name                                                      String?
-  processed_by_enumerator_at                                DateTime?            @db.Timestamp(6)
-  processed_by_enumerator_id                                BigInt?
-  sent_by_admin_at                                          DateTime?            @db.Timestamp(6)
-  sent_by_admin_id                                          BigInt?
-  validated_by_koordinator_at                               DateTime?            @db.Timestamp(6)
-  validated_by_koordinator_id                               BigInt?
-  validated_by_koordinator_utama_at                         DateTime?            @db.Timestamp(6)
-  validated_by_koordinator_utama_id                         BigInt?
-  verified_by_koordinator_at                                DateTime?            @db.Timestamp(6)
-  verified_by_koordinator_id                                BigInt?
-  agency_id                                                 BigInt?
-  agenda_setting_base_score_id                              BigInt?
-  agenda_setting_id                                         BigInt?
-  agenda_setting_file_id                                    BigInt?
-  agenda_setting_ki_id                                      BigInt?
-  agenda_setting_ki_score_id                                BigInt?
-  agenda_setting_ku_id                                      BigInt?
-  agenda_setting_ku_score_id                                BigInt?
-  evaluasi_kebijakan_base_score_id                          BigInt?
-  evaluasi_kebijakan_id                                     BigInt?
-  evaluasi_kebijakan_file_id                                BigInt?
-  evaluasi_kebijakan_ki_id                                  BigInt?
-  evaluasi_kebijakan_ki_score_id                            BigInt?
-  evaluasi_kebijakan_ku_id                                  BigInt?
-  evaluasi_kebijakan_ku_score_id                            BigInt?
-  formulasi_kebijakan_base_score_id                         BigInt?
-  formulasi_kebijakan_id                                    BigInt?
-  formulasi_kebijakan_file_id                               BigInt?
-  formulasi_kebijakan_ki_id                                 BigInt?
-  formulasi_kebijakan_ki_score_id                           BigInt?
-  formulasi_kebijakan_ku_id                                 BigInt?
-  formulasi_kebijakan_ku_score_id                           BigInt?
-  implementasi_kebijakan_base_score_id                      BigInt?
-  implementasi_kebijakan_id                                 BigInt?
-  implementasi_kebijakan_file_id                            BigInt?
-  implementasi_kebijakan_ki_id                              BigInt?
-  implementasi_kebijakan_ki_score_id                        BigInt?
-  implementasi_kebijakan_ku_id                              BigInt?
-  implementasi_kebijakan_ku_score_id                        BigInt?
-  policy_details_id                                         BigInt?
-  policy_process_id                                         BigInt?
-  policy_status_id                                          BigInt?
-  agencies                                                  agencies?            @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  agenda_setting_file                                       agenda_setting_file? @relation(fields: [agenda_setting_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  agenda_setting                                            agenda_setting?      @relation(fields: [agenda_setting_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user                                                      user?                @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user_policies_enumerator_idTouser                         user?                @relation("policies_enumerator_idTouser", fields: [enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  policy_details_policies_policy_details_idTopolicy_details policy_details?      @relation("policies_policy_details_idTopolicy_details", fields: [policy_details_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  policy_process                                            policy_process?      @relation(fields: [policy_process_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  policy_status                                             policy_status?       @relation(fields: [policy_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user_policies_processed_by_enumerator_idTouser            user?                @relation("policies_processed_by_enumerator_idTouser", fields: [processed_by_enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  policy_details                                            policy_details?
+  id                               BigInt    @id(map: "policies_pk")
+  created_at                       DateTime? @db.Timestamp(6)
+  created_by                       BigInt?
+  name                             String?
+  agency_id                        BigInt?
+  validated_by                     BigInt?
+  is_valid                         Boolean?
+  sector                           String?   @db.VarChar
+  file_url                         String?   @db.VarChar
+  type                             String?   @db.VarChar
+  agencies                         agencies? @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_agencies_fk")
+  user_policies_created_byTouser   user?     @relation("policies_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_user_created_by_FK")
+  user_policies_validated_byTouser user?     @relation("policies_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_user_validated_by_FK")
 
-  @@schema("ikk")
-}
-
-model policy_details {
-  id                                                  BigInt     @id
-  created_at                                          DateTime?  @db.Timestamp(6)
-  created_by                                          BigInt?
-  modified_by                                         BigInt?
-  updated_at                                          DateTime?  @db.Timestamp(6)
-  base_score                                          Float?
-  effective_date                                      DateTime?  @db.Timestamp(6)
-  file_original_name                                  String?    @db.VarChar(255)
-  file_path                                           String?    @db.VarChar(255)
-  file_size                                           String?    @db.VarChar(255)
-  file_type                                           String?    @db.VarChar(255)
-  progress                                            Float?
-  sector                                              String?    @db.VarChar(255)
-  validationkiscore                                   Float?
-  validationkuscore                                   Float?
-  validationkinote                                    String?
-  policies_policies_policy_details_idTopolicy_details policies[] @relation("policies_policy_details_idTopolicy_details")
-  user                                                user?      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  policies                                            policies   @relation(fields: [id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@schema("ikk")
-}
-
-model policy_process {
-  id          BigInt     @id
-  created_at  DateTime?  @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime?  @db.Timestamp(6)
-  name        String?    @db.VarChar(255)
-  policies    policies[]
-
-  @@schema("ikk")
-}
-
-model policy_sample {
-  id            BigInt    @id
-  created_at    DateTime? @db.Timestamp(6)
-  created_by    BigInt?
-  modified_by   BigInt?
-  updated_at    DateTime? @db.Timestamp(6)
-  id_user_admin BigInt?
-  policy_id     BigInt?
-
-  @@schema("ikk")
-}
-
-model policy_status {
-  id          BigInt     @id
-  created_at  DateTime?  @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime?  @db.Timestamp(6)
-  name        String?    @db.VarChar(255)
-  policies    policies[]
-
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
 model role {
-  id          BigInt      @id @unique
+  id          BigInt      @id @unique(map: "role_unique")
   created_at  DateTime?   @db.Timestamp(6)
   created_by  BigInt?
   modified_by BigInt?
@@ -973,7 +193,7 @@ model role {
   name        String?     @db.VarChar(255)
   role_user   role_user[]
 
-  @@schema("ikk")
+  @@schema("ikk_new")
 }
 
 model role_user {
@@ -982,46 +202,59 @@ model role_user {
   role    role   @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user    user   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@schema("ikk")
+  @@schema("ikk_new")
+}
+
+model surat_penunjukkan {
+  id         BigInt    @id @default(autoincrement())
+  file       String?
+  created_at DateTime? @default(dbgenerated("'2025-05-01 23:36:38.525109'::timestamp without time zone")) @db.Timestamp(6)
+  user       user[]
+
+  @@schema("ikk_new")
 }
 
 model user {
-  id                                                                                                          BigInt                                   @id
-  created_at                                                                                                  DateTime?                                @db.Timestamp(6)
-  created_by                                                                                                  BigInt?
-  modified_by                                                                                                 BigInt?
-  updated_at                                                                                                  DateTime?                                @db.Timestamp(6)
-  coordinator_type                                                                                            String?                                  @db.VarChar(255)
-  deleted                                                                                                     String?                                  @db.Bit(1)
-  deleted_at                                                                                                  DateTime?                                @db.Timestamp(6)
-  deleted_by                                                                                                  BigInt?
-  email                                                                                                       String?                                  @db.VarChar(255)
-  name                                                                                                        String?                                  @db.VarChar(255)
-  nik                                                                                                         String?                                  @db.VarChar(255)
-  password                                                                                                    String?                                  @db.VarChar(255)
-  phone                                                                                                       String?                                  @db.VarChar(255)
-  position                                                                                                    String?                                  @db.VarChar(255)
-  status                                                                                                      String?                                  @db.VarChar(255)
-  username                                                                                                    String?                                  @db.VarChar(255) @unique
-  work_unit                                                                                                   String?                                  @db.VarChar(255)
-  agency_id                                                                                                   BigInt?
-  coordinator_type_id                                                                                         BigInt?
-  admin_instansi_enumerator_admin_instansi_enumerator_admin_instansi_idTouser                                 admin_instansi_enumerator[]              @relation("admin_instansi_enumerator_admin_instansi_idTouser")
-  admin_instansi_enumerator_admin_instansi_enumerator_enumerator_idTouser                                     admin_instansi_enumerator[]              @relation("admin_instansi_enumerator_enumerator_idTouser")
-  agenda_setting                                                                                              agenda_setting[]
-  agenda_setting_base_score                                                                                   agenda_setting_base_score[]
-  koordinator_instansi_admin_instansi_koordinator_instansi_admin_instansi_koordinator_instansi_idTouser       koordinator_instansi_admin_instansi[]    @relation("koordinator_instansi_admin_instansi_koordinator_instansi_idTouser")
-  koordinator_instansi_admin_instansi_koordinator_instansi_admin_instansi_admin_instansi_idTouser             koordinator_instansi_admin_instansi[]    @relation("koordinator_instansi_admin_instansi_admin_instansi_idTouser")
-  koordinator_instansi_agency                                                                                 koordinator_instansi_agency[]
-  koordinator_utama_koordinator_instansi_koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser koordinator_utama_koordinator_instansi[] @relation("koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser")
-  koordinator_utama_koordinator_instansi_koordinator_utama_koordinator_instansi_koordinator_utama_idTouser    koordinator_utama_koordinator_instansi[] @relation("koordinator_utama_koordinator_instansi_koordinator_utama_idTouser")
-  policies                                                                                                    policies[]
-  policies_policies_enumerator_idTouser                                                                       policies[]                               @relation("policies_enumerator_idTouser")
-  policies_policies_processed_by_enumerator_idTouser                                                          policies[]                               @relation("policies_processed_by_enumerator_idTouser")
-  policy_details                                                                                              policy_details[]
-  role_user                                                                                                   role_user?
-  agencies                                                                                                    agencies?                                @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  coordinator_types                                                                                           coordinator_types?                       @relation(fields: [coordinator_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_coordinator_types_fk")
+  id                                        BigInt             @id
+  created_at                                DateTime?          @db.Timestamp(6)
+  created_by                                BigInt?
+  modified_by                               BigInt?
+  updated_at                                DateTime?          @db.Timestamp(6)
+  deleted                                   String?            @db.Bit(1)
+  deleted_at                                DateTime?          @db.Timestamp(6)
+  deleted_by                                BigInt?
+  email                                     String?            @db.VarChar(255)
+  name                                      String?            @db.VarChar(255)
+  nik                                       String?            @db.VarChar(255)
+  password                                  String?            @db.VarChar(255)
+  phone                                     String?            @db.VarChar(255)
+  position                                  String?            @db.VarChar(255)
+  status                                    String?            @db.VarChar(255)
+  username                                  String?            @db.VarChar(255)
+  work_unit                                 String?            @db.VarChar(255)
+  agency_id                                 BigInt?
+  agency_id_panrb                           BigInt?
+  active_year                               BigInt?
+  penunjukkan_id                            BigInt?
+  policies_policies_created_byTouser        policies[]         @relation("policies_created_byTouser")
+  policies_policies_validated_byTouser      policies[]         @relation("policies_validated_byTouser")
+  role_user                                 role_user?
+  active_year_user_active_yearToactive_year active_year?       @relation("user_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "user_active_year_fk")
+  agencies                                  agencies?          @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  instansi                                  instansi?          @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction)
+  surat_penunjukkan                         surat_penunjukkan? @relation(fields: [penunjukkan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@schema("ikk")
+  @@schema("ikk_new")
+}
+
+model validator_agency {
+  id           BigInt    @id
+  created_at   DateTime? @db.Timestamp(6)
+  created_by   BigInt?
+  modified_by  BigInt?
+  updated_at   DateTime? @db.Timestamp(6)
+  agencies_id  BigInt?
+  validator_id BigInt?
+
+  @@schema("ikk_new")
 }

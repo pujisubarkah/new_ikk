@@ -1,11 +1,10 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '@/components/sidebar-admin';
 import { Bar, Radar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
-  LinearScale,
   BarElement,
   RadialLinearScale,
   PointElement,
@@ -17,7 +16,6 @@ import {
 
 ChartJS.register(
   CategoryScale,
-  LinearScale,
   BarElement,
   RadialLinearScale,
   PointElement,

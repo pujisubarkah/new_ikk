@@ -23,7 +23,7 @@ const Page = () => {
     const [showAdminTable, setShowAdminTable] = useState(false);
     const [koordinatorData, setKoordinatorData] = useState<DataRow[]>([]);
     
-    const [loading] = useState(true);
+    // Removed unused loading state
     const [adminData, setAdminData] = useState<DataRow[]>([]);
     const router = useRouter();
 

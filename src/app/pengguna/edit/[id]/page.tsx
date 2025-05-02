@@ -66,7 +66,7 @@ function EditUserPage() {
         ])
         setRoles(rolesRes.data)
         setAgencies(agenciesRes.data)
-      } catch (err) {
+      } catch {
         setError('Gagal memuat data awal (roles / agencies)')
       }
     }
@@ -90,7 +90,7 @@ function EditUserPage() {
           telepon: userData.telepon || '',
           status: userData.status || '',
         })
-      } catch (err) {
+      } catch {
         setError('Gagal memuat detail pengguna')
       } finally {
         setLoading(false)
@@ -118,8 +118,7 @@ function EditUserPage() {
       await axios.put(`/api/users/${id}`, formData)
       alert('Pengguna berhasil diperbarui')
       router.back()
-    } catch (err) {
-      console.error('Error updating user:', err)
+    } catch {
       alert('Gagal memperbarui pengguna')
     }
   }
@@ -298,8 +297,7 @@ function EditUserPage() {
   )
 }
 
-// Role Guard
 const ProtectedPage = withRoleGuard(EditUserPage, [1])
 export default function Page() {
-  return <EditUserPage />
+  return <ProtectedPage />
 }
