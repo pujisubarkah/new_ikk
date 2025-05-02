@@ -16,9 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       // Cari user berdasarkan username
       console.log('Searching for user:', username); // Log username yang dicari
-      const user = await prisma.user.findUnique({
+      const users = await prisma.user.findMany({
         where: {
-          username: username, // Ensure username is unique in the schema
+          username: username, // Search for all users with the given username
         },
         include: {
           role_user: {
@@ -28,6 +28,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         },
       });
+
+      if (users.length === 0) {
+        console.log(`User with username "${username}" not found`); // Log if no user is found
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (users.length > 1) {
+        console.log(`Multiple users found with username "${username}"`); // Log if multiple users are found
+        return res.status(400).json({ error: 'Multiple users found with the same username' });
+      }
+
+      const user = users[0]; // Use the first user if only one is found
 
       if (!user) {
         console.log(`User with username "${username}" not found`); // Log jika user tidak ditemukan
