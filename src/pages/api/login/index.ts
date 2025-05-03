@@ -3,83 +3,87 @@ import bcrypt from 'bcrypt';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const { username, password } = req.body;
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({
+      success: false,
+      error: 'Method tidak diizinkan'
+    });
+  }
 
-    console.log('Request Body:', req.body); // Log body request untuk memeriksa data yang dikirim
+  const { username, password } = req.body;
 
-    if (!username || !password) {
-      console.log('Missing username or password'); // Log jika username atau password tidak ada
-      return res.status(400).json({ error: 'Username and password are required' });
+  // Validasi input
+  if (typeof username !== 'string' || username.trim().length === 0 || !password) {
+    return res.status(400).json({
+      success: false,
+      error: 'Username dan password wajib diisi'
+    });
+  }
+
+  try {
+    // Cari user berdasarkan username
+    const user = await prisma.user.findUnique({
+      where: { username: username },
+      include: {
+        role_user: {
+          include: {
+            role: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User tidak ditemukan'
+      });
     }
 
-    try {
-      // Cari user berdasarkan username
-      console.log('Searching for user:', username); // Log username yang dicari
-      const users = await prisma.user.findMany({
-        where: {
-          username: username, // Search for all users with the given username
-        },
-        include: {
-          role_user: {
-            include: {
-              role: true,
-            },
-          },
-        },
+    // Pengecekan status akun
+    if (user.status !== 'aktif') {
+      return res.status(403).json({
+        success: false,
+        error: 'Akun Anda belum aktif. Silakan tunggu verifikasi admin.'
       });
+    }
 
-      if (users.length === 0) {
-        console.log(`User with username "${username}" not found`); // Log if no user is found
-        return res.status(404).json({ error: 'User not found' });
-      }
+    // Verifikasi password
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password tidak valid'
+      });
+    }
 
-      if (users.length > 1) {
-        console.log(`Multiple users found with username "${username}"`); // Log if multiple users are found
-        return res.status(400).json({ error: 'Multiple users found with the same username' });
-      }
+    const passwordValid = await bcrypt.compare(password, user.password);
+    if (!passwordValid) {
+      return res.status(401).json({
+        success: false,
+        error: 'Password salah'
+      });
+    }
 
-      const user = users[0]; // Use the first user if only one is found
-
-      if (!user) {
-        console.log(`User with username "${username}" not found`); // Log jika user tidak ditemukan
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      console.log('User found:', user); // Log data user yang ditemukan
-
-      // Periksa password dengan bcrypt
-      if (!user.password) {
-        console.log('User password is missing'); // Log jika password tidak ditemukan
-        return res.status(500).json({ error: 'User password is missing' });
-      }
-
-      // Cek apakah password yang dimasukkan sesuai dengan hash di database
-      console.log('Comparing passwords'); // Log sebelum membandingkan password
-      const passwordMatch = await bcrypt.compare(password, user.password);
-
-      if (!passwordMatch) {
-        console.log('Invalid password'); // Log jika password tidak cocok
-        return res.status(401).json({ error: 'Invalid password' });
-      }
-
-      // Kirim data pengguna beserta rolenya jika login berhasil
-      const responseData = {
-        id: String(user.id), // Konversi id ke String
+    // Response sukses
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: user.id.toString(),
         name: user.name,
         username: user.username,
-        role: user.role_user?.role?.name, // Mendapatkan nama role
-        role_id: user.role_user?.role?.id.toString(), // Menambahkan role_id ke response dan mengonversi BigInt menjadi String
-      };
-      
-      console.log('Login successful:', responseData); // Log data pengguna yang berhasil login
-      return res.status(200).json(responseData); // Mengembalikan response data pengguna
-    } catch (error) {
-      console.error('Error processing request:', error); // Log error yang terjadi di dalam try-catch
-      return res.status(500).json({ error: 'Error processing request' });
-    }
-  } else {
-    console.log('Invalid method'); // Log jika metode bukan POST
-    return res.status(405).json({ error: 'Method Not Allowed' }); // Jika bukan metode POST
+        email: user.email,
+        role: user.role_user?.role?.name || 'user',
+        role_id: user.role_user?.role?.id.toString(),
+        status: user.status
+      }
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Terjadi kesalahan saat proses login'
+    });
   }
 }
