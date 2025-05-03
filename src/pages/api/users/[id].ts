@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 
 // Helper untuk convert BigInt ke String secara otomatis
-const safeJson = (data: any) =>
+const safeJson = <T>(data: T): T =>
   JSON.parse(JSON.stringify(data, (_, value) =>
     typeof value === 'bigint' ? value.toString() : value
   ));
@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Menggunakan safeJson untuk memastikan BigInt aman
         res.status(200).json(safeJson(user));
       } catch (error) {
+        console.error('Error fetching user:', error);
         res.status(500).json({ error: 'Failed to fetch user' });
       }
       break;
