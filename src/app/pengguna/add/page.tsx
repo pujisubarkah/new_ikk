@@ -191,9 +191,13 @@ const TambahPengguna: React.FC = () => {
           router.push("/pengguna")
         }, 1500)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to submit form", error)
-      toast.error(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data")
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error("Terjadi kesalahan saat menyimpan data")
+      }
     } finally {
       setIsSubmitting(false)
     }
