@@ -99,18 +99,21 @@ function TabelInstansi() {
       } else {
         throw new Error(response.data?.message || 'Gagal menghapus pengguna')
       }
-    } catch (error: any) {
-      console.error('Error deleting user:', error)
-      
-      // Menampilkan pesan error yang lebih spesifik
-      const errorMessage = error.response?.data?.message 
-        || error.message 
-        || 'Terjadi kesalahan saat menghapus pengguna'
-      
-      toast.error(errorMessage, {
-        id: deleteToast
-      })
-    }
+    } catch (error: unknown) {
+        console.error('Error deleting user:', error);
+        
+        // Menampilkan pesan error yang lebih spesifik
+        const errorMessage =
+          axios.isAxiosError(error) && error.response?.data?.message
+            ? error.response.data.message
+            : error instanceof Error
+            ? error.message
+            : 'Terjadi kesalahan saat menghapus pengguna';
+        
+        toast.error(errorMessage, {
+          id: deleteToast,
+        });
+      }
   }
   const filteredData = data.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
