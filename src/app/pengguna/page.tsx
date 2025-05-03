@@ -30,6 +30,8 @@ function TabelInstansi() {
   const [currentPage, setCurrentPage] = useState(1)
 
   interface User {
+    active_year: string
+    instansi: any
     coordinator_type_name: string
     agency_name: string
     id: number
@@ -135,7 +137,7 @@ function TabelInstansi() {
                   <TableHead>Nama</TableHead>
                   <TableHead className="text-center">NIP</TableHead>
                   <TableHead className="text-center">Nama Instansi</TableHead>
-                  <TableHead className="text-center">Wilayah Kerja</TableHead>
+                  <TableHead className="text-center">Tahun Aktif</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
@@ -153,8 +155,8 @@ function TabelInstansi() {
                     <TableCell className="text-center">{startIndex + index + 1}</TableCell>
                     <TableCell>{item.name}</TableCell>
                     <TableCell className="text-center">{item.username}</TableCell>
-                    <TableCell className="text-center space-x-3">{item.agency_name ?? '-'}</TableCell>
-                    <TableCell className="text-center space-x-3">{item.coordinator_type_name ?? '-'}</TableCell>
+                    <TableCell className="text-center space-x-3">{item.instansi?.agency_name ?? '-'}</TableCell>
+                    <TableCell className="text-center space-x-3">{item.active_year ?? '-'}</TableCell>
                     <TableCell className="text-center">
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -166,19 +168,21 @@ function TabelInstansi() {
                       {item.status || 'Tidak Diketahui'}
                     </span>
                     </TableCell>
-                    <TableCell className="text-center space-x-25">
-                      <Button
-                        onClick={() => handleEdit(item.name)}
-                        className="text-blue-600 hover:text-blue-800 variant-ghost"
-                      >
-                        <FaEdit />
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(item.name)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <FaTrash />
-                      </Button>
+                    <TableCell className="text-center space-x-4 w-40">
+                        <div className="flex justify-center items-center space-x-2">
+                        <Button
+                          onClick={() => handleEdit(item.name)}
+                          className="flex justify-center items-center bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200"
+                        >
+                          <FaEdit />
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(item.name)}
+                          className="flex justify-center items-center bg-red-600 text-white hover:bg-red-700 rounded-md py-2 px-4 transition duration-200"
+                        >
+                          <FaTrash />
+                        </Button>
+                        </div>
                     </TableCell>
                   </TableRow>
     ))
