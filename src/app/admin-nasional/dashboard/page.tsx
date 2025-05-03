@@ -37,7 +37,7 @@ interface User {
   position: string | null;
   work_unit: string | null;
   active_year: string;
-  status: "aktif" | "nonaktif" | "pending";
+  status: "aktif" | "nonaktif" | "inactive";
   instansi: {
     agency_id: string;
     agency_name: string;
@@ -217,7 +217,7 @@ const DashboardPage: React.FC = () => {
                                 className={`px-2 py-1 rounded-full text-xs ${
                                   user.status === "aktif"
                                     ? "bg-green-100 text-green-800"
-                                    : user.status === "pending"
+                                    : user.status === "inactive"
                                     ? "bg-yellow-100 text-yellow-800"
                                     : "bg-red-100 text-red-800"
                                 }`}
@@ -246,7 +246,7 @@ const DashboardPage: React.FC = () => {
                                 user.status === "nonaktif") && (
                                 <button
                                   className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base"
-                                  onClick={() => approveUser(user.id)}
+                                  onClick={() => approveUser(Number(user.id))}
                                 >
                                   Approve
                                 </button>
