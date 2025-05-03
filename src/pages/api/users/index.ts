@@ -103,7 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const body = parsed.data;
       console.log('Parsed body:', body); // Log parsed data
 
-      const existing = await prisma.user.findUnique({ where: { email: body.email } });
+      const existing = await prisma.user.findFirst({ where: { email: body.email } });
       if (existing) {
         console.log('Email already exists:', body.email); // Log duplicate email
         return res.status(400).json({ error: 'Email already in use' });

@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Ambil enumerator yang sesuai admin_instansi_id
-    const adminInstansiEnumerators = await prisma.admin_instansi_enumerator.findMany({
+    const adminInstansiEnumerators = await prisma.validator_agency.findMany({
       where: {
         admin_instansi_id: BigInt(admin_instansi_id as string), // Konversi ke BigInt
       },

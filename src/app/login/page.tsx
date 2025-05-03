@@ -39,40 +39,51 @@ export default function Login() {
   }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError('')
-    setShowErrorModal(false)
-
+    e.preventDefault();
+    setError('');
+    setShowErrorModal(false);
+  
     try {
       const response = await axios.post('/api/login', {
         username,
         password,
-      })
-
-      const { id, role_id, username: resUsername, name, role } = response.data
-
-      // Simpan ke localStorage
-      localStorage.setItem('id', id.toString())
-      localStorage.setItem('role_id', role_id.toString())
-      localStorage.setItem('username', resUsername)
-      localStorage.setItem('name', name)
-      localStorage.setItem('role', role)
-
-      setShowSuccessModal(true)
-
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2000)
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data?.error || 'Login failed')
+      });
+  
+      console.log('Login Response:', response.data); // Log respons login untuk debugging
+  
+      // Cek apakah respons sukses
+      if (response.data.success) {
+        const { id, role_id, username: resUsername, name, role } = response.data.data;
+  
+        // Simpan ke localStorage
+        localStorage.setItem('id', id.toString());
+        localStorage.setItem('role_id', role_id.toString());
+        localStorage.setItem('username', resUsername);
+        localStorage.setItem('name', name);
+        localStorage.setItem('role', role);
+  
+        setShowSuccessModal(true);
+        setShowErrorModal(false); // Pastikan error modal disembunyikan
+  
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
       } else {
-        setError('An unexpected error occurred')
+        setError('Login failed: ' + response.data.error);
+        setShowErrorModal(true);
       }
-      setShowErrorModal(true)
+    } catch (err: unknown) {
+      console.error('Error during login:', err); // Log untuk melihat error lebih lanjut
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data?.error || 'Login failed');
+      } else {
+        setError('An unexpected error occurred');
+      }
+      setShowErrorModal(true);
     }
-  }
-
+  };
+  
+  
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Background Carousel */}

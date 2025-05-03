@@ -78,7 +78,7 @@ const Page = () => {
             <Sidebar>
                 <div className="w-full px-6 py-8">
                 <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-bold text-gray-800">Daftar Koordinator Instansi</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Daftar Tim Verifikasi</h1>
                     <input
                         type="text"
                         placeholder="Cari..."
@@ -110,7 +110,7 @@ const Page = () => {
   onClick={() => handleClick(row.koordinatorinstansiid)} // ✅ Panggil pakai ID
   className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
 >
-  Lihat Wilayah
+  Lihat Tim Verifikasi
 </Button>
                                     </TableCell>
                                 </TableRow>
