@@ -231,11 +231,11 @@ const TambahPengguna: React.FC = () => {
       });
       
       router.push('/registrasi-berhasil');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || error.message || "Terjadi kesalahan tidak diketahui",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan tidak diketahui",
         variant: "destructive",
       });
     } finally {
@@ -455,7 +455,7 @@ const TambahPengguna: React.FC = () => {
                 value={formData.suratPenunjukkan}
                 onChange={handleChange}
                 required
-                placeholder="https://drive.google.com/..."
+                placeholder="https://drive.google.com/&quot;..."
                 className={errors.suratPenunjukkan ? "border-red-500" : ""}
               />
               {errors.suratPenunjukkan && (
