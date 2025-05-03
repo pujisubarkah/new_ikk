@@ -11,56 +11,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      if (isNaN(Number(id))) {
-        return res.status(400).json({ error: 'Invalid ID parameter' });
-      }
-
       const koordinatorId = BigInt(id as string);
-      console.log('Fetching data for koordinator_utama_id:', koordinatorId);
 
-      const data = await prisma.koordinator_utama_koordinator_instansi.findMany({
+      const data = await prisma.koor_nasional_validator.findMany({
         where: {
-          koordinator_utama_id: koordinatorId,
+          koor_nasional_id: koordinatorId,
         },
         include: {
-          user_koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser: {
+          user_koor_nasional_validator_koor_nasional_idTouser: {
             select: {
               name: true,
               username: true,
               work_unit: true,
-              coordinator_type_id: true,
-              coordinator_types: true,
+              // coordinator_type_id: true, // Removed as it does not exist in the type
+              // coordinator_types removed as it does not exist in the type
             },
           },
         },
       });
 
-      console.log('Fetched data:', data);
+      const serializedData = data.map((item) => {
+        const user = item.user_koor_nasional_validator_koor_nasional_idTouser;
 
-      const serializedData: Record<string, unknown>[] = data.map(item => {
-        const user = item.user_koordinator_utama_koordinator_instansi_koordinator_instansi_idTouser;
-        return user ? {
-          coordinator_instansi_id: item.koordinator_instansi_id,
-          name: user.name,
-          username: user.username,
-          work_unit: user.work_unit,
-          coordinator_type_id: user.coordinator_type_id,
-          coordinator_type_name: user.coordinator_types && typeof user.coordinator_types === 'object' && 'name' in (user.coordinator_types as { name: string }) ? (user.coordinator_types as { name: string }).name : null,
-        } : {
-          coordinator_instansi_id: item.koordinator_instansi_id,
-          name: null,
-          username: null,
-          work_unit: null,
-          coordinator_type_id: null,
-          coordinator_type_name: null,
+        return {
+          id: item.id,
+          koor_nasional_id: item.koor_nasional_id,
+          validator_id: item.validator_id,
+          name: user?.name ?? null,
+          username: user?.username ?? null,
+          work_unit: user?.work_unit ?? null,
+          // coordinator_type_id removed as it does not exist in the type
+          // coordinator_type_name removed as it does not exist in the type
         };
       });
 
-      const serializedResponse = serializedData.map(item => serializeBigInt(item));
+      const result = serializedData.map(serializeBigInt);
 
-      res.status(200).json(serializedResponse);
+      res.status(200).json(result);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching data:', error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   } else {

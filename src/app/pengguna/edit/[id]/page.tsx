@@ -21,6 +21,9 @@ interface FormData {
   unitKerja: string
   telepon: string
   status: string
+  username?: string // Added username
+  position?: string // Added position
+  work_unit?: string // Added work_unit
 }
 
 interface Role {
@@ -161,7 +164,7 @@ function EditUserPage(): React.ReactNode {
         : `+62${cleanedPhone}`
 
       const payload: Partial<FormData & { agency_id: number; role_id: number }> = {
-        name: formData.nama,
+        nama: formData.nama,
         username: formData.nip,
         nik: formData.nik,
         agency_id: Number(formData.instansi),
