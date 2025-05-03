@@ -444,27 +444,28 @@ const TambahPengguna: React.FC = () => {
             </div>
             
             {/* SURAT PENUNJUKKAN */}
-            <div className="md:col-span-2">
-              <Label htmlFor="suratPenunjukkan">
-                Link Google Drive Surat Penunjukkan*
-                <span className="text-xs text-gray-500 ml-2">(Pastikan file dapat diakses oleh semua)</span>
-              </Label>
-              <Input
-                id="suratPenunjukkan"
-                name="suratPenunjukkan"
-                value={formData.suratPenunjukkan}
-                onChange={handleChange}
-                required
-                placeholder='https://drive.google.com/&quot;...'
-                className={errors.suratPenunjukkan ? "border-red-500" : ""}
-              />
-              {errors.suratPenunjukkan && (
-                <p className="text-red-500 text-sm mt-1">{errors.suratPenunjukkan}</p>
-              )}
-              <p className="text-sm text-gray-500 mt-1">
-                Cara membuat link shareable: Buka file di Google Drive → Klik "Bagikan" → Pilih "Siapa saja dengan link" → Salin link
-              </p>
-            </div>
+<div className="md:col-span-2">
+  <Label htmlFor="suratPenunjukkan">
+    Link Google Drive Surat Penunjukkan*
+    <span className="text-xs text-gray-500 ml-2">(Pastikan file dapat diakses oleh semua)</span>
+  </Label>
+  <Input
+    id="suratPenunjukkan"
+    name="suratPenunjukkan"
+    value={formData.suratPenunjukkan}
+    onChange={handleChange}
+    required
+    placeholder="https://drive.google.com/..."
+    className={errors.suratPenunjukkan ? "border-red-500" : ""}
+  />
+  {errors.suratPenunjukkan && (
+    <p className="text-red-500 text-sm mt-1">{errors.suratPenunjukkan}</p>
+  )}
+  <p className="text-sm text-gray-500 mt-1">
+    Cara membuat link shareable: Buka file di Google Drive → Klik &quot;Bagikan&quot; → Pilih &quot;Siapa saja dengan link&quot; → Salin link
+  </p>
+</div>
+
             
             {/* BUTTONS */}
             <div className="md:col-span-2 flex justify-between">
