@@ -1,201 +1,252 @@
-"use client"
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import axios from "axios";
 
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/components/ui/use-toast"
-import Navbar from "@/components/Navbar"
-import Footer from "@/components/Footer"
-
+// ================== TYPES ==================
 interface FormData {
-  nama: string
-  nip: string
-  nik: string
-  instansi: string
-  email: string
-  role: string
-  password: string
-  jabatan: string
-  telepon: string
-  status: string
-  suratPenunjukkan: string
+  nama: string;
+  nip: string;
+  nik: string;
+  instansi: string;
+  email: string;
+  role: string;
+  password: string;
+  jabatan: string;
+  unitKerja: string;
+  telepon: string;
+  status: string;
+  suratPenunjukkan: string;
+  penunjukkan_id?: number;
+  role_id: number;
 }
 
 interface Instansi {
-  id: string
-  name: string
-  category: string
+  id: string;
+  name: string;
+  category: string;
 }
 
+// ================== HELPER FUNCTIONS ==================
+const formatNipDisplay = (nip: string): string => {
+  return nip.replace(/(\d{4})(?=\d)/g, "$1 ");
+};
+
+const isValidGoogleDriveLink = (url: string): boolean => {
+  // Mencakup berbagai format tautan Google Drive/Sheets
+  const driveRegex = /^https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+/;
+  const sheetsRegex = /^https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]+(\/edit#gid=\d+)?/;
+  return driveRegex.test(url) || sheetsRegex.test(url);
+};
+
+// ================== MAIN COMPONENT ==================
 const TambahPengguna: React.FC = () => {
-  const { toast } = useToast()
+  // ================== HOOKS ==================
+  const { toast } = useToast();
+  const router = useRouter();
+
+  // ================== STATE ==================
   const [formData, setFormData] = useState<FormData>({
     nama: "",
     nip: "",
     nik: "",
     instansi: "",
     email: "",
-    role: "Admin Instansi",
+    role: "Koordinator Instansi",
     password: "",
     jabatan: "",
+    unitKerja: "",
     telepon: "",
-    status: "Aktif",
-    suratPenunjukkan: ""
-  })
+    status: "Nonaktif",
+    suratPenunjukkan: "",
+    role_id: 4,
+  });
 
-  const [instansis, setInstansis] = useState<Instansi[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const router = useRouter()
+  const [instansis, setInstansis] = useState<Instansi[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Daftar field yang wajib diisi
+  // ================== CONSTANTS ==================
   const mandatoryFields = [
-    'nama', 'nip', 'nik', 'instansi', 'email', 
-    'password', 'jabatan', 'telepon', 'suratPenunjukkan'
-  ]
+    "nama",
+    "nip",
+    "nik",
+    "instansi",
+    "email",
+    "password",
+    "jabatan",
+    "unitKerja",
+    "telepon",
+    "suratPenunjukkan",
+  ];
 
+  // ================== EFFECTS ==================
   useEffect(() => {
     const fetchInstansi = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
       try {
-        const res = await fetch("/api/instansi")
-        if (!res.ok) {
-          throw new Error("Failed to fetch instansi")
-        }
-        const data = await res.json()
-        setInstansis(data)
+        const response = await axios.get("/api/instansi");
+        setInstansis(response.data);
       } catch (err) {
-        console.error("Failed to fetch instansi", err)
-        setError("Gagal memuat data instansi")
+        console.error("Failed to fetch instansi:", err);
+        setError("Gagal memuat data instansi");
+        toast({
+          title: "Error",
+          description: "Gagal memuat data instansi",
+          variant: "destructive",
+        });
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-    fetchInstansi()
-  }, [])
+    };
+    fetchInstansi();
+  }, [toast]);
 
+  // ================== EVENT HANDLERS ==================
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
+    const { name, value } = e.target;
+    
+    setFormData(prev => ({
       ...prev,
       [name]: value,
-    }))
+      ...(name === "nip" && { username: value.replace(/[^0-9]/g, '') })
+    }));
     
-    // Clear error ketika user mulai mengisi
     if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = {...prev}
-        delete newErrors[name]
-        return newErrors
-      })
+      setErrors(prev => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-    let isValid = true
+  // ================== VALIDATION ==================
+  const validateForm = async () => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
 
-    // Validasi field wajib
-    mandatoryFields.forEach(field => {
-      if (!formData[field as keyof FormData]) {
-        newErrors[field] = "Field ini wajib diisi"
-        isValid = false
+    // Validasi required fields
+    mandatoryFields.forEach((field) => {
+      if (!formData[field as keyof FormData]?.toString().trim()) {
+        newErrors[field] = "Field ini wajib diisi";
+        isValid = false;
       }
-    })
+    });
 
-    // Validasi format khusus
-    if (formData.nip && !/^\d+$/.test(formData.nip)) {
-      newErrors.nip = "NIP harus berupa angka"
-      isValid = false
+    // Validasi NIP
+    if (formData.nip) {
+      const cleanNip = formData.nip.replace(/[^0-9]/g, '');
+      
+      if (!/^\d+$/.test(cleanNip)) {
+        newErrors.nip = "NIP hanya boleh mengandung angka";
+        isValid = false;
+      } else {
+        try {
+          const response = await axios.get(`/api/users/check-nip?nip=${cleanNip}`);
+          if (response.data.exists) {
+            newErrors.nip = "NIP ini sudah terdaftar";
+            isValid = false;
+          }
+        } catch (error) {
+          console.error("Gagal memverifikasi NIP:", error);
+        }
+      }
     }
 
+    // Validasi NIK
     if (formData.nik && !/^\d+$/.test(formData.nik)) {
-      newErrors.nik = "NIK harus berupa angka"
-      isValid = false
+      newErrors.nik = "NIK harus berupa angka";
+      isValid = false;
     }
 
+    // Validasi telepon
     if (formData.telepon && !/^\d+$/.test(formData.telepon)) {
-      newErrors.telepon = "Nomor telepon harus berupa angka"
-      isValid = false
+      newErrors.telepon = "Nomor telepon harus berupa angka";
+      isValid = false;
     }
 
+    // Validasi password
     if (formData.password && formData.password.length < 8) {
-      newErrors.password = "Password minimal 8 karakter"
-      isValid = false
+      newErrors.password = "Password minimal 8 karakter";
+      isValid = false;
     }
 
+    // Validasi email
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Format email tidak valid"
-      isValid = false
+      newErrors.email = "Format email tidak valid";
+      isValid = false;
     }
 
-    if (formData.suratPenunjukkan && !formData.suratPenunjukkan.includes("drive.google.com")) {
-      newErrors.suratPenunjukkan = "Harus berupa link Google Drive yang valid"
-      isValid = false
+    // Validasi link surat penunjukkan
+    if (formData.suratPenunjukkan && !isValidGoogleDriveLink(formData.suratPenunjukkan)) {
+      newErrors.suratPenunjukkan = "Harus berupa link Google Drive/Sheets yang valid";
+      isValid = false;
     }
 
-    setErrors(newErrors)
-    return isValid
-  }
+    setErrors(newErrors);
+    return isValid;
+  };
 
+  // ================== FORM SUBMISSION ==================
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
-    if (!validateForm()) {
+    const isValid = await validateForm();
+    if (!isValid) {
       toast({
         title: "Error Validasi",
         description: "Harap perbaiki field yang ditandai",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
-
-    setIsLoading(true)
-    setError(null)
     
+    setIsLoading(true);
     try {
-      console.log("Form Data:", formData)
-      // TODO: kirim ke API
-      // const res = await fetch("/api/user", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(formData)
-      // })
-      // if (!res.ok) throw new Error(await res.text())
+      // 1. Upload surat penunjukkan
+      const suratResponse = await axios.post('/api/surat_penunjukkan', {
+        file: formData.suratPenunjukkan
+      });
+      
+      const penunjukkanId = suratResponse.data.id;
 
+      // 2. Simpan user
+      await axios.post('/api/users', {
+        name: formData.nama,
+        username: formData.nip.replace(/[^0-9]/g, ''),
+        NIK: formData.nik,
+        agency_id: formData.instansi,
+        email: formData.email,
+        phone: formData.telepon,
+        position: formData.jabatan,
+        work_unit: formData.unitKerja,
+        role_id: formData.role_id,
+        status: formData.status,
+        password: formData.password,
+        penunjukkan_id: penunjukkanId
+      });
+      
+      router.push('/registrasi-berhasil');
+    } catch (error: any) {
+      console.error("Error:", error);
       toast({
-        title: "Registrasi Berhasil",
-        description: "Admin akan segera memverifikasi data anda.",
-      })
-
-      // router.push("/halaman-berikutnya") // kalau mau redirect
-    } catch (err) {
-      console.error("Failed to submit form", err)
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tidak diketahui"
-      toast({
-        description: (
-          <div>
-            <strong>Gagal menyimpan data</strong>
-            <p>{errorMessage}</p>
-          </div>
-        ),
+        title: "Error",
+        description: error.response?.data?.message || error.message || "Terjadi kesalahan tidak diketahui",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleBack = () => {
-    router.push("/")
-  }
+  // ================== NAVIGATION ==================
+  const handleBack = () => router.push("/");
 
+  // ================== RENDER ==================
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -205,40 +256,56 @@ const TambahPengguna: React.FC = () => {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Registrasi Koordinator Instansi</h1>
           </div>
-
+          
           {error && (
-            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-              {error}
-            </div>
+            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">{error}</div>
           )}
-
+          
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* ROLE */}
+            {/* ROLE - Tampilkan sebagai Koordinator Instansi */}
             <div className="md:col-span-2">
               <Label htmlFor="role">Role</Label>
               <Input
                 id="role"
                 name="role"
-                value="Admin Instansi"
+                value="Koordinator Instansi"
                 readOnly
                 className="w-full bg-gray-100 cursor-not-allowed"
               />
+              {/* Tambahkan input hidden untuk mengirim role_id */}
+              <input type="hidden" name="role_id" value={formData.role_id} />
             </div>
-
-            {/* KIRI */}
+            
+            {/* BAGIAN KIRI */}
             <div className="grid gap-4">
               <div>
                 <Label htmlFor="nip">NIP*</Label>
-                <Input 
-                  id="nip" 
-                  name="nip" 
-                  value={formData.nip} 
-                  onChange={handleChange} 
-                  required
-                  className={errors.nip ? "border-red-500" : ""}
+                <Input
+                  id="nip"
+                  name="nip"
+                  value={formatNipDisplay(formData.nip)}
+                  onChange={handleChange}
+                  onBlur={async (e) => {
+                    const cleanNip = e.target.value.replace(/[^0-9]/g, '');
+                    setFormData(prev => ({ ...prev, nip: cleanNip }));
+                    
+                    // Validasi real-time saat blur
+                    if (cleanNip.length === 18) {
+                      try {
+                        const response = await fetch(`/api/users/check-nip?nip=${cleanNip}`);
+                        const data = await response.json();
+                        if (data.exists) {
+                          setErrors(prev => ({ ...prev, nip: "NIP ini sudah terdaftar" }));
+                        }
+                      } catch (error) {
+                        console.error("Gagal memverifikasi NIP:", error);
+                      }
+                    }
+                  }}
                 />
                 {errors.nip && <p className="text-red-500 text-sm mt-1">{errors.nip}</p>}
               </div>
+              
               <div>
                 <Label htmlFor="nik">NIK*</Label>
                 <Input 
@@ -251,6 +318,7 @@ const TambahPengguna: React.FC = () => {
                 />
                 {errors.nik && <p className="text-red-500 text-sm mt-1">{errors.nik}</p>}
               </div>
+              
               <div>
                 <Label htmlFor="instansi">Nama Instansi*</Label>
                 <select
@@ -262,7 +330,9 @@ const TambahPengguna: React.FC = () => {
                   disabled={isLoading || instansis.length === 0}
                   className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.instansi ? "border-red-500" : "border-input"}`}
                 >
-                  <option value="">{isLoading ? "Memuat..." : instansis.length === 0 ? "Tidak ada instansi" : "Pilih Instansi"}</option>
+                  <option value="">
+                    {isLoading ? "Memuat..." : instansis.length === 0 ? "Tidak ada instansi" : "Pilih Instansi"}
+                  </option>
                   {instansis.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
@@ -271,6 +341,7 @@ const TambahPengguna: React.FC = () => {
                 </select>
                 {errors.instansi && <p className="text-red-500 text-sm mt-1">{errors.instansi}</p>}
               </div>
+              
               <div>
                 <Label htmlFor="email">Email Aktif*</Label>
                 <Input
@@ -284,6 +355,7 @@ const TambahPengguna: React.FC = () => {
                 />
                 {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
+              
               <div>
                 <Label htmlFor="password">Password*</Label>
                 <Input
@@ -298,8 +370,8 @@ const TambahPengguna: React.FC = () => {
                 {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>
             </div>
-
-            {/* KANAN */}
+            
+            {/* BAGIAN KANAN */}
             <div className="grid gap-4">
               <div>
                 <Label htmlFor="nama">Nama*</Label>
@@ -313,6 +385,7 @@ const TambahPengguna: React.FC = () => {
                 />
                 {errors.nama && <p className="text-red-500 text-sm mt-1">{errors.nama}</p>}
               </div>
+              
               <div>
                 <Label htmlFor="jabatan">Jabatan*</Label>
                 <Input 
@@ -325,6 +398,20 @@ const TambahPengguna: React.FC = () => {
                 />
                 {errors.jabatan && <p className="text-red-500 text-sm mt-1">{errors.jabatan}</p>}
               </div>
+              
+              <div>
+                <Label htmlFor="unitKerja">Unit Kerja*</Label>
+                <Input 
+                  id="unitKerja" 
+                  name="unitKerja" 
+                  value={formData.unitKerja} 
+                  onChange={handleChange} 
+                  required
+                  className={errors.unitKerja ? "border-red-500" : ""}
+                />
+                {errors.unitKerja && <p className="text-red-500 text-sm mt-1">{errors.unitKerja}</p>}
+              </div>
+              
               <div>
                 <Label htmlFor="telepon">Nomor Telepon Aktif*</Label>
                 <div className="flex items-center gap-2">
@@ -343,18 +430,19 @@ const TambahPengguna: React.FC = () => {
                 </div>
                 {errors.telepon && <p className="text-red-500 text-sm mt-1">{errors.telepon}</p>}
               </div>
+              
               <div>
                 <Label htmlFor="status">Status</Label>
                 <Input
                   id="status"
                   name="status"
-                  value="Aktif"
+                  value="Nonaktif"
                   readOnly
                   className="w-full bg-gray-100 cursor-not-allowed"
                 />
               </div>
             </div>
-
+            
             {/* SURAT PENUNJUKKAN */}
             <div className="md:col-span-2">
               <Label htmlFor="suratPenunjukkan">
@@ -377,7 +465,7 @@ const TambahPengguna: React.FC = () => {
                 Cara membuat link shareable: Buka file di Google Drive → Klik "Bagikan" → Pilih "Siapa saja dengan link" → Salin link
               </p>
             </div>
-
+            
             {/* BUTTONS */}
             <div className="md:col-span-2 flex justify-between">
               <Button type="button" variant="secondary" onClick={handleBack}>
@@ -390,10 +478,10 @@ const TambahPengguna: React.FC = () => {
           </form>
         </div>
       </main>
-
+      
       <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default TambahPengguna
+export default TambahPengguna;
