@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
+import { toast } from 'sonner'
 
 interface FormData {
   nama: string
@@ -18,6 +18,7 @@ interface FormData {
   role: string
   password: string
   jabatan: string
+  unitKerja: string
   telepon: string
   status: string
 }
@@ -33,10 +34,9 @@ interface Agency {
   category: string
 }
 
-function EditUserPage() {
+function EditUserPage(): React.ReactNode {
   const router = useRouter()
   const params = useParams()
-
   const id = params?.id as string
 
   const [formData, setFormData] = useState<FormData>({
@@ -48,14 +48,42 @@ function EditUserPage() {
     role: '',
     password: '',
     jabatan: '',
+    unitKerja: '',
     telepon: '',
     status: '',
   })
-
   const [roles, setRoles] = useState<Role[]>([])
   const [agencies, setAgencies] = useState<Agency[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const validateEmail = (email: string): boolean => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return re.test(email)
+  }
+
+  const validateForm = (): boolean => {
+    const requiredFields: (keyof FormData)[] = [
+      'nama', 'nip', 'nik', 'instansi', 'email', 'jabatan'
+    ]
+    const errors: string[] = []
+
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        errors.push(`${field.charAt(0).toUpperCase() + field.slice(1)} wajib diisi`)
+      }
+    })
+
+    if (!validateEmail(formData.email)) {
+      errors.push('Format email tidak valid')
+    }
+
+    if (errors.length > 0) {
+      toast.error(errors.join(', '))
+      return false
+    }
+    return true
+  }
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -66,34 +94,33 @@ function EditUserPage() {
         ])
         setRoles(rolesRes.data)
         setAgencies(agenciesRes.data)
-      } catch {
-        setError('Gagal memuat data awal (roles / agencies)')
+      } catch (err: any) {
+        console.error('Gagal memuat data awal:', err)
+        setError('Gagal memuat data roles atau instansi')
       }
     }
 
     const fetchUserData = async () => {
       if (!id) return
-
       try {
         const response = await axios.get(`/api/users/${id}`)
         const userData = response.data
-
         setFormData({
           nama: userData.name || '',
           nip: userData.username || '',
           nik: userData.nik || '',
-          instansi: userData.agency_id.toString() || '',
+          instansi: userData.agency_id?.toString() || '',
           email: userData.email || '',
-          role: userData.role_user?.role_id.toString() || '',
+          role: userData.role_user?.role_id?.toString() || '',
           password: '',
-          jabatan: userData.work_unit || '',
+          jabatan: userData.position || '',
+          unitKerja: userData.work_unit || '',
           telepon: userData.telepon || '',
           status: userData.status || '',
         })
-      } catch {
+      } catch (err: any) {
+        console.error('Gagal memuat detail pengguna:', err)
         setError('Gagal memuat detail pengguna')
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -113,22 +140,80 @@ function EditUserPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) return
+    setLoading(true)
+
+    const updateToast = toast.loading('Sedang memperbarui data...')
 
     try {
-      await axios.put(`/api/users/${id}`, formData)
-      alert('Pengguna berhasil diperbarui')
-      router.back()
-    } catch {
-      alert('Gagal memperbarui pengguna')
+      const cleanedPhone = formData.telepon.replace(/^0+/, '')
+      const phoneWithPrefix = cleanedPhone.startsWith('+62') 
+        ? cleanedPhone 
+        : `+62${cleanedPhone}`
+
+      const payload: any = {
+        name: formData.nama,
+        username: formData.nip,
+        nik: formData.nik,
+        agency_id: Number(formData.instansi),
+        email: formData.email,
+        role_id: Number(formData.role),
+        position: formData.jabatan,
+        work_unit: formData.unitKerja,
+        telepon: phoneWithPrefix,
+        status: formData.status
+      }
+
+      if (formData.password) {
+        payload.password = formData.password
+      }
+
+      await axios.put(`/api/users/${id}`, payload)
+
+      toast.success('Data pengguna berhasil diperbarui', {
+        id: updateToast
+      })
+
+      // Delay redirect to allow toast to be visible
+      setTimeout(() => {
+        router.push('/pengguna')
+      }, 1500)
+      
+    } catch (error: any) {
+      toast.dismiss(updateToast)
+      console.error('API Error:', error)
+      
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message)
+      } else if (error.request) {
+        toast.error('Server tidak merespons. Periksa koneksi Anda.')
+      } else {
+        toast.error('Terjadi kesalahan saat mengirim permintaan.')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
   if (loading) {
-    return <p>Loading...</p>
+    return (
+      <Sidebar>
+        <div className="w-full px-6 py-8">
+          <p>Loading...</p>
+        </div>
+      </Sidebar>
+    )
   }
 
   if (error) {
-    return <p className="text-red-500">{error}</p>
+    return (
+      <Sidebar>
+        <div className="w-full px-6 py-8">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </Sidebar>
+    )
   }
 
   return (
@@ -137,7 +222,7 @@ function EditUserPage() {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Edit Pengguna</h1>
         </div>
-
+        
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* ROLE */}
           <div className="md:col-span-2">
@@ -161,7 +246,7 @@ function EditUserPage() {
             </select>
           </div>
 
-          {/* KIRI */}
+          {/* Kolom Kiri */}
           <div className="grid gap-4">
             <div>
               <Label htmlFor="nip">NIP</Label>
@@ -171,8 +256,10 @@ function EditUserPage() {
                 value={formData.nip}
                 onChange={handleChange}
                 required
+                placeholder="Masukkan NIP"
               />
             </div>
+            
             <div>
               <Label htmlFor="nik">NIK</Label>
               <Input
@@ -181,8 +268,10 @@ function EditUserPage() {
                 value={formData.nik}
                 onChange={handleChange}
                 required
+                placeholder="Masukkan NIK"
               />
             </div>
+            
             <div>
               <Label htmlFor="instansi">Nama Instansi</Label>
               <select
@@ -203,6 +292,7 @@ function EditUserPage() {
                 ))}
               </select>
             </div>
+            
             <div>
               <Label htmlFor="email">Email Aktif</Label>
               <Input
@@ -212,8 +302,10 @@ function EditUserPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                placeholder="Masukkan email"
               />
             </div>
+            
             <div>
               <Label htmlFor="password">Password</Label>
               <Input
@@ -222,11 +314,12 @@ function EditUserPage() {
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
+                placeholder="Biarkan kosong jika tidak ingin mengubah"
               />
             </div>
           </div>
 
-          {/* KANAN */}
+          {/* Kolom Kanan */}
           <div className="grid gap-4">
             <div>
               <Label htmlFor="nama">Nama</Label>
@@ -236,8 +329,10 @@ function EditUserPage() {
                 value={formData.nama}
                 onChange={handleChange}
                 required
+                placeholder="Masukkan nama lengkap"
               />
             </div>
+            
             <div>
               <Label htmlFor="jabatan">Jabatan</Label>
               <Input
@@ -245,10 +340,22 @@ function EditUserPage() {
                 name="jabatan"
                 value={formData.jabatan}
                 onChange={handleChange}
+                placeholder="Contoh: Kepala Dinas"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="unitKerja">Unit Kerja</Label>
+              <Input
+                id="unitKerja"
+                name="unitKerja"
+                value={formData.unitKerja}
+                onChange={handleChange}
+                placeholder="Contoh: Dinas"
               />
             </div>
             <div>
-              <Label htmlFor="telepon">Nomor Telepon Aktif</Label>
+              <Label htmlFor="telepon">Telepon</Label>
               <div className="relative">
                 <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">
                   +62
@@ -259,10 +366,11 @@ function EditUserPage() {
                   value={formData.telepon}
                   onChange={handleChange}
                   className="pl-14"
-                  placeholder="Nomor Telepon"
+                  placeholder="8123456789"
                 />
               </div>
             </div>
+            
             <div>
               <Label htmlFor="status">Status</Label>
               <select
@@ -282,13 +390,22 @@ function EditUserPage() {
             </div>
           </div>
 
-          {/* BUTTON */}
+          {/* Tombol Aksi */}
           <div className="col-span-1 md:col-span-2 flex justify-between mt-4">
-            <Button type="button" variant="secondary" onClick={router.back}>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={() => router.push('/pengguna')}
+              disabled={loading}
+            >
               Kembali
             </Button>
-            <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">
-              Simpan
+            <Button 
+              type="submit" 
+              className="bg-green-600 hover:bg-green-700 text-white" 
+              disabled={loading}
+            >
+              {loading ? "Menyimpan..." : "Simpan Perubahan"}
             </Button>
           </div>
         </form>
@@ -298,6 +415,7 @@ function EditUserPage() {
 }
 
 const ProtectedPage = withRoleGuard(EditUserPage, [1])
+
 export default function Page() {
   return <ProtectedPage />
 }
