@@ -94,8 +94,12 @@ function EditUserPage(): React.ReactNode {
         ])
         setRoles(rolesRes.data)
         setAgencies(agenciesRes.data)
-      } catch (err: any) {
-        console.error('Gagal memuat data awal:', err)
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error('Gagal memuat data awal:', err.message)
+        } else {
+          console.error('Gagal memuat data awal:', err)
+        }
         setError('Gagal memuat data roles atau instansi')
       }
     }
@@ -110,7 +114,7 @@ function EditUserPage(): React.ReactNode {
           nip: userData.username || '',
           nik: userData.nik || '',
           instansi: userData.agency_id?.toString() || '',
-          email: userData.email || '',
+          email: userData?.email || '',
           role: userData.role_user?.role_id?.toString() || '',
           password: '',
           jabatan: userData.position || '',
@@ -118,8 +122,12 @@ function EditUserPage(): React.ReactNode {
           telepon: userData.telepon || '',
           status: userData.status || '',
         })
-      } catch (err: any) {
-        console.error('Gagal memuat detail pengguna:', err)
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error('Gagal memuat detail pengguna:', err.message)
+        } else {
+          console.error('Gagal memuat detail pengguna:', err)
+        }
         setError('Gagal memuat detail pengguna')
       }
     }
@@ -152,7 +160,7 @@ function EditUserPage(): React.ReactNode {
         ? cleanedPhone 
         : `+62${cleanedPhone}`
 
-      const payload: any = {
+      const payload: Partial<FormData & { agency_id: number; role_id: number }> = {
         name: formData.nama,
         username: formData.nip,
         nik: formData.nik,
@@ -180,13 +188,13 @@ function EditUserPage(): React.ReactNode {
         router.push('/pengguna')
       }, 1500)
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.dismiss(updateToast)
       console.error('API Error:', error)
       
-      if (error.response?.data?.message) {
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
         toast.error(error.response.data.message)
-      } else if (error.request) {
+      } else if (axios.isAxiosError(error) && error.request) {
         toast.error('Server tidak merespons. Periksa koneksi Anda.')
       } else {
         toast.error('Terjadi kesalahan saat mengirim permintaan.')
