@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Kirim email pemberitahuan ke admin
       const adminEmail = 'admin@example.com'; // Ganti dengan email admin yang sesuai
-      await sendApprovalEmail(adminEmail, updatedUser.name || 'Unknown', updatedUser.email);
+      await sendApprovalEmail(adminEmail, updatedUser.name || 'Unknown', updatedUser.email || 'no-reply@example.com');
 
       return res.status(200).json({ message: 'User approved and email sent' });
     } catch (error) {
