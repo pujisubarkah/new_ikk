@@ -75,18 +75,6 @@ const Page = () => {
         fetchKoordinatorData();
     }, []);
 
-    const fetchValidatorData = async (validatorId: string) => {
-        try {
-            setIsLoading(true);
-            const response = await axios.get(`/api/validator/${validatorId}/koordinators`);
-            setValidatorData(response.data);
-        } catch (error) {
-            console.error("Error fetching validator data:", error);
-            alert("Gagal memuat data validator");
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleTampilkanAdmin = async () => {
         try {
@@ -115,8 +103,13 @@ const Page = () => {
     };
 
     const handleTambah = () => {
-        router.push("/koordinator-utama/pengguna/tambah");
-    };
+        if (activeTab === "koordinator") {
+          router.push("/koordinator-utama/verifikator/tambah"); // untuk Tim Verifikasi
+        } else {
+          router.push("/koordinator-utama/pengguna/tambah"); // untuk Koordinator Instansi
+        }
+      }
+      
 
     // Filter data dengan debounce
     const filteredKoordinatorData = koordinatorData.filter(
@@ -138,7 +131,7 @@ const Page = () => {
                             onClick={handleTambah} 
                             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md"
                         >
-                            Tambah {activeTab === "koordinator" ? "Koordinator Tim Verifikasi" : "Koordinator Instansi"}
+                            Tambah {activeTab === "koordinator" ? "Tim Verifikasi" : "Koordinator Instansi"}
                         </Button>
                         <Input
                             type="text"
