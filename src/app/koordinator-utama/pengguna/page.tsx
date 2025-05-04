@@ -50,12 +50,12 @@ const Page = () => {
 
     useEffect(() => {
         const fetchKoordinatorData = async () => {
-            const id = localStorage.getItem("id");
+            const id = typeof window !== "undefined" ? localStorage.getItem("id") : null;
             if (id) {
                 try {
                     setIsLoading(true);
                     const response = await axios.get(`/api/koordinator_utama?id=${id}`);
-                    const formattedData = response.data.map((item: any, index: number) => ({
+                    const formattedData = response.data.map((item: { name: string; username: string; coordinator_type_name: string; validator_id?: string; work_unit?: string; }, index: number) => ({
                         no: index + 1,
                         nama: item.name,
                         nip: item.username,
@@ -266,7 +266,7 @@ const Page = () => {
         </tr>
       </thead>
       <tbody>
-        {validatorData.flatMap((validator, validatorIndex) =>
+        {validatorData.flatMap((validator) =>
           (validator.koordinator_instansi || []).map((instansi, instansiIndex) => (
             <tr key={`${validator.validator_id}-${instansi.id}`} className="hover:bg-blue-50 transition duration-150">
               <td className="px-6 py-4 border-b text-center">{instansiIndex + 1}</td>
