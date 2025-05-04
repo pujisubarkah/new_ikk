@@ -16,12 +16,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('Cek email:', email);
 
     const user = await prisma.user.findUnique({
-      where: { email: email as string },
+      where: { 
+        email: email // No need for type assertion if email is properly typed in your schema
+      },
     });
 
     return res.status(200).json({ exists: !!user });
   } catch (error) {
     console.error('Error checking email:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }
