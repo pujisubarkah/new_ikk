@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/lib/prisma'; // Sesuaikan dengan path prisma yang kamu gunakan
+import prisma from '@/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { validatorId } = req.query;
@@ -21,6 +21,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               id: true,
               name: true,
               username: true,
+              agencies: {
+                select: { 
+                  name: true,
+                },
+              },
             },
           },
         },
@@ -31,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: item.user_koor_instansi_validator_koor_instansi_idTouser?.id?.toString() ?? null,
         name: item.user_koor_instansi_validator_koor_instansi_idTouser?.name ?? null,
         username: item.user_koor_instansi_validator_koor_instansi_idTouser?.username ?? null,
+        instansi: item.user_koor_instansi_validator_koor_instansi_idTouser?.agencies?.name ?? null,
       }));
 
       res.status(200).json(result);
