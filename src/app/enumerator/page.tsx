@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/sidebar";
-import { withRoleGuard } from '@/lib/withRoleGuard';
+import { withRoleGuard } from "@/lib/withRoleGuard";
 
 interface Enumerator {
   id: string;
@@ -15,40 +15,30 @@ interface Enumerator {
 
 function EnumeratorPage() {
   const [enumerators, setEnumerators] = useState<Enumerator[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-
       try {
         const koorinstansiId = localStorage.getItem("id");
         if (!koorinstansiId) {
-          throw new Error("Admin Instansi ID not found");
+          console.error("Admin Instansi ID tidak ditemukan");
+          return;
         }
 
         const response = await fetch(`/api/analis_instansi?koor_instansi_id=${koorinstansiId}`);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          console.error(`HTTP error! status: ${response.status}`);
+          return;
         }
 
         const data = await response.json();
 
-        if (!Array.isArray(data.analis_instansi) || data.analis_instansi.length === 0) {
-          throw new Error("Data enumerators is not an array or empty");
+        if (Array.isArray(data.analis_instansi)) {
+          setEnumerators(data.analis_instansi);
         }
-
-        setEnumerators(data.analis_instansi); // Ganti dengan data.analis_instansi
-
       } catch (err) {
         console.error("Fetch error:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch data");
-        setEnumerators([]);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -61,30 +51,10 @@ function EnumeratorPage() {
 
   const handleDelete = (id: string) => {
     if (confirm("Apakah kamu yakin ingin menghapus enumerator ini?")) {
-      // Di sini bisa ditambahkan logika hapusnya (API call delete)
       console.log(`Hapus enumerator dengan ID: ${id}`);
+      // Implement delete logic here
     }
   };
-
-  if (isLoading) {
-    return (
-      <Sidebar>
-        <div className="p-6">
-          <p>Loading data enumerator...</p>
-        </div>
-      </Sidebar>
-    );
-  }
-
-  if (error) {
-    return (
-      <Sidebar>
-        <div className="p-6">
-          <p className="text-red-500">Error: {error}</p>
-        </div>
-      </Sidebar>
-    );
-  }
 
   return (
     <Sidebar>
@@ -99,7 +69,7 @@ function EnumeratorPage() {
           </Button>
         </div>
 
-        <div className="overflow-auto rounded-lg border mb-4">
+        <div className="overflow-auto rounded-lg border">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -125,7 +95,7 @@ function EnumeratorPage() {
                     <td className="px-4 py-2">{enumerator.unit_kerja || '-'}</td>
                     <td className="px-4 py-2">{enumerator.nip}</td>
                     <td className="px-4 py-2 space-x-2">
-                        <Button
+                      <Button
                         className="bg-yellow-400 hover:bg-yellow-500 text-white"
                         onClick={() => handleEdit(enumerator.id)}
                       >
@@ -147,9 +117,10 @@ function EnumeratorPage() {
       </div>
     </Sidebar>
   );
-};
+}
 
 const ProtectedPage = withRoleGuard(EnumeratorPage, [4]);
+
 export default function Page() {
-    return <ProtectedPage />
-  }
+  return <ProtectedPage />;
+}
