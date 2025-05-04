@@ -113,8 +113,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const newKoorInstansiAnalis = await prisma.koor_instansi_analis.create({
         data: {
           // Let Prisma auto-generate the ID
-          koor_instansi_id: BigInt(koor_instansi_id),
-          analis_instansi_id: user.id,
+          koor_instansi_id: Number(koor_instansi_id),
+          analis_instansi_id: Number(user.id),
         },
       });
 
