@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-import { act } from 'react';
 
 // Helper untuk convert BigInt ke String secara otomatis
 const safeJson = <T>(data: T): T =>

@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           OR: [{ deleted: null }, { deleted: '0' }],
           ...(role_id && {
             id: {
-              in: roleUsers?.map((ru: { user_id: any; }) => ru.user_id) || []
+              in: roleUsers?.map((ru: { user_id: bigint; }) => ru.user_id) || []
             }
           }),
         },

@@ -6,7 +6,7 @@ interface Role {
   id: bigint;
   created_by: bigint | null;
   modified_by: bigint | null;
-  [key: string]: any; // Include other fields dynamically if needed
+  [key: string]: unknown; // Include other fields dynamically if needed
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
