@@ -8,7 +8,7 @@ import { withRoleGuard } from '@/lib/withRoleGuard';
 
 interface Enumerator {
   id: string;
-  name: string;
+  nama: string;
   nip: string;
   unit_kerja: string;
 }
@@ -25,25 +25,24 @@ function EnumeratorPage() {
       setError(null);
 
       try {
-        const adminInstansiId = localStorage.getItem("id");
-        if (!adminInstansiId) {
+        const koorinstansiId = localStorage.getItem("id");
+        if (!koorinstansiId) {
           throw new Error("Admin Instansi ID not found");
         }
 
-        const response = await fetch(`/api/pengguna_enumerator?admin_instansi_id=${adminInstansiId}`);
+        const response = await fetch(`/api/analis_instansi?koor_instansi_id=${koorinstansiId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
 
-        if (!Array.isArray(data) || data.length === 0) {
+        if (!Array.isArray(data.analis_instansi) || data.analis_instansi.length === 0) {
           throw new Error("Data enumerators is not an array or empty");
         }
 
-        const enumeratorList = data[0]?.enumerator || [];
+        setEnumerators(data.analis_instansi); // Ganti dengan data.analis_instansi
 
-        setEnumerators(enumeratorList);
       } catch (err) {
         console.error("Fetch error:", err);
         setError(err instanceof Error ? err.message : "Failed to fetch data");
@@ -91,12 +90,12 @@ function EnumeratorPage() {
     <Sidebar>
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Daftar Enumerator</h2>
+          <h2 className="text-2xl font-bold">Daftar Analis Instansi</h2>
           <Button
             onClick={() => router.push("/enumerator/tambah")}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            + Tambah Enumerator
+            + Tambah Analis Instansi
           </Button>
         </div>
 
@@ -122,7 +121,7 @@ function EnumeratorPage() {
                 enumerators.map((enumerator, index) => (
                   <tr key={enumerator.id}>
                     <td className="px-4 py-2">{index + 1}</td>
-                    <td className="px-4 py-2">{enumerator.name}</td>
+                    <td className="px-4 py-2">{enumerator.nama}</td>
                     <td className="px-4 py-2">{enumerator.unit_kerja || '-'}</td>
                     <td className="px-4 py-2">{enumerator.nip}</td>
                     <td className="px-4 py-2 space-x-2">
