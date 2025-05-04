@@ -26,16 +26,15 @@ interface KoorinstansiData {
   koorinstansi_id: string;
   name: string;
   work_unit: string;
-  koordinator_instansi: any[];
+  koordinator_instansi: unknown[]; // Replace 'unknown[]' with a specific type if known
 }
 
 function AdminInstansiPage() {
   const [search, setSearch] = useState("");
   const [adminData, setAdminData] = useState<AdminData[]>([]);
   const [activeTab, setActiveTab] = useState<"admin" | "enumerator">("admin");
-  const [selectedAdminId, setSelectedAdminId] = useState<string>("");
-  const [selectedKoordinator, setSelectedKoordinator] = useState<string>(""); // Added this line
-  const [koorinstansiData, setKoorinstansiData] = useState<KoorinstansiData[]>([]);
+  // Removed unused selectedAdminId state
+  const [selectedKoordinator, setSelectedKoordinator] = useState<string | null>(null);
   const [enumerators, setEnumerators] = useState<EnumeratorData[]>([]);
   const [loading, setLoading] = useState({
     admin: false,
@@ -90,7 +89,7 @@ function AdminInstansiPage() {
  
  
   const handleTampilkanAnalis = async () => {
-    if (!selectedKoordinator) return;
+    if (!selectedKoordinator || selectedKoordinator.trim() === "") return;
     
     setLoading(prev => ({ ...prev, enumerator: true }));
     setError(null);
@@ -266,7 +265,7 @@ function AdminInstansiPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-4 mb-4">
               <select
-                value={selectedKoordinator}
+                value={selectedKoordinator || ""}
                 onChange={(e) => setSelectedKoordinator(e.target.value)}
                 className="border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
