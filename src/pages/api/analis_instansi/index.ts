@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Create the koor_instansi_analis relationship
       const newKoorInstansiAnalis = await prisma.koor_instansi_analis.create({
         data: {
-          id: undefined, // Let Prisma auto-generate the ID
+          // Let Prisma auto-generate the ID
           koor_instansi_id: BigInt(koor_instansi_id),
           analis_instansi_id: user.id,
         },
