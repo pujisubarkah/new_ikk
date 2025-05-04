@@ -4,19 +4,37 @@ import { FaEdit } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Sidebar from '@/components/sidebar-admin'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { withRoleGuard } from '@/lib/withRoleGuard'
+import { Button } from '@/components/ui/button'
 
 function TabelInstansi() {
   const [searchQuery, setSearchQuery] = useState('')
   
   interface Instansi {
+    instansi: {
+      agency_name: string
+      agency_id: number
+      instansi_kategori: {
+        id: number
+        kat_instansi: string
+      }
+    }
     id: number
-    name: string
+    active_year: number
   }
 
   const [instansiData, setInstansiData] = useState<Instansi[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
+  const [filterYear, setFilterYear] = useState<number | ''>('')
 
   useEffect(() => {
     const fetchInstansiData = async () => {
@@ -32,9 +50,8 @@ function TabelInstansi() {
   }, [])
 
   const filteredData = instansiData.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    item.instansi?.agency_name.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem)
@@ -71,53 +88,61 @@ function TabelInstansi() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="table-auto w-full border border-gray-300 rounded-lg shadow">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 border">No</th>
-                <th className="px-4 py-2 border">Nama Instansi</th>
-                <th className="px-4 py-2 border">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.map((item, index) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border text-center">{index + 1}</td>
-                  <td className="px-4 py-2 border">{item.name}</td>
-                  <td className="px-4 py-2 border text-center">
-                    <button
-                      onClick={() => alert(`Edit ${item.name}`)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <FaEdit />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="overflow-x-auto rounded-lg border">
+        <Table>
+               <TableHeader>
+                 <TableRow>
+                 <TableHead className="text-center">No</TableHead>
+                <TableHead className="text-left">Nama Instansi</TableHead>
+                <TableHead className="text-center">Tahun Penilaian</TableHead>
+                <TableHead className="text-center">Aksi</TableHead>
+                </TableRow>
+               </TableHeader>
+               <TableBody>
+                {currentItems
+                .sort((a, b) => b.active_year - a.active_year) // Sort by active_year descending
+                .map((item, index) => (
+                  <TableRow key={item.id} className="hover:bg-gray-50">
+                  <TableCell className="text-center">{index + 1}</TableCell>
+                  <TableCell className="text-left">{item.instansi?.agency_name || 'NA'}</TableCell>
+                    <TableCell className="text-center">{item.active_year}</TableCell>
+                    <TableCell className="text-center">
+                    <Button
+                    onClick={() => alert(`Edit ${item.instansi?.agency_name ?? 'NA'}`)}
+                    className="flex justify-center items-center bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200"
+                       >
+                    <FaEdit />
+                    </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+            </Table>
         </div>
 
-        <div className="flex justify-between items-center mt-4">
-          <button
-            onClick={handlePrevPage}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          <span className="text-lg">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
+        {/* Pagination Controls */}
+        {filteredData.length > itemsPerPage && (
+           <div className="mt-6 flex justify-between items-center text-sm">
+             <span>
+                 Halaman {currentPage} dari {totalPages}
+               </span>
+               <div className="space-x-2">
+                 <Button
+                   className="border border-gray-300"
+                   disabled={currentPage === 1}
+                   onClick={handlePrevPage}
+                 >
+                   Sebelumnya
+                 </Button>
+                 <Button
+                   disabled={currentPage === totalPages}
+                   onClick={handleNextPage}
+                 >
+                   Berikutnya
+                 </Button>
+               </div>
+             </div>
+           )}
       </div>
     </Sidebar>
   )
