@@ -2,16 +2,23 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import prisma from '@/lib/prisma';
 
+interface Role {
+  id: bigint;
+  created_by: bigint | null;
+  modified_by: bigint | null;
+  [key: string]: any; // Include other fields dynamically if needed
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method Not Allowed" })
   }
 
   try {
-    const rolesRaw = await prisma.role.findMany()
+    const rolesRaw: Role[] = await prisma.role.findMany()
 
     // Konversi BigInt ke string
-    const roles = rolesRaw.map((role: { id: { toString: () => any }; created_by: { toString: () => any }; modified_by: { toString: () => any } }) => ({
+    const roles = rolesRaw.map((role: Role) => ({
       ...role,
       id: role.id.toString(),
       created_by: role.created_by?.toString() ?? null,

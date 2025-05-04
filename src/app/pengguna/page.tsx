@@ -28,8 +28,12 @@ const tabs = [
 
 const USERS_PER_PAGE = 20;
 
+interface Instansi {
+  agency_name: string;
+}
+
 interface User {
-  instansi: any;
+  instansi: Instansi | null;
   active_year: string;
   coordinator_type_name: string;
   agency_name: string;

@@ -30,7 +30,10 @@ interface Role {
 }
 
 interface Instansi {
-  instansi: any
+  instansi: {
+    agency_id: string
+    agency_name: string
+  } | null
   id: string
   name: string
   category: string
@@ -230,8 +233,7 @@ const TambahPengguna: React.FC = () => {
           {/* ACTIVE YEAR */}
         <div className="md:col-span-2">
         <Label htmlFor="role" className="text-gray-700 font-medium">Tahun Penilaian</Label>
-        {activeyears.length > 0 ? (
-            <select
+        <select
             id="active_year"
             name="active_year"
             value={formData.active_year || "2025"}
@@ -248,9 +250,6 @@ const TambahPengguna: React.FC = () => {
               </option>
               ))}
             </select>
-        ) : (
-          <p className="text-gray-500">Memuat tahun penilaian...</p>
-        )}
           </div>
           {/* ROLE */}
           <div className="md:col-span-2">
