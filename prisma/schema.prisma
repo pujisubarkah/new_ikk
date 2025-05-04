@@ -147,7 +147,7 @@ model instrument_question {
 }
 
 model koor_instansi_analis {
-  id                                                 BigInt    @id
+  id                                                 BigInt    @id @default(autoincrement())  // Auto-generate id
   created_at                                         DateTime? @db.Timestamp(6)
   created_by                                         BigInt?
   modified_by                                        BigInt?
@@ -248,7 +248,7 @@ model user {
   deleted                                                                String?                   @db.Bit(1)
   deleted_at                                                             DateTime?                 @db.Timestamp(6)
   deleted_by                                                             BigInt?
-  email                                                                  String?                   @db.VarChar(255)
+  email                                                                  String?                   @db.VarChar(255) @unique
   name                                                                   String?                   @db.VarChar(255)
   nik                                                                    String?                   @db.VarChar(255)
   password                                                               String?                   @db.VarChar(255)
