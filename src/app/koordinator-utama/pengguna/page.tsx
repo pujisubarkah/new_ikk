@@ -57,7 +57,7 @@ const Page = () => {
         try {
           setIsLoading(true);
           const response = await axios.get(`/api/koordinator_utama?id=${id}`);
-          const formattedData = response.data.map((item: any, index: number) => ({
+          const formattedData = response.data.map((item: { name: string; username: string; coordinator_type_name: string; validator_id?: string; work_unit?: string; }, index: number) => ({
             no: index + 1,
             nama: item.name,
             nip: item.username,
