@@ -92,7 +92,7 @@ const handleDelete = async (id: number, name: string) => {
         id: deleteToast
       })
       fetchData() // Refresh data
-      
+
     } else {
       throw new Error(response.data?.message || 'Gagal menghapus pengguna')
     }
@@ -199,7 +199,7 @@ const handleDelete = async (id: number, name: string) => {
                       {item.status || 'Tidak Diketahui'}
                     </span>
                     </TableCell>
-                    <TableCell className="text-center space-x-4 w-40">
+                    <TableCell className="text-center space-x-2 w-40 flex justify-center items-center">
                       <Button
                       onClick={() => handleEdit(item.id, item.name)}
                       className="flex justify-center items-center bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200"
