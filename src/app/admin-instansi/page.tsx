@@ -22,12 +22,6 @@ interface EnumeratorData {
   unit_kerja: string;
 }
 
-interface KoorinstansiData {
-  koorinstansi_id: string;
-  name: string;
-  work_unit: string;
-  koordinator_instansi: unknown[]; // Replace 'unknown[]' with a specific type if known
-}
 
 function AdminInstansiPage() {
   const [search, setSearch] = useState("");
