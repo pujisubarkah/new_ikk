@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { toast } from 'sonner'
 
 const tabs = ['Koordinator Nasional', 'Tim Verifikator', 'Koordinator Instansi', 'Analis Instansi']
 
@@ -71,16 +72,46 @@ function TabelInstansi() {
     fetchData()
   }, [activeTab])
 
-  const handleEdit = (name: string) => {
-    alert(`Edit ${name}`)
-  }
+  const handleEdit = (id:number, name:string) => {
+    // Menampilkan toast pemberitahuan
+    toast.info(`Mengarahkan ke halaman edit ${name}...`);
+  
+    // Mengarahkan ke halaman edit pengguna dengan id
+    router.push(`/pengguna/edit/${id}`);
+  };
 
-  const handleDelete = (name: string) => {
-    const konfirmasi = confirm(`Yakin ingin menghapus ${name}?`)
-    if (konfirmasi) {
-      alert(`Berhasil menghapus ${name}`)
+const handleDelete = async (id: number, name: string) => {
+  const deleteToast = toast.loading(`Sedang menghapus ${name}...`)
+  
+  try {
+    // Menggunakan try-catch untuk menangkap error dengan lebih baik
+    const response = await axios.delete(`/api/users/${id}`)
+    
+    if (response.status === 200) {
+      toast.success(`Pengguna ${name} berhasil dihapus`, {
+        id: deleteToast
+      })
+      fetchData() // Refresh data
+      
+    } else {
+      throw new Error(response.data?.message || 'Gagal menghapus pengguna')
     }
-  }
+  } catch (error: unknown) {
+      console.error('Error deleting user:', error);
+      
+      // Menampilkan pesan error yang lebih spesifik
+      const errorMessage =
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : error instanceof Error
+          ? error.message
+          : 'Terjadi kesalahan saat menghapus pengguna';
+      
+      toast.error(errorMessage, {
+        id: deleteToast,
+      });
+    }
+}
 
   // Filter nama
   const filteredData = data.filter((item) =>
@@ -169,20 +200,18 @@ function TabelInstansi() {
                     </span>
                     </TableCell>
                     <TableCell className="text-center space-x-4 w-40">
-                        <div className="flex justify-center items-center space-x-2">
-                        <Button
-                          onClick={() => handleEdit(item.name)}
-                          className="flex justify-center items-center bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200"
-                        >
-                          <FaEdit />
-                        </Button>
-                        <Button
-                          onClick={() => handleDelete(item.name)}
-                          className="flex justify-center items-center bg-red-600 text-white hover:bg-red-700 rounded-md py-2 px-4 transition duration-200"
-                        >
-                          <FaTrash />
-                        </Button>
-                        </div>
+                      <Button
+                      onClick={() => handleEdit(item.id, item.name)}
+                      className="flex justify-center items-center bg-blue-600 text-white hover:bg-blue-700 rounded-md py-2 px-4 transition duration-200"
+                      >
+                      <FaEdit />
+                      </Button>
+                      <Button
+                      onClick={() => handleDelete(item.id, item.name)}
+                      className="flex justify-center items-center bg-red-600 text-white hover:bg-red-700 rounded-md py-2 px-4 transition duration-200"
+                      >
+                      <FaTrash />
+                      </Button>
                     </TableCell>
                   </TableRow>
     ))
@@ -227,3 +256,7 @@ const ProtectedPage = withRoleGuard(TabelInstansi, [1])
 export default function Page() {
   return <ProtectedPage />
 }
+function fetchData() {
+  throw new Error('Function not implemented.')
+}
+
