@@ -117,8 +117,12 @@ function TabelInstansi() {
         });
       }
   }
-  const filteredData = data.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredData = data.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.instansi?.agency_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.active_year?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredData.length / USERS_PER_PAGE);
