@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     {
       label: 'Master Data',
       items: [
-        { name: 'Daftar Enumerator', icon: Users, href: '/enumerator' },
+        { name: 'Daftar Analis Instansi', icon: Users, href: '/enumerator' },
       ],
     },
     {
