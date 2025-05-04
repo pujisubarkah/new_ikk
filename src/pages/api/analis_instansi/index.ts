@@ -84,50 +84,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
-    const { koor_instansi_id, name, nip, unit_kerja, agency_id } = req.body;
+    const { koor_instansi_id, analis_instansi_id } = req.body;
 
-    if (!koor_instansi_id || !name || !nip || !unit_kerja || !agency_id) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!koor_instansi_id || !analis_instansi_id) {
+      return res.status(400).json({ error: 'koor_instansi_id and analis_instansi_id are required' });
     }
 
     try {
-      // First, check if the user (analis) already exists
-      let user = await prisma.user.findUnique({
-        where: { username: nip },
+      // Cek apakah relasi sudah ada sebelumnya
+      const existingRelation = await prisma.koor_instansi_analis.findFirst({
+        where: {
+          koor_instansi_id: BigInt(koor_instansi_id),
+          analis_instansi_id: BigInt(analis_instansi_id)
+        }
       });
 
-      // If user doesn't exist, create a new one
-      if (!user) {
-        user = await prisma.user.create({
-          data: {
-            name,
-            username: nip,
-            work_unit: unit_kerja,
-            agency_id: BigInt(agency_id),
-            // Add role if required by your schema
-            // role: 'ANALIS_INSTANSI',
-          },
-        });
+      if (existingRelation) {
+        return res.status(409).json({ error: 'Relationship already exists' });
       }
 
-      // Create the koor_instansi_analis relationship with proper typing
-      const newKoorInstansiAnalis = await prisma.koor_instansi_analis.create({
+      // Buat relasi baru
+      const newRelation = await prisma.koor_instansi_analis.create({
         data: {
-          koor_instansi_id: BigInt(koor_instansi_id), // Use BigInt instead of Number
-          analis_instansi_id: user.id, // No need to convert, should match the schema type
+          koor_instansi_id: BigInt(koor_instansi_id),
+          analis_instansi_id: BigInt(analis_instansi_id),
+          created_at: new Date(),
+          // created_by bisa ditambahkan jika diperlukan
+          // created_by: BigInt(userId) 
         },
+        include: {
+          user_koor_instansi_analis_koor_instansi_idTouser: {
+            select: { name: true }
+          },
+          user_koor_instansi_analis_analis_instansi_idTouser: {
+            select: { name: true }
+          }
+        }
       });
 
       return res.status(201).json({
-        id: newKoorInstansiAnalis.id.toString(),
-        koor_instansi_id: newKoorInstansiAnalis.koor_instansi_id ? newKoorInstansiAnalis.koor_instansi_id.toString() : null,
-        analis_instansi_id: newKoorInstansiAnalis.analis_instansi_id ? newKoorInstansiAnalis.analis_instansi_id.toString() : null,
+        id: newRelation.id.toString(),
+        koor_instansi: {
+          id: newRelation.koor_instansi_id?.toString(),
+          name: newRelation.user_koor_instansi_analis_koor_instansi_idTouser?.name
+        },
+        analis_instansi: {
+          id: newRelation.analis_instansi_id?.toString(),
+          name: newRelation.user_koor_instansi_analis_analis_instansi_idTouser?.name
+        },
+        created_at: newRelation.created_at
       });
+
     } catch (error) {
-      console.error('Error creating data:', error);
-      return res.status(500).json({ error: 'Failed to create data' });
+      console.error('Error creating relation:', error);
+      return res.status(500).json({ 
+        error: 'Failed to create relation',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
-  }
+}
 
   return res.status(405).json({ error: 'Method Not Allowed' });
 }
