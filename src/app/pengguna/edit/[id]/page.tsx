@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Sidebar from '@/components/sidebar-admin'
@@ -21,6 +22,7 @@ interface FormData {
   unitKerja: string
   telepon: string
   status: string
+  active_year: string // Added active_year
   username?: string // Added username
   position?: string // Added position
   work_unit?: string // Added work_unit
@@ -32,9 +34,18 @@ interface Role {
 }
 
 interface Agency {
+  instansi?: {
+    agency_id: string
+    agency_name: string
+  }
   id: string
   name: string
   category: string
+}
+
+interface ActiveYear {
+  id: string
+  active_year: string
 }
 
 function EditUserPage(): React.ReactNode {
@@ -54,11 +65,14 @@ function EditUserPage(): React.ReactNode {
     unitKerja: '',
     telepon: '',
     status: '',
+    active_year: '', // Added active_year
   })
   const [roles, setRoles] = useState<Role[]>([])
   const [agencies, setAgencies] = useState<Agency[]>([])
+  const [activeyears, setActiveyears] = useState<ActiveYear[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -91,12 +105,14 @@ function EditUserPage(): React.ReactNode {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [rolesRes, agenciesRes] = await Promise.all([
+        const [rolesRes, agenciesRes, activeyearRes] = await Promise.all([
           axios.get('/api/role'),
           axios.get('/api/instansi'),
+          axios.get("/api/active_year"),
         ])
         setRoles(rolesRes.data)
         setAgencies(agenciesRes.data)
+        setActiveyears(activeyearRes.data)
       } catch (err: unknown) {
         if (err instanceof Error) {
           console.error('Gagal memuat data awal:', err.message)
@@ -116,7 +132,7 @@ function EditUserPage(): React.ReactNode {
           nama: userData.name || '',
           nip: userData.username || '',
           nik: userData.nik || '',
-          instansi: userData.agency_id?.toString() || '',
+          instansi: userData.agency_id_panrb?.toString() || '',
           email: userData?.email || '',
           role: userData.role_user?.role_id?.toString() || '',
           password: '',
@@ -124,6 +140,7 @@ function EditUserPage(): React.ReactNode {
           unitKerja: userData.work_unit || '',
           telepon: userData.telepon || '',
           status: userData.status || '',
+          active_year: userData.active_year || '',
         })
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -163,17 +180,18 @@ function EditUserPage(): React.ReactNode {
         ? cleanedPhone 
         : `+62${cleanedPhone}`
 
-      const payload: Partial<FormData & { agency_id: number; role_id: number }> = {
+      const payload: Partial<FormData & { agency_id_panrb: number; role_id: number }> = {
         nama: formData.nama,
         username: formData.nip,
         nik: formData.nik,
-        agency_id: Number(formData.instansi),
+        agency_id_panrb: Number(formData.instansi),
         email: formData.email,
         role_id: Number(formData.role),
         position: formData.jabatan,
         work_unit: formData.unitKerja,
         telepon: phoneWithPrefix,
-        status: formData.status
+        status: formData.status,
+        active_year: formData.active_year,
       }
 
       if (formData.password) {
@@ -235,27 +253,48 @@ function EditUserPage(): React.ReactNode {
         </div>
         
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* ACTIVE YEAR */}
+                  <div className="md:col-span-2">
+                  <Label htmlFor="role" className="text-gray-700 font-medium">Tahun Penilaian</Label>
+                  <select
+                      id="active_year"
+                      name="active_year"
+                      value={formData.active_year}
+                      onChange={handleChange}
+                      required
+                      className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                      >
+                      <option value="" disabled>Pilih Tahun Penilaian</option>
+                      {activeyears
+                        .sort((a, b) => a.active_year.localeCompare(b.active_year))
+                        .map((active_year) => (
+                        <option key={active_year.id} value={active_year.active_year}>
+                        {active_year.active_year}
+                        </option>
+                        ))}
+                      </select>
+                    </div>
           {/* ROLE */}
-          <div className="md:col-span-2">
-            <Label htmlFor="role">Role</Label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-md p-2"
-            >
-              <option value="" disabled>
-                Pilih Role
-              </option>
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
-          </div>
+                    <div className="md:col-span-2">
+                    <Label htmlFor="role" className="text-gray-700 font-medium">Role</Label>
+                    <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    required
+                    className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                    >
+                      <option value="" disabled>Pilih Role</option>
+                      {roles
+                      .sort((a, b) => a.id.localeCompare(b.id))
+                      .map((role) => (
+                      <option key={role.id} value={role.id}>
+                      {role.name}
+                      </option>
+                      ))}
+                    </select>
+                    </div>
 
           {/* Kolom Kiri */}
           <div className="grid gap-4">
@@ -284,25 +323,32 @@ function EditUserPage(): React.ReactNode {
             </div>
             
             <div>
-              <Label htmlFor="instansi">Nama Instansi</Label>
-              <select
-                id="instansi"
-                name="instansi"
-                value={formData.instansi}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-md p-2"
-              >
-                <option value="" disabled>
-                  Pilih Instansi
-                </option>
-                {agencies.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+             <Label htmlFor="instansi" className="text-gray-700 font-medium">Nama Instansi</Label>
+             <select
+               id="instansi"
+               name="instansi"
+               value={formData.instansi}
+               onChange={handleChange}
+               required
+               className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+             >
+                 <option value="" disabled>Pilih Instansi</option>
+                 {agencies
+                 .filter((item, index, self) => 
+                   index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
+                 )
+                 .sort((a, b) => {
+                   const idA = a.instansi?.agency_id || '';
+                   const idB = b.instansi?.agency_id || '';
+                   return idA.localeCompare(idB);
+                 })
+                 .map((item) => (
+                   <option key={item.id} value={item.instansi?.agency_id || ''}>
+                   {item.instansi?.agency_name || "NA"}
+                   </option>
+                 ))}
+             </select>
+           </div>
             
             <div>
               <Label htmlFor="email">Email Aktif</Label>
@@ -319,14 +365,22 @@ function EditUserPage(): React.ReactNode {
             
             <div>
               <Label htmlFor="password">Password</Label>
+              <div className="relative">
               <Input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Biarkan kosong jika tidak ingin mengubah"
               />
+              <span
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+              </div>
             </div>
           </div>
 

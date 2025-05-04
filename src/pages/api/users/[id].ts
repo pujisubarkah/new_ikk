@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
+import { act } from 'react';
 
 // Helper untuk convert BigInt ke String secara otomatis
 const safeJson = <T>(data: T): T =>
@@ -17,7 +18,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   switch (req.method) {
     case 'GET':
       try {
-        const user = await prisma.user.findUnique({ where: { id: BigInt(id) } });
+        const user = await prisma.user.findUnique({ 
+          where: { 
+            id: BigInt(id) 
+          },
+        select: {
+          id: true,
+          name: true,
+          nik: true,
+          username: true,
+          password: true,
+          phone: true,
+          email: true,
+          position: true,
+          work_unit: true,
+          active_year: true,
+          status: true,
+          agency_id_panrb: true,
+          instansi: {
+            select: {
+              agency_id: true,
+              agency_name: true,
+              instansi_kategori: {
+                select: {
+                  id: true,
+                  kat_instansi: true
+                }
+              }
+            }
+          },
+          penunjukkan_id: true,
+          surat_penunjukkan: {
+            select: { file: true }
+          },
+          role_user: {
+            select: {
+              role_id: true,
+              role: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            }
+          }},
+         });
         if (!user) return res.status(404).json({ error: 'User not found' });
         
         // Menggunakan safeJson untuk memastikan BigInt aman
@@ -54,11 +99,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               phone: req.body.phone,
               position: req.body.position,
               work_unit: req.body.work_unit,
+              status: req.body.status,
+              active_year: req.body.active_year,
+              agency_id_panrb: req.body.agency_id_panrb,
               ...(req.body.username && { username: req.body.username }),
-              // Tambahkan field lain sesuai kebutuhan
+              
             },
           });
       
+          // Update role_id in the role_user table
+          if (req.body.role_id) {
+            await prisma.role_user.updateMany({
+              where: { user_id: BigInt(id) },
+              data: { role_id: req.body.role_id },
+            });
+          }
+
           console.log('Successfully updated user:', {
             userId: id,
             updatedFields: Object.keys(req.body)

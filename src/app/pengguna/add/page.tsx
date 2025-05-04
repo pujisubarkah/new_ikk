@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { FaEye, FaEyeSlash } from "react-icons/fa"
 import Sidebar from "@/components/sidebar-admin"
 import { withRoleGuard } from '@/lib/withRoleGuard'
 import axios from "axios"
@@ -61,6 +62,7 @@ const TambahPengguna: React.FC = () => {
   const [usernameValid, setUsernameValid] = useState(true) // Changed from nipValid
   const [emailValid, setEmailValid] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const router = useRouter()
 
@@ -310,11 +312,20 @@ const TambahPengguna: React.FC = () => {
             className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
           >
             <option value="" disabled>Pilih Instansi</option>
-            {instansis.map((item) => (
-          <option key={item.id} value={item.instansi?.agency_id || ''}>
-            {item.instansi?.agency_name || "NA"}
-          </option>
-            ))}
+                 {instansis
+                 .filter((item, index, self) => 
+                   index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
+                 )
+                 .sort((a, b) => {
+                   const idA = a.instansi?.agency_id || '';
+                   const idB = b.instansi?.agency_id || '';
+                   return idA.localeCompare(idB);
+                 })
+                 .map((item) => (
+                   <option key={item.id} value={item.instansi?.agency_id || ''}>
+                   {item.instansi?.agency_name || "NA"}
+                   </option>
+                 ))}
           </select>
         </div>
         <div>
@@ -335,19 +346,24 @@ const TambahPengguna: React.FC = () => {
           )}
         </div>
         <div>
-          <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
-          <Input 
-            id="password" 
-            name="password" 
-            type="password" 
-            value={formData.password} 
-            onChange={handleChange} 
-            required 
-            minLength={8}
-            className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-          />
-          <p className="text-sm text-gray-500 mt-1">Minimal 8 karakter</p>
-        </div>
+                      <Label htmlFor="password">Password</Label>
+                      <div className="relative">
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Minimal 8 karakter"
+                      />
+                      <span
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </span>
+                      </div>
+                    </div>
           </div>
 
           {/* RIGHT COLUMN */}
