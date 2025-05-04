@@ -28,6 +28,10 @@ interface FormData {
 }
 
 interface Instansi {
+  instansi: {
+    agency_id: string
+    agency_name: string
+  } | null
   id: string;
   name: string;
   category: string;
@@ -219,13 +223,14 @@ const TambahPengguna: React.FC = () => {
         name: formData.nama,
         username: formData.nip.replace(/[^0-9]/g, ''),
         NIK: formData.nik,
-        agency_id: formData.instansi,
+        agency_id_panrb: formData.instansi,
+        active_year: 2025,
         email: formData.email,
         phone: formData.telepon,
         position: formData.jabatan,
         work_unit: formData.unitKerja,
-        role_id: formData.role_id,
-        status: formData.status,
+        role_id: 4,
+        status: 'inaktif',
         password: formData.password,
         penunjukkan_id: penunjukkanId
       });
@@ -330,14 +335,21 @@ const TambahPengguna: React.FC = () => {
                   disabled={isLoading || instansis.length === 0}
                   className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.instansi ? "border-red-500" : "border-input"}`}
                 >
-                  <option value="">
-                    {isLoading ? "Memuat..." : instansis.length === 0 ? "Tidak ada instansi" : "Pilih Instansi"}
-                  </option>
-                  {instansis.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
+                  <option value="" disabled>Pilih Instansi</option>
+                 {instansis
+                 .filter((item, index, self) => 
+                   index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
+                 )
+                 .sort((a, b) => {
+                   const idA = a.instansi?.agency_id || '';
+                   const idB = b.instansi?.agency_id || '';
+                   return idA.localeCompare(idB);
+                 })
+                 .map((item) => (
+                   <option key={item.id} value={item.instansi?.agency_id || ''}>
+                   {item.instansi?.agency_name || "NA"}
+                   </option>
+                 ))}
                 </select>
                 {errors.instansi && <p className="text-red-500 text-sm mt-1">{errors.instansi}</p>}
               </div>
@@ -436,7 +448,7 @@ const TambahPengguna: React.FC = () => {
                 <Input
                   id="status"
                   name="status"
-                  value="Nonaktif"
+                  value="inaktif"
                   readOnly
                   className="w-full bg-gray-100 cursor-not-allowed"
                 />
