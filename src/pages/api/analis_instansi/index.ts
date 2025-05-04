@@ -104,17 +104,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             username: nip,
             work_unit: unit_kerja,
             agency_id: BigInt(agency_id),
-          
+            // Add role if required by your schema
+            // role: 'ANALIS_INSTANSI',
           },
         });
       }
 
-      // Create the koor_instansi_analis relationship
+      // Create the koor_instansi_analis relationship with proper typing
       const newKoorInstansiAnalis = await prisma.koor_instansi_analis.create({
         data: {
-          // Let Prisma auto-generate the ID
-          koor_instansi_id: Number(koor_instansi_id),
-          analis_instansi_id: Number(user.id),
+          koor_instansi_id: BigInt(koor_instansi_id), // Use BigInt instead of Number
+          analis_instansi_id: user.id, // No need to convert, should match the schema type
         },
       });
 
