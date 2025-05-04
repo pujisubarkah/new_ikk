@@ -1,4 +1,3 @@
-// Di file API (misal: pages/api/users/check-email.ts)
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 
@@ -9,13 +8,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { email } = req.query;
 
-  if (!email || typeof email !== 'string') {
-    return res.status(400).json({ message: 'Email is required' });
+  if (!email || Array.isArray(email)) {
+    return res.status(400).json({ message: 'Email tidak valid' });
   }
 
   try {
+    console.log('Cek email:', email);
+
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email as string },
     });
 
     return res.status(200).json({ exists: !!user });
