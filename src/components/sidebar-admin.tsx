@@ -52,7 +52,6 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       items: [
         { name: 'Tahun Aktif', icon: Calendar, href: '/tahun-aktif' },
         { name: 'Instansi', icon: Users, href: '/instansi' },
-        { name: 'Wilayah Koordinasi', icon: Users, href: '/wilayah-koordinasi' },
         { name: 'Pengguna', icon: Users, href: '/pengguna' },
       ],
     },
