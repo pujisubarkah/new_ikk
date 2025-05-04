@@ -1,8 +1,6 @@
 // pages/api/role/index.ts
 import { NextApiRequest, NextApiResponse } from "next"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -13,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const rolesRaw = await prisma.role.findMany()
 
     // Konversi BigInt ke string
-    const roles = rolesRaw.map((role) => ({
+    const roles = rolesRaw.map((role: { id: { toString: () => any }; created_by: { toString: () => any }; modified_by: { toString: () => any } }) => ({
       ...role,
       id: role.id.toString(),
       created_by: role.created_by?.toString() ?? null,

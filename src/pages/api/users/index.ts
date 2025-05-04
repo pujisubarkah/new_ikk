@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           OR: [{ deleted: null }, { deleted: '0' }],
           ...(role_id && {
             id: {
-              in: roleUsers?.map(ru => ru.user_id) || []
+              in: roleUsers?.map((ru: { user_id: any; }) => ru.user_id) || []
             }
           }),
         },
@@ -83,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orderBy: [{ id: 'asc' }],
       });
 
-      const serialized = users.map(user => serializeBigInt(user));
+      const serialized = users.map((user: Record<string, unknown>) => serializeBigInt(user));
       res.status(200).json(serialized);
     } catch (error) {
       console.error('Fetch users error:', error);

@@ -9,31 +9,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const agencies = await prisma.agencies.findMany({
+    const active_years = await prisma.active_year.findMany({
       select: {
         id: true,
-        name: true,
-        category: true,
-        active_year: true,
-        instansi: {
-          select: {
-            agency_id: true,
-            agency_name: true,
-            instansi_kategori: {
-              select: {
-                id: true,
-                kat_instansi: true
-              }
-            }
-          }
+        active_year: true,  
         },
-      },
     })
 
     // Pakai serializeBigInt untuk handle BigInt
-    const serializedAgencies = agencies.map((agency: Record<string, unknown>) => serializeBigInt(agency))
+    const serializedActiveYear = JSON.parse(JSON.stringify(active_years.map((active_year: Record<string, unknown>) => serializeBigInt(active_year))))
 
-    res.status(200).json(serializedAgencies)
+    res.status(200).json(serializedActiveYear)
   } catch (error) {
     console.error('Error fetching agencies:', error)
     res.status(500).json({ message: 'Internal server error' })
