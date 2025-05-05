@@ -141,25 +141,7 @@ const TambahPengguna: React.FC = () => {
       }
     });
 
-    // Validasi NIP
-    if (formData.nip) {
-      const cleanNip = formData.nip.replace(/[^0-9]/g, '');
-      
-      if (!/^\d+$/.test(cleanNip)) {
-        newErrors.nip = "NIP hanya boleh mengandung angka";
-        isValid = false;
-      } else {
-        try {
-          const response = await axios.get(`/api/users/check-nip?nip=${cleanNip}`);
-          if (response.data.exists) {
-            newErrors.nip = "NIP ini sudah terdaftar";
-            isValid = false;
-          }
-        } catch (error) {
-          console.error("Gagal memverifikasi NIP:", error);
-        }
-      }
-    }
+    
 
     // Validasi NIK
     if (formData.nik && !/^\d+$/.test(formData.nik)) {
@@ -221,8 +203,8 @@ const TambahPengguna: React.FC = () => {
       // 2. Simpan user
       await axios.post('/api/users', {
         name: formData.nama,
-        username: formData.nip.replace(/[^0-9]/g, ''),
-        NIK: formData.nik,
+        username: formData.nip,
+        nik: formData.nik,
         agency_id_panrb: formData.instansi,
         active_year: 2025,
         email: formData.email,
