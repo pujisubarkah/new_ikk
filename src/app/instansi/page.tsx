@@ -34,7 +34,6 @@ function TabelInstansi() {
   const [instansiData, setInstansiData] = useState<Instansi[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
-  const [filterYear, setFilterYear] = useState<number | ''>('')
 
   useEffect(() => {
     const fetchInstansiData = async () => {

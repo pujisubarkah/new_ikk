@@ -1,6 +1,5 @@
 'use client'
 
-import { FaEdit } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Sidebar from '@/components/sidebar-admin'
@@ -26,7 +25,6 @@ function TabelInstansi() {
   const [activeYearData, setActiveyears] = useState<ActiveYear[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
-  const [filterYear, setFilterYear] = useState<number | ''>('')
 
   useEffect(() => {
     const fetchActiveyears = async () => {
