@@ -12,7 +12,7 @@ export default async function handler(
 
   const { username } = req.query;
 
-  if (!username || typeof username !== 'string') {
+  if (!username) {
     return res.status(400).json({ message: 'Missing or invalid username' });
   }
 
