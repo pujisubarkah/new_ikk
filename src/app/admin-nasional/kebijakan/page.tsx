@@ -15,7 +15,7 @@ export default function TabelInstansi() {
   const [searchTerm, setSearchTerm] = useState('')
   
   interface Instansi {
-    instansi_year: any
+    instansi_year: { instansi_year: string } | null
     instansi_id: { instansi_id: string };
     instansi_name: string;
   }
@@ -122,7 +122,7 @@ export default function TabelInstansi() {
                 className="hover:bg-gray-50">
                 <TableCell>{indexOfFirstItem + index + 1}</TableCell>
                 <TableCell>{item.instansi_name}</TableCell>
-                <TableCell className='text-center'>{item.instansi_year.instansi_year}</TableCell>
+                <TableCell className='text-center'>{item.instansi_year?.instansi_year || '-'}</TableCell>
                 <TableCell>
                   {/*}
                 <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded text-xs shadow">
