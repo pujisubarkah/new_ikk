@@ -3,301 +3,331 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/sidebar-enum";
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
-import { toast } from "sonner"
+import { toast } from "sonner";
 
 type Policy = {
-  id: string;
-  enumerator: string;
-  name: string;
-  tanggal_proses: string;
-  tanggal_berlaku: string;
-  instansi: string;
-  progress_pengisian: number;
-  status_kebijakan: string;
+    id: string;
+    enumerator: string;
+    name: string;
+    tanggal_proses: string;
+    tanggal_berlaku: string;
+    instansi: string;
+    progress_pengisian: number;
+    status_kebijakan: string;
 };
 
 const steps = [
-  "1. Perencanaan Kebijakan",
-  "2. Implementasi Kebijakan",
-  "3. Evaluasi Keberlanjutan",
-  "4. Transparansi dan Partisipasi",
+    "1. Perencanaan Kebijakan",
+    "2. Implementasi Kebijakan",
+    "3. Evaluasi Keberlanjutan",
+    "4. Transparansi dan Partisipasi",
 ];
 
 const stepDimensionMap: Record<number, string> = {
-  0: "Perencanaan Kebijakan",
-  1: "Implementasi Kebijakan",
-  2: "Evaluasi dan Keberlanjutan Kebijakan",
-  3: "Transparansi dan Partisipasi Publik",
+    0: "Perencanaan Kebijakan",
+    1: "Implementasi Kebijakan",
+    2: "Evaluasi dan Keberlanjutan Kebijakan",
+    3: "Transparansi dan Partisipasi Publik",
 };
 
 export default function PolicyPage() {
-  const [activeStep, setActiveStep] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
-  const [uploadedFiles, setUploadedFiles] = useState<Record<number, string>>({});
-  const [policyData, setPolicyData] = useState<Policy | null>(null);
-  const [additionalInfo, setAdditionalInfo] = useState("");
-  const [apiQuestions, setApiQuestions] = useState<any[]>([]);
+    const [activeStep, setActiveStep] = useState(0);
+    const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+    const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
+    const [policyData, setPolicyData] = useState<Policy | null>(null);
+    const [additionalInfo, setAdditionalInfo] = useState("");
+    const [apiQuestions, setApiQuestions] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchPolicyData = async () => {
-      const enumerator_id = localStorage.getItem("id");
-      if (!enumerator_id) return;
-      try {
-        const res = await fetch(`/api/policies/enumerator?enumerator_id=${enumerator_id}`);
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setPolicyData(data[0]);
-        }
-      } catch (error) {
-        console.error("Gagal mengambil data kebijakan:", error);
-      }
+    useEffect(() => {
+        const fetchPolicyData = async () => {
+            const enumerator_id = localStorage.getItem("id");
+            if (!enumerator_id) return;
+            try {
+                const res = await fetch(`/api/policies/enumerator?enumerator_id=${enumerator_id}`);
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    setPolicyData(data[0]);
+                }
+            } catch (error) {
+                console.error("Gagal mengambil data kebijakan:", error);
+            }
+        };
+
+        const fetchQuestions = async () => {
+            try {
+                const res = await fetch("/api/pertanyaan");
+                const data = await res.json();
+                if (Array.isArray(data.data)) {
+                    setApiQuestions(data.data);
+                }
+            } catch (error) {
+                console.error("Gagal mengambil pertanyaan:", error);
+            }
+        };
+
+        fetchPolicyData();
+        fetchQuestions();
+    }, []);
+
+    const handleAnswerChange = (questionId: string, answer: string) => {
+        setSelectedAnswers((prev) => ({
+            ...prev,
+            [questionId]: answer,
+        }));
     };
 
-    const fetchQuestions = async () => {
-      try {
-        const res = await fetch("/api/pertanyaan");
-        const data = await res.json();
-        if (Array.isArray(data.data)) {
-          setApiQuestions(data.data);
-        }
-      } catch (error) {
-        console.error("Gagal mengambil pertanyaan:", error);
-      }
+    const handleLinkUpload = (questionId: string, link: string) => {
+        setUploadedFiles((prev) => ({
+            ...prev,
+            [questionId]: link,
+        }));
     };
 
-    fetchPolicyData();
-    fetchQuestions();
-  }, []);
+    const handleSaveAnswer = (questionId: string, questionText: string) => {
+        if (!selectedAnswers[questionId]) {
+            toast.warning("Pilih jawaban terlebih dahulu");
+            return;
+        }
 
-  const handleAnswerChange = (questionIndex: number, answer: string) => {
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [questionIndex]: answer,
-    }));
-  };
+        // Here you would typically call your API to save the answer
+        // For now, we'll just show a toast notification
+        toast.success("Jawaban berhasil disimpan", {
+            description: `Pertanyaan: ${questionText}`,
+        });
 
-  const handleLinkUpload = (questionIndex: number, link: string) => {
-    setUploadedFiles((prev) => ({
-      ...prev,
-      [questionIndex]: link,
-    }));
-  };
+        console.log("Saved answer:", {
+            questionId,
+            answer: selectedAnswers[questionId],
+            documentLink: uploadedFiles[questionId]
+        });
+    };
 
-  if (!policyData) {
+    if (!policyData) {
+        return (
+            <div className="flex min-h-screen bg-gray-50">
+                <Sidebar />
+                <div className="flex-1 p-6 ml-0 md:ml-64 flex items-center justify-center">
+                    <p>Memuat data kebijakan...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar>
-          <div>Sidebar Content</div>
-        </Sidebar>
-        <div className="flex-1 p-6 ml-0 md:ml-64 flex items-center justify-center">
-          <p>Memuat data kebijakan...</p>
+        <div className="flex min-h-screen bg-gray-50">
+            <Sidebar />
+            <div className="flex-1 p-6 space-y-6 ml-0 md:ml-64">
+                <PolicyCard policy={policyData} />
+                <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
+                <div className="grid grid-cols-1 gap-6">
+                    <QuestionList
+                        activeStep={activeStep}
+                        selectedAnswers={selectedAnswers}
+                        onAnswerChange={handleAnswerChange}
+                        onLinkUpload={handleLinkUpload}
+                        uploadedFiles={uploadedFiles}
+                        apiQuestions={apiQuestions}
+                        onSaveAnswer={handleSaveAnswer}
+                    />
+                       <AdditionalInfoSection
+                        value={additionalInfo}
+                        onChange={(e) => setAdditionalInfo(e.target.value)}
+                        onSave={() => {
+                            toast.success("Informasi tambahan berhasil disimpan");
+                            console.log("Saved additional info:", additionalInfo);
+                        }}
+                    />
+                </div>
+            </div>
         </div>
-      </div>
     );
-  }
-
-  return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar>
-        <div>Sidebar Content</div>
-      </Sidebar>
-      <div className="flex-1 p-6 space-y-6 ml-0 md:ml-64">
-        <PolicyCard policy={policyData} />
-        <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
-        <div className="grid grid-cols-1 gap-6">
-          <QuestionList
-            activeStep={activeStep}
-            selectedAnswers={selectedAnswers}
-            onAnswerChange={handleAnswerChange}
-            onLinkUpload={handleLinkUpload}
-            uploadedFiles={uploadedFiles}
-            apiQuestions={apiQuestions}
-          />
-          <AdditionalInfoSection
-            value={additionalInfo}
-            onChange={(e) => setAdditionalInfo(e.target.value)}
-          />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function PolicyCard({ policy }: { policy: Policy }) {
-  const router = useRouter();
-  const statusColors = {
-    'MASUK': 'bg-blue-500',
-    'PROSES': 'bg-yellow-500',
-    'SELESAI': 'bg-green-500'
-  };
-
-  return (
-    <div className="p-6 rounded-xl shadow-md bg-white">
-      <button
-        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6"
-        onClick={() => router.back()}
-      >
-        <FaArrowLeft />
-        <span>Kembali</span>
-      </button>
-      <div className="mb-4">
-        <small className="text-gray-500 text-sm">{policy.instansi}</small>
-        <h2 className="text-xl font-bold text-gray-800 mt-1">{policy.name}</h2>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <small className="text-gray-500 text-sm">Status Kebijakan</small>
-          <span className={`inline-block px-3 py-1 rounded-full text-white text-xs font-medium mt-1 ${statusColors[policy.status_kebijakan as keyof typeof statusColors] || 'bg-gray-500'}`}>
-            {policy.status_kebijakan}
-          </span>
+    const router = useRouter();
+    const statusColors = {
+      'MASUK': 'bg-blue-500',
+      'PROSES': 'bg-yellow-500',
+      'SELESAI': 'bg-green-500'
+    };
+  
+    return (
+      <div className="p-6 rounded-xl shadow-md bg-white">
+        <button
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6"
+          onClick={() => router.back()}
+        >
+          <FaArrowLeft />
+          <span>Kembali</span>
+        </button>
+        <div className="mb-4">
+          <small className="text-gray-500 text-sm">{policy.instansi}</small>
+          <h2 className="text-xl font-bold text-gray-800 mt-1">{policy.name}</h2>
         </div>
-        <div>
-          <small className="text-gray-500 text-sm">Tanggal Pengesahan</small>
-          <strong className="text-gray-800 mt-1 block">
-            {new Date(policy.tanggal_berlaku).toLocaleDateString('id-ID', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric'
-            })}
-          </strong>
-        </div>
-        <div>
-          <small className="text-gray-500 text-sm">Progres Pengisian</small>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="w-full bg-gray-200 rounded-full h-2.5 flex-1">
-              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${policy.progress_pengisian}%` }} />
-            </div>
-            <span className="text-blue-600 text-sm font-medium">
-              {policy.progress_pengisian.toFixed(2)}%
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <small className="text-gray-500 text-sm">Status Kebijakan</small>
+            <span className={`inline-block px-3 py-1 rounded-full text-white text-xs font-medium mt-1 ${statusColors[policy.status_kebijakan as keyof typeof statusColors] || 'bg-gray-500'}`}>
+              {policy.status_kebijakan}
             </span>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PolicyStepsNav({
-  activeStep,
-  onChangeStep,
-}: {
-  activeStep: number;
-  onChangeStep: (step: number) => void;
-}) {
-  return (
-    <div className="overflow-x-auto pb-2">
-      <ul className="flex gap-2 w-max min-w-full">
-        {steps.map((step, index) => (
-          <li key={index}>
-            <button
-              onClick={() => onChangeStep(index)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-w-max ${
-                index === activeStep
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {step}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function QuestionList({
-  activeStep,
-  selectedAnswers,
-  uploadedFiles,
-  onAnswerChange,
-  onLinkUpload,
-  apiQuestions,
-}: {
-  activeStep: number;
-  selectedAnswers: Record<number, string>;
-  uploadedFiles: Record<number, string>;
-  onAnswerChange: (questionIndex: number, answer: string) => void;
-  onLinkUpload: (questionIndex: number, link: string) => void;
-  apiQuestions: any[];
-}) {
-  const dimensionName = stepDimensionMap[activeStep];
-  const filteredQuestions = apiQuestions.filter(
-    (q) => q.dimension_name === dimensionName
-  );
-
-  return (
-    <div className="bg-white p-6 rounded-xl shadow space-y-6">
-      <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
-      {filteredQuestions.map((item, idx) => (
-        <div key={idx} className="space-y-4 pb-4 border-b last:border-b-0 last:pb-0">
-          <p className="font-semibold text-gray-800">{item.indicator_question}</p>
-          <div className="space-y-3">
-            {item.instrument_answer.map((opt: any, i: number) => (
-              <label key={i} className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name={`question-${activeStep}-${idx}`}
-                  value={opt.level_description}
-                  checked={selectedAnswers[idx] === opt.level_description}
-                  onChange={() => onAnswerChange(idx, opt.level_description)}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                />
-                <span className="text-gray-700">{opt.level_description}</span>
-              </label>
-            ))}
+          <div>
+            <small className="text-gray-500 text-sm">Tanggal Pengesahan</small>
+            <strong className="text-gray-800 mt-1 block">
+              {new Date(policy.tanggal_berlaku).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              })}
+            </strong>
           </div>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Unggah dokumen pendukung <span className="text-xs text-gray-500 ml-1">(Google Drive link)</span>
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="https://drive.google.com/..."
-                value={uploadedFiles[idx] || ""}
-                onChange={(e) => onLinkUpload(idx, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
+          <div>
+            <small className="text-gray-500 text-sm">Progres Pengisian</small>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="w-full bg-gray-200 rounded-full h-2.5 flex-1">
+                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${policy.progress_pengisian}%` }} />
+              </div>
+              <span className="text-blue-600 text-sm font-medium">
+                {policy.progress_pengisian.toFixed(2)}%
+              </span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Pastikan link dapat diakses oleh semua
-            </p>
           </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AdditionalInfoSection({
-    value,
-    onChange,
-    onSave,
-  }: {
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-    onSave?: () => void;
-  }) {
-    return (
-      <div className="bg-white p-6 rounded-xl shadow space-y-4">
-        <h3 className="text-lg font-bold text-gray-800">Informasi Tambahan</h3>
-        <textarea
-          value={value}
-          onChange={onChange}
-          rows={5}
-          placeholder="Tuliskan informasi tambahan terkait pengisian..."
-          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-        />
-        <div className="text-right">
-          <button
-            onClick={onSave}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-md shadow"
-          >
-            Simpan
-          </button>
         </div>
       </div>
     );
   }
+  
+  function PolicyStepsNav({
+    activeStep,
+    onChangeStep,
+  }: {
+    activeStep: number;
+    onChangeStep: (step: number) => void;
+  }) {
+    return (
+      <div className="overflow-x-auto pb-2">
+        <ul className="flex gap-2 w-max min-w-full">
+          {steps.map((step, index) => (
+            <li key={index}>
+              <button
+                onClick={() => onChangeStep(index)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-w-max ${
+                  index === activeStep
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {step}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+  
+  function QuestionList({
+    activeStep,
+    selectedAnswers,
+    uploadedFiles,
+    onAnswerChange,
+    onLinkUpload,
+    apiQuestions,
+    onSaveAnswer,
+}: {
+    activeStep: number;
+    selectedAnswers: Record<string, string>;
+    uploadedFiles: Record<string, string>;
+    onAnswerChange: (questionId: string, answer: string) => void;
+    onLinkUpload: (questionId: string, link: string) => void;
+    apiQuestions: any[];
+    onSaveAnswer: (questionId: string, questionText: string) => void;
+}) {
+    const dimensionName = stepDimensionMap[activeStep];
+    const filteredQuestions = apiQuestions.filter(
+        (q) => q.dimension_name === dimensionName
+    );
+  
+    return (
+        <div className="bg-white p-6 rounded-xl shadow space-y-6">
+                <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
+                {filteredQuestions.map((item, idx) => (
+                    <div key={item.id} className="space-y-4 pb-4 border-b last:border-b-0 last:pb-0">
+                        <p className="font-semibold text-gray-800">{item.indicator_question}</p>
+                        <div className="space-y-3">
+                            {item.instrument_answer.map((opt: any, i: number) => (
+                                <label key={i} className="flex items-start gap-3 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`question-${item.id}`}
+                                        value={opt.level_description}
+                                        checked={selectedAnswers[item.id] === opt.level_description}
+                                        onChange={() => onAnswerChange(item.id, opt.level_description)}
+                                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                    />
+                                    <span className="text-gray-700">{opt.level_description}</span>
+                                </label>
+                            ))}
+                        </div>
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Unggah dokumen pendukung <span className="text-xs text-gray-500 ml-1">(Google Drive link)</span>
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="https://drive.google.com/..."
+                                    value={uploadedFiles[item.id] || ""}
+                                    onChange={(e) => onLinkUpload(item.id, e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Pastikan link dapat diakses oleh semua
+                            </p>
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                onClick={() => onSaveAnswer(item.id, item.indicator_question)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-md shadow"
+                            >
+                                Simpan Jawaban
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+  
+  function AdditionalInfoSection({
+      value,
+      onChange,
+      onSave,
+    }: {
+      value: string;
+      onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+      onSave?: () => void;
+    }) {
+      return (
+        <div className="bg-white p-6 rounded-xl shadow space-y-4">
+          <h3 className="text-lg font-bold text-gray-800">Informasi Tambahan</h3>
+          <textarea
+            value={value}
+            onChange={onChange}
+            rows={5}
+            placeholder="Tuliskan informasi tambahan terkait pengisian..."
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+          <div className="text-right">
+            <button
+              onClick={onSave}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-md shadow"
+            >
+              Simpan
+            </button>
+          </div>
+        </div>
+      );
+    }
   

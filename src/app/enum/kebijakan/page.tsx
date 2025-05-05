@@ -64,10 +64,7 @@ const KebijakanTable = () => {
 
   return (
     <div className="flex">
-      <Sidebar>
-        <>
-        </>
-      </Sidebar>
+      <Sidebar />
       
       <div className="flex-1 p-4 md:p-8 lg:p-12 ml-0 md:ml-60">
         {loading ? (
