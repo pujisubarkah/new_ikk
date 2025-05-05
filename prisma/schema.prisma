@@ -11,89 +11,332 @@ datasource db {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model active_year {
-  id                                                             BigInt               @id(map: "active_year_pk")
-  active_year                                                    BigInt?              @unique(map: "active_year_unique")
-  agencies_agencies_active_yearToactive_year                     agencies[]           @relation("agencies_active_yearToactive_year")
-  ikk_instansi_score_ikk_instansi_score_active_yearToactive_year ikk_instansi_score[] @relation("ikk_instansi_score_active_yearToactive_year")
-  ikk_verif_score_ikk_verif_score_active_yearToactive_year       ikk_verif_score[]    @relation("ikk_verif_score_active_yearToactive_year")
-  user_user_active_yearToactive_year                             user[]               @relation("user_active_yearToactive_year")
+  id                                                 BigInt         @id(map: "active_year_pk")
+  active_year                                        BigInt?        @unique(map: "active_year_unique")
+  agencies_agencies_active_yearToactive_year         agencies[]     @relation("agencies_active_yearToactive_year")
+  ikk_file_ikk_file_active_yearToactive_year         ikk_file[]     @relation("ikk_file_active_yearToactive_year")
+  ikk_ki_score_ikk_ki_score_active_yearToactive_year ikk_ki_score[] @relation("ikk_ki_score_active_yearToactive_year")
+  ikk_ku_score_ikk_ku_score_active_yearToactive_year ikk_ku_score[] @relation("ikk_ku_score_active_yearToactive_year")
+  user_user_active_yearToactive_year                 user[]         @relation("user_active_yearToactive_year")
 
   @@schema("ikk_new")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model agencies {
-  id                                            BigInt               @id
-  created_at                                    DateTime?            @db.Timestamp(6)
+  id                                            BigInt         @id
+  created_at                                    DateTime?      @db.Timestamp(6)
   created_by                                    BigInt?
   modified_by                                   BigInt?
-  updated_at                                    DateTime?            @db.Timestamp(6)
-  name                                          String?              @db.VarChar(255)
-  category                                      String?              @db.VarChar(255)
-  kd_bkn                                        String?              @db.VarChar(100)
-  kd_prov                                       String?              @db.VarChar(100)
-  kd_kab                                        String?              @db.VarChar(100)
+  updated_at                                    DateTime?      @db.Timestamp(6)
+  name                                          String?        @db.VarChar(255)
+  category                                      String?        @db.VarChar(255)
+  kd_bkn                                        String?        @db.VarChar(100)
+  kd_prov                                       String?        @db.VarChar(100)
+  kd_kab                                        String?        @db.VarChar(100)
   agency_id_panrb                               BigInt?
   active_year                                   BigInt?
-  active_year_agencies_active_yearToactive_year active_year?         @relation("agencies_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "agencies_active_year_fk")
-  instansi                                      instansi?            @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "agencies_instansi_fk")
-  ikk_instansi_score                            ikk_instansi_score[]
-  ikk_verif_score                               ikk_verif_score[]
-  policies                                      policies[]
+  active_year_agencies_active_yearToactive_year active_year?   @relation("agencies_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "agencies_active_year_fk")
+  instansi                                      instansi?      @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "agencies_instansi_fk")
+  ikk_file                                      ikk_file[]
+  ikk_ki_score                                  ikk_ki_score[]
+  ikk_ku_score                                  ikk_ku_score[]
+  policy                                        policy[]
   user                                          user[]
 
   @@schema("ikk_new")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model ikk_instansi_score {
-  id                                                      BigInt       @id
-  agency_id                                               BigInt?
-  policy_id                                               BigInt?
-  active_year                                             BigInt?
-  a1                                                      BigInt?
-  a2                                                      BigInt?
-  a3                                                      BigInt?
-  b1                                                      BigInt?
-  b2                                                      BigInt?
-  b3                                                      BigInt?
-  c1                                                      BigInt?
-  c2                                                      BigInt?
-  c3                                                      BigInt?
-  d1                                                      BigInt?
-  d2                                                      BigInt?
-  jf                                                      Boolean?
-  created_by                                              BigInt?
-  active_year_ikk_instansi_score_active_yearToactive_year active_year? @relation("ikk_instansi_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_active_year_fk")
-  agencies                                                agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_agencies_fk")
-  policies                                                policies?    @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_policies_fk")
-  user                                                    user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_user_fk")
+model evaluasi_keberlanjutan {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  a1          String?   @db.VarChar(255)
+  a2          String?   @db.VarChar(255)
+  a3          String?   @db.VarChar(255)
+  a1d         String?   @db.VarChar(255)
+  a2a         String?   @db.VarChar(255)
+  a2b         String?   @db.VarChar(255)
+  a2c         String?   @db.VarChar(255)
+  informasia3 String?
 
   @@schema("ikk_new")
 }
 
-model ikk_verif_score {
-  id                                                   BigInt       @id
-  agency_id                                            BigInt?
-  policy_id                                            BigInt?
-  active_year                                          BigInt?
-  a1                                                   BigInt?
-  a2                                                   BigInt?
-  a3                                                   BigInt?
-  b1                                                   BigInt?
-  b2                                                   BigInt?
-  b3                                                   BigInt?
-  c1                                                   BigInt?
-  c2                                                   BigInt?
-  c3                                                   BigInt?
-  d1                                                   BigInt?
-  d2                                                   BigInt?
-  jf                                                   Boolean?
-  created_by                                           BigInt?
-  active_year_ikk_verif_score_active_yearToactive_year active_year? @relation("ikk_verif_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_active_year_fk")
-  agencies                                             agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_agencies_fk")
-  policies                                             policies?    @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_policies_fk")
-  user                                                 user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_user_fk")
+model evaluasi_keberlanjutan_file {
+  id                    BigInt    @id
+  created_at            DateTime? @db.Timestamp(6)
+  created_by            BigInt?
+  modified_by           BigInt?
+  updated_at            DateTime? @db.Timestamp(6)
+  file_original_namea3a String?   @db.VarChar(255)
+  file_original_namea3b String?   @db.VarChar(255)
+  file_original_namea3c String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model evaluasi_keberlanjutan_ki {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  c1          String?   @db.VarChar(255)
+  c2          String?   @db.VarChar(255)
+  c3          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model evaluasi_keberlanjutan_ki_score {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  c1          Float?
+  c2          Float?
+  c3          Float?
+  total_score Float?
+
+  @@schema("ikk_new")
+}
+
+model evaluasi_keberlanjutan_ku {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  c1          String?   @db.VarChar(255)
+  c2          String?   @db.VarChar(255)
+  c3          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model evaluasi_keberlanjutan_ku_score {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  c1          Float?
+  c2          Float?
+  c3          Float?
+  total_score Float?
+
+  @@schema("ikk_new")
+}
+
+model helpdesk {
+  id           BigInt    @id @default(autoincrement())
+  nama_lengkap String
+  email_aktif  String
+  instansi     String?
+  masalah      String?
+  pesan        String?
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+
+  @@schema("ikk_new")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ikk_file {
+  id                                            BigInt       @id(map: "ikk_file_pk")
+  agency_id                                     BigInt?
+  policy_id                                     BigInt?
+  active_year                                   BigInt?
+  file_url_a1                                   String?      @db.VarChar
+  file_url_a2                                   String?      @db.VarChar
+  file_url_a3                                   String?      @db.VarChar
+  file_url_b1                                   String?      @db.VarChar
+  file_url_b2                                   String?      @db.VarChar
+  file_url_b3                                   String?      @db.VarChar
+  file_url_c1                                   String?      @db.VarChar
+  file_url_c2                                   String?      @db.VarChar
+  file_url_c3                                   String?      @db.VarChar
+  file_url_d1                                   String?      @db.VarChar
+  file_url_d2                                   String?      @db.VarChar
+  file_url_jf                                   String?      @db.VarChar
+  created_by                                    BigInt?
+  active_year_ikk_file_active_yearToactive_year active_year? @relation("ikk_file_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_active_year_fk")
+  agencies                                      agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_agencies_fk")
+  policy                                        policy?      @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_policy_fk")
+  user                                          user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_user_fk")
+
+  @@schema("ikk_new")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ikk_ki_score {
+  id                                                BigInt       @id(map: "ikk_instansi_score_pkey")
+  agency_id                                         BigInt?
+  policy_id                                         BigInt?
+  active_year                                       BigInt?
+  a1                                                BigInt?
+  a2                                                BigInt?
+  a3                                                BigInt?
+  b1                                                BigInt?
+  b2                                                BigInt?
+  b3                                                BigInt?
+  c1                                                BigInt?
+  c2                                                BigInt?
+  c3                                                BigInt?
+  d1                                                BigInt?
+  d2                                                BigInt?
+  jf                                                Boolean?
+  created_by                                        BigInt?
+  a_total_score                                     Float?       @default(dbgenerated("(((0.375 * (a1)::numeric) + (0.375 * (a2)::numeric)) + (0.25 * (a3)::numeric))")) @db.Real
+  b_total_score                                     Float?       @default(dbgenerated("(((0.35 * (b1)::numeric) + (0.35 * (b2)::numeric)) + (0.30 * (b3)::numeric))")) @db.Real
+  c_total_score                                     Float?       @default(dbgenerated("(((0.35 * (c1)::numeric) + (0.35 * (c2)::numeric)) + (0.30 * (c3)::numeric))")) @db.Real
+  d_total_score                                     Float?       @default(dbgenerated("((0.50 * (d1)::numeric) + (0.50 * (d2)::numeric))")) @db.Real
+  ikk_total_score                                   Float?       @default(dbgenerated("(((((0.20 * (((0.375 * (a1)::numeric) + (0.375 * (a2)::numeric)) + (0.25 * (a3)::numeric))) + (0.30 * (((0.35 * (b1)::numeric) + (0.35 * (b2)::numeric)) + (0.30 * (b3)::numeric)))) + (0.30 * (((0.35 * (c1)::numeric) + (0.35 * (c2)::numeric)) + (0.30 * (c3)::numeric)))) + (0.15 * ((0.50 * (d1)::numeric) + (0.50 * (d2)::numeric)))) + (0.05 * (\nCASE\n    WHEN jf THEN 1\n    ELSE 0\nEND)::numeric))")) @db.Real
+  active_year_ikk_ki_score_active_yearToactive_year active_year? @relation("ikk_ki_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_active_year_fk")
+  agencies                                          agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_agencies_fk")
+  policy                                            policy?      @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_policies_fk")
+  user                                              user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_user_fk")
+
+  @@schema("ikk_new")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ikk_ku_score {
+  id                                                BigInt       @id(map: "ikk_verif_score_pkey")
+  agency_id                                         BigInt?
+  policy_id                                         BigInt?
+  active_year                                       BigInt?
+  a1                                                BigInt?
+  a2                                                BigInt?
+  a3                                                BigInt?
+  b1                                                BigInt?
+  b2                                                BigInt?
+  b3                                                BigInt?
+  c1                                                BigInt?
+  c2                                                BigInt?
+  c3                                                BigInt?
+  d1                                                BigInt?
+  d2                                                BigInt?
+  jf                                                Boolean?
+  created_by                                        BigInt?
+  a_total_score                                     Float?       @default(dbgenerated("(((0.375 * (a1)::numeric) + (0.375 * (a2)::numeric)) + (0.25 * (a3)::numeric))")) @db.Real
+  b_total_score                                     Float?       @default(dbgenerated("(((0.35 * (b1)::numeric) + (0.35 * (b2)::numeric)) + (0.30 * (b3)::numeric))")) @db.Real
+  c_total_score                                     Float?       @default(dbgenerated("(((0.35 * (c1)::numeric) + (0.35 * (c2)::numeric)) + (0.30 * (c3)::numeric))")) @db.Real
+  d_total_score                                     Float?       @default(dbgenerated("((0.50 * (d1)::numeric) + (0.50 * (d2)::numeric))")) @db.Real
+  ikk_total_score                                   Float?       @default(dbgenerated("(((((0.20 * (((0.375 * (a1)::numeric) + (0.375 * (a2)::numeric)) + (0.25 * (a3)::numeric))) + (0.30 * (((0.35 * (b1)::numeric) + (0.35 * (b2)::numeric)) + (0.30 * (b3)::numeric)))) + (0.30 * (((0.35 * (c1)::numeric) + (0.35 * (c2)::numeric)) + (0.30 * (c3)::numeric)))) + (0.15 * ((0.50 * (d1)::numeric) + (0.50 * (d2)::numeric)))) + (0.05 * (\nCASE\n    WHEN jf THEN 1\n    ELSE 0\nEND)::numeric))")) @db.Real
+  active_year_ikk_ku_score_active_yearToactive_year active_year? @relation("ikk_ku_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_active_year_fk")
+  agencies                                          agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_agencies_fk")
+  policy                                            policy?      @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_policies_fk")
+  user                                              user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_user_fk")
+
+  @@schema("ikk_new")
+}
+
+model implementasi_kebijakan {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  b1          String?   @db.VarChar(255)
+  b2          String?   @db.VarChar(255)
+  b3          String?   @db.VarChar(255)
+  informasia3 String?
+
+  @@schema("ikk_new")
+}
+
+model implementasi_kebijakan_file {
+  id                    BigInt    @id
+  created_at            DateTime? @db.Timestamp(6)
+  created_by            BigInt?
+  modified_by           BigInt?
+  updated_at            DateTime? @db.Timestamp(6)
+  file_original_namea1a String?   @db.VarChar(255)
+  file_original_namea1b String?   @db.VarChar(255)
+  file_original_namea1c String?   @db.VarChar(255)
+  file_original_namea1d String?   @db.VarChar(255)
+  file_original_namea2a String?   @db.VarChar(255)
+  file_original_namea2b String?   @db.VarChar(255)
+  file_original_namea2c String?   @db.VarChar(255)
+  file_patha1a          String?   @db.VarChar(255)
+  file_patha1b          String?   @db.VarChar(255)
+  file_patha1c          String?   @db.VarChar(255)
+  file_patha1d          String?   @db.VarChar(255)
+  file_patha2a          String?   @db.VarChar(255)
+  file_patha2b          String?   @db.VarChar(255)
+  file_patha2c          String?   @db.VarChar(255)
+  file_sizea1a          String?   @db.VarChar(255)
+  file_sizea1b          String?   @db.VarChar(255)
+  file_sizea1c          String?   @db.VarChar(255)
+  file_sizea1d          String?   @db.VarChar(255)
+  file_sizea2a          String?   @db.VarChar(255)
+  file_sizea2b          String?   @db.VarChar(255)
+  file_sizea2c          String?   @db.VarChar(255)
+  file_typea1a          String?   @db.VarChar(255)
+  file_typea1b          String?   @db.VarChar(255)
+  file_typea1c          String?   @db.VarChar(255)
+  file_typea1d          String?   @db.VarChar(255)
+  file_typea2a          String?   @db.VarChar(255)
+  file_typea2b          String?   @db.VarChar(255)
+  file_typea2c          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model implementasi_kebijakan_ki {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  b1          String?   @db.VarChar(255)
+  b2          String?   @db.VarChar(255)
+  b3          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model implementasi_kebijakan_ki_score {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  b1          Float?
+  b2          Float?
+  b3          Float?
+  total_score Float?
+
+  @@schema("ikk_new")
+}
+
+model implementasi_kebijakan_ku {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  b1          String?   @db.VarChar(255)
+  b2          String?   @db.VarChar(255)
+  b3          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model implementasi_kebijakan_ku_score {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  b1          Float?
+  b2          Float?
+  b3          Float?
+  total_score Float?
 
   @@schema("ikk_new")
 }
@@ -106,11 +349,13 @@ model instansi {
   agency_category_id Int?
   agencies           agencies[]
   instansi_kategori  instansi_kategori? @relation(fields: [agency_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "instansi_instansi_kategori_fk")
+  policy             policy[]
   user               user[]
 
   @@schema("ikk_new")
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model instansi_kategori {
   id           Int        @id(map: "instansi_kategori_pk")
   kat_instansi String?    @db.VarChar
@@ -119,6 +364,7 @@ model instansi_kategori {
   @@schema("ikk_new")
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model instrument_answer {
   id                  BigInt               @id(map: "instrument_answer_pk")
   question_id         BigInt?
@@ -147,7 +393,7 @@ model instrument_question {
 }
 
 model koor_instansi_analis {
-  id                                                 BigInt    @id @default(autoincrement())  // Auto-generate id
+  id                                                 BigInt    @id
   created_at                                         DateTime? @db.Timestamp(6)
   created_by                                         BigInt?
   modified_by                                        BigInt?
@@ -188,23 +434,222 @@ model koor_nasional_validator {
   @@schema("ikk_new")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model perencanaan_kebijakan {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  a1          String?   @db.VarChar(255)
+  a2          String?   @db.VarChar(255)
+  a3          String?   @db.VarChar(255)
+  informasia3 String?
+
+  @@schema("ikk_new")
+}
+
+model perencanaan_kebijakan_file {
+  id                    BigInt    @id
+  created_at            DateTime? @db.Timestamp(6)
+  created_by            BigInt?
+  modified_by           BigInt?
+  updated_at            DateTime? @db.Timestamp(6)
+  file_original_namea1a String?   @db.VarChar(255)
+  file_original_namea1b String?   @db.VarChar(255)
+  file_original_namea1c String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model perencanaan_kebijakan_ki {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  a1          String?   @db.VarChar(255)
+  a2          String?   @db.VarChar(255)
+  a3          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model perencanaan_kebijakan_ki_score {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  a1          Float?
+  a2          Float?
+  a3          Float?
+  total_score Float?
+
+  @@schema("ikk_new")
+}
+
+model perencanaan_kebijakan_ku {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  a1          String?   @db.VarChar(255)
+  a2          String?   @db.VarChar(255)
+  a3          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model perencanaan_kebijakan_ku_score {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  a1          Float?
+  a2          Float?
+  a3          Float?
+  total_score Float?
+
+  @@schema("ikk_new")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model policies {
-  id                               BigInt               @id(map: "policies_pk")
-  created_at                       DateTime?            @db.Timestamp(6)
-  created_by                       BigInt?
-  name                             String?
-  agency_id                        BigInt?
-  validated_by                     BigInt?
-  is_valid                         Boolean?
-  sector                           String?              @db.VarChar
-  file_url                         String?              @db.VarChar
-  type                             String?              @db.VarChar
-  ikk_instansi_score               ikk_instansi_score[]
-  ikk_verif_score                  ikk_verif_score[]
-  agencies                         agencies?            @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_agencies_fk")
-  user_policies_created_byTouser   user?                @relation("policies_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_user_created_by_FK")
-  user_policies_validated_byTouser user?                @relation("policies_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_user_validated_by_FK")
+  id                                   BigInt?
+  created_at                           DateTime?       @db.Timestamp(6)
+  created_by                           BigInt?
+  modified_by                          BigInt?
+  updated_at                           DateTime?       @db.Timestamp(6)
+  assigned_by_admin_at                 DateTime?       @db.Timestamp(6)
+  assigned_by_admin_id                 BigInt?
+  enumerator_id                        BigInt?
+  name                                 String?
+  processed_by_enumerator_at           DateTime?       @db.Timestamp(6)
+  processed_by_enumerator_id           BigInt?
+  sent_by_admin_at                     DateTime?       @db.Timestamp(6)
+  sent_by_admin_id                     BigInt?
+  validated_by_koordinator_at          DateTime?       @db.Timestamp(6)
+  validated_by_koordinator_id          BigInt?
+  validated_by_koordinator_utama_at    DateTime?       @db.Timestamp(6)
+  validated_by_koordinator_utama_id    BigInt?
+  verified_by_koordinator_at           DateTime?       @db.Timestamp(6)
+  verified_by_koordinator_id           BigInt?
+  policy_details_id                    BigInt?
+  policy_process_id                    BigInt?
+  policy_status_id                     BigInt?
+  perencanaan_kebijakan_id             BigInt?
+  perencanaan_kebijakan_ki_id          BigInt?
+  perencanaan_kebijakan_ki_score_id    BigInt?
+  perencanaan_kebijakan_ku_id          BigInt?
+  perencanaan_kebijakan_ku_score_id    BigInt?
+  perencanaan_kebijakan_file_id        BigInt?
+  implementasi_kebijakan_id            BigInt?
+  implementasi_kebijakan_file_id       BigInt?
+  implementasi_kebijakan_ki_id         BigInt?
+  implementasi_kebijakan_ki_score_id   BigInt?
+  implementasi_kebijakan_ku_id         BigInt?
+  implementasi_kebijakan_ku_score_id   BigInt?
+  evaluasi_kebijakan_id                BigInt?
+  evaluasi_kebijakan_file_id           BigInt?
+  evaluasi_kebijakan_ki_id             BigInt?
+  evaluasi_kebijakan_ki_score_id       BigInt?
+  evaluasi_kebijakan_ku_id             BigInt?
+  evaluasi_kebijakan_ku_score_id       BigInt?
+  transparansi_partisipasi_id          BigInt?
+  transparansi_partisipasi_file_id     BigInt?
+  transparansi_partisipasi_ki_id       BigInt?
+  transparansi_partisipasi_ki_score_id BigInt?
+  transparansi_partisipasi_ku_id       BigInt?
+  transparansi_partisipasi_ku_score_id BigInt?
+  policy_details                       policy_details? @relation(fields: [policy_details_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_details")
+  policy_process                       policy_process? @relation(fields: [policy_process_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_process")
+  policy_status                        policy_status?  @relation(fields: [policy_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_status")
+
+  @@ignore
+  @@schema("ikk_new")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model policy {
+  id                             BigInt         @id(map: "policies_pk")
+  created_at                     DateTime?      @db.Timestamp(6)
+  created_by                     BigInt?
+  name                           String?
+  agency_id                      BigInt?
+  validated_by                   BigInt?
+  is_valid                       Boolean?
+  sector                         String?        @db.VarChar
+  file_url                       String?        @db.VarChar
+  type                           String?        @db.VarChar
+  agency_id_panrb                BigInt?
+  active_year                    BigInt?
+  ikk_file                       ikk_file[]
+  ikk_ki_score                   ikk_ki_score[]
+  ikk_ku_score                   ikk_ku_score[]
+  agencies                       agencies?      @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_agencies_fk")
+  instansi                       instansi?      @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "policy_instansi_fk")
+  user_policy_created_byTouser   user?          @relation("policy_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_user_fk")
+  user_policy_validated_byTouser user?          @relation("policy_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_user_validated_FK")
+
+  @@schema("ikk_new")
+}
+
+model policy_details {
+  id                 BigInt     @id
+  created_at         DateTime?  @db.Timestamp(6)
+  created_by         BigInt?
+  modified_by        BigInt?
+  updated_at         DateTime?  @db.Timestamp(6)
+  base_score         Float?
+  effective_date     DateTime?  @db.Timestamp(6)
+  file_original_name String?    @db.VarChar(255)
+  file_path          String?    @db.VarChar(255)
+  file_size          String?    @db.VarChar(255)
+  file_type          String?    @db.VarChar(255)
+  progress           Float?
+  sector             String?    @db.VarChar(255)
+  validationkiscore  Float?
+  validationkuscore  Float?
+  validationkinote   String?
+  policies           policies[] @ignore
+
+  @@schema("ikk_new")
+}
+
+model policy_process {
+  id          BigInt     @id
+  created_at  DateTime?  @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime?  @db.Timestamp(6)
+  name        String?    @db.VarChar(255)
+  policies    policies[] @ignore
+
+  @@schema("ikk_new")
+}
+
+model policy_sample {
+  id            BigInt    @id
+  created_at    DateTime? @db.Timestamp(6)
+  created_by    BigInt?
+  modified_by   BigInt?
+  updated_at    DateTime? @db.Timestamp(6)
+  id_user_admin BigInt?
+  policy_id     BigInt?
+
+  @@schema("ikk_new")
+}
+
+model policy_status {
+  id          BigInt     @id
+  created_at  DateTime?  @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime?  @db.Timestamp(6)
+  name        String?    @db.VarChar(255)
+  policies    policies[] @ignore
 
   @@schema("ikk_new")
 }
@@ -239,6 +684,107 @@ model surat_penunjukkan {
   @@schema("ikk_new")
 }
 
+model transparansi_partisipasi {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  d1          String?   @db.VarChar(255)
+  d2          String?   @db.VarChar(255)
+  informasia3 String?
+
+  @@schema("ikk_new")
+}
+
+model transparansi_partisipasi_file {
+  id                    BigInt    @id
+  created_at            DateTime? @db.Timestamp(6)
+  created_by            BigInt?
+  modified_by           BigInt?
+  updated_at            DateTime? @db.Timestamp(6)
+  file_original_namea1a String?   @db.VarChar(255)
+  file_original_namea1b String?   @db.VarChar(255)
+  file_original_namea1c String?   @db.VarChar(255)
+  file_original_namea1d String?   @db.VarChar(255)
+  file_original_namea2a String?   @db.VarChar(255)
+  file_original_namea2b String?   @db.VarChar(255)
+  file_original_namea2c String?   @db.VarChar(255)
+  file_patha1a          String?   @db.VarChar(255)
+  file_patha1b          String?   @db.VarChar(255)
+  file_patha1c          String?   @db.VarChar(255)
+  file_patha1d          String?   @db.VarChar(255)
+  file_patha2a          String?   @db.VarChar(255)
+  file_patha2b          String?   @db.VarChar(255)
+  file_patha2c          String?   @db.VarChar(255)
+  file_sizea1a          String?   @db.VarChar(255)
+  file_sizea1b          String?   @db.VarChar(255)
+  file_sizea1c          String?   @db.VarChar(255)
+  file_sizea1d          String?   @db.VarChar(255)
+  file_sizea2a          String?   @db.VarChar(255)
+  file_sizea2b          String?   @db.VarChar(255)
+  file_sizea2c          String?   @db.VarChar(255)
+  file_typea1a          String?   @db.VarChar(255)
+  file_typea1b          String?   @db.VarChar(255)
+  file_typea1c          String?   @db.VarChar(255)
+  file_typea1d          String?   @db.VarChar(255)
+  file_typea2a          String?   @db.VarChar(255)
+  file_typea2b          String?   @db.VarChar(255)
+  file_typea2c          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model transparansi_partisipasi_ki {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  d1          String?   @db.VarChar(255)
+  d2          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model transparansi_partisipasi_ki_score {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  d1          Float?
+  d2          Float?
+  total_score Float?
+
+  @@schema("ikk_new")
+}
+
+model transparansi_partisipasi_ku {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  d1          String?   @db.VarChar(255)
+  d2          String?   @db.VarChar(255)
+
+  @@schema("ikk_new")
+}
+
+model transparansi_partisipasi_ku_score {
+  id          BigInt    @id
+  created_at  DateTime? @db.Timestamp(6)
+  created_by  BigInt?
+  modified_by BigInt?
+  updated_at  DateTime? @db.Timestamp(6)
+  d1          Float?
+  d2          Float?
+  total_score Float?
+
+  @@schema("ikk_new")
+}
+
 model user {
   id                                                                     BigInt                    @id @default(autoincrement())
   created_at                                                             DateTime?                 @db.Timestamp(6)
@@ -248,29 +794,30 @@ model user {
   deleted                                                                String?                   @db.Bit(1)
   deleted_at                                                             DateTime?                 @db.Timestamp(6)
   deleted_by                                                             BigInt?
-  email                                                                  String?                   @db.VarChar(255) @unique
+  email                                                                  String?                   @db.VarChar(255)
   name                                                                   String?                   @db.VarChar(255)
   nik                                                                    String?                   @db.VarChar(255)
   password                                                               String?                   @db.VarChar(255)
   phone                                                                  String?                   @db.VarChar(255)
   position                                                               String?                   @db.VarChar(255)
-   status                                                                String?                   @db.VarChar(255) @default("nonaktif") // Default statusnya inactive
-  username                                                               String?                   @db.VarChar(255) @unique
+  status                                                                 String?                   @db.VarChar(255)
+  username                                                               String?                   @db.VarChar(255)
   work_unit                                                              String?                   @db.VarChar(255)
   agency_id                                                              BigInt?
   agency_id_panrb                                                        BigInt?
   active_year                                                            BigInt?
   penunjukkan_id                                                         BigInt?
-  ikk_instansi_score                                                     ikk_instansi_score[]
-  ikk_verif_score                                                        ikk_verif_score[]
+  ikk_file                                                               ikk_file[]
+  ikk_ki_score                                                           ikk_ki_score[]
+  ikk_ku_score                                                           ikk_ku_score[]
   koor_instansi_analis_koor_instansi_analis_analis_instansi_idTouser     koor_instansi_analis[]    @relation("koor_instansi_analis_analis_instansi_idTouser")
   koor_instansi_analis_koor_instansi_analis_koor_instansi_idTouser       koor_instansi_analis[]    @relation("koor_instansi_analis_koor_instansi_idTouser")
   koor_instansi_validator_koor_instansi_validator_koor_instansi_idTouser koor_instansi_validator[] @relation("koor_instansi_validator_koor_instansi_idTouser")
   koor_instansi_validator_koor_instansi_validator_validator_idTouser     koor_instansi_validator[] @relation("koor_instansi_validator_validator_idTouser")
   koor_nasional_validator_koor_nasional_validator_koor_nasional_idTouser koor_nasional_validator[] @relation("koor_nasional_validator_koor_nasional_idTouser")
   koor_nasional_validator_koor_nasional_validator_validator_idTouser     koor_nasional_validator[] @relation("koor_nasional_validator_validator_idTouser")
-  policies_policies_created_byTouser                                     policies[]                @relation("policies_created_byTouser")
-  policies_policies_validated_byTouser                                   policies[]                @relation("policies_validated_byTouser")
+  policy_policy_created_byTouser                                         policy[]                  @relation("policy_created_byTouser")
+  policy_policy_validated_byTouser                                       policy[]                  @relation("policy_validated_byTouser")
   role_user                                                              role_user?
   active_year_user_active_yearToactive_year                              active_year?              @relation("user_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "user_active_year_fk")
   agencies                                                               agencies?                 @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
