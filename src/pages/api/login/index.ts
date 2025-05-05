@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Cari user berdasarkan username
     const user = await prisma.user.findUnique({
-      where: { username: username },
+      where: { username: username } as { username: string },
       include: {
         role_user: {
           include: {
