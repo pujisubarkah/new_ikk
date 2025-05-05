@@ -11,7 +11,7 @@ export const sendApprovalEmail = async (adminEmail: string, userName: string, us
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: adminEmail,
+    to: userEmail,
     subject: `User Approved: ${userName}`,
     text: `Hello Admin,\n\nThe user ${userName} (${userEmail}) sudah disetujui dan sudah bisa mengunakan aplikasi IKK.\n\nSalam,\nYour Application`,
   };
