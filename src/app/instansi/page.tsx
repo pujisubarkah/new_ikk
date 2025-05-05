@@ -50,7 +50,8 @@ function TabelInstansi() {
   }, [])
 
   const filteredData = instansiData.filter(item =>
-    item.instansi?.agency_name.toLowerCase().includes(searchQuery.toLowerCase())
+    item.instansi?.agency_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.active_year?.toString().toLowerCase().includes(searchQuery.toLowerCase())
   )
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
