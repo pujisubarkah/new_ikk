@@ -28,7 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             name: true,
           },
         },
-        
+        agency_id: true,
+        agencies: { 
+          select: {
+            name: true,
+          },
+        },
         policy_details: {
           select: {
             progress: true,
