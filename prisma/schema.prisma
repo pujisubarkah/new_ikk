@@ -24,25 +24,27 @@ model active_year {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model agencies {
-  id                                            BigInt         @id
-  created_at                                    DateTime?      @db.Timestamp(6)
+  id                                            BigInt             @id
+  created_at                                    DateTime?          @db.Timestamp(6)
   created_by                                    BigInt?
   modified_by                                   BigInt?
-  updated_at                                    DateTime?      @db.Timestamp(6)
-  name                                          String?        @db.VarChar(255)
-  category                                      String?        @db.VarChar(255)
-  kd_bkn                                        String?        @db.VarChar(100)
-  kd_prov                                       String?        @db.VarChar(100)
-  kd_kab                                        String?        @db.VarChar(100)
+  updated_at                                    DateTime?          @db.Timestamp(6)
+  name                                          String?            @db.VarChar(255)
+  category                                      String?            @db.VarChar(255)
+  kd_bkn                                        String?            @db.VarChar(100)
+  kd_prov                                       String?            @db.VarChar(100)
+  kd_kab                                        String?            @db.VarChar(100)
   agency_id_panrb                               BigInt?
   active_year                                   BigInt?
-  active_year_agencies_active_yearToactive_year active_year?   @relation("agencies_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "agencies_active_year_fk")
-  instansi                                      instansi?      @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "agencies_instansi_fk")
+  active_year_agencies_active_yearToactive_year active_year?       @relation("agencies_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "agencies_active_year_fk")
+  instansi                                      instansi?          @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "agencies_instansi_fk")
   ikk_file                                      ikk_file[]
   ikk_ki_score                                  ikk_ki_score[]
   ikk_ku_score                                  ikk_ku_score[]
+  policies                                      policies[]
   policy                                        policy[]
   user                                          user[]
+  validator_agency                              validator_agency[]
 
   @@schema("ikk_new")
 }
@@ -515,59 +517,62 @@ model perencanaan_kebijakan_ku_score {
   @@schema("ikk_new")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model policies {
-  id                                   BigInt?
-  created_at                           DateTime?       @db.Timestamp(6)
-  created_by                           BigInt?
-  modified_by                          BigInt?
-  updated_at                           DateTime?       @db.Timestamp(6)
-  assigned_by_admin_at                 DateTime?       @db.Timestamp(6)
-  assigned_by_admin_id                 BigInt?
-  enumerator_id                        BigInt?
-  name                                 String?
-  processed_by_enumerator_at           DateTime?       @db.Timestamp(6)
-  processed_by_enumerator_id           BigInt?
-  sent_by_admin_at                     DateTime?       @db.Timestamp(6)
-  sent_by_admin_id                     BigInt?
-  validated_by_koordinator_at          DateTime?       @db.Timestamp(6)
-  validated_by_koordinator_id          BigInt?
-  validated_by_koordinator_utama_at    DateTime?       @db.Timestamp(6)
-  validated_by_koordinator_utama_id    BigInt?
-  verified_by_koordinator_at           DateTime?       @db.Timestamp(6)
-  verified_by_koordinator_id           BigInt?
-  policy_details_id                    BigInt?
-  policy_process_id                    BigInt?
-  policy_status_id                     BigInt?
-  perencanaan_kebijakan_id             BigInt?
-  perencanaan_kebijakan_ki_id          BigInt?
-  perencanaan_kebijakan_ki_score_id    BigInt?
-  perencanaan_kebijakan_ku_id          BigInt?
-  perencanaan_kebijakan_ku_score_id    BigInt?
-  perencanaan_kebijakan_file_id        BigInt?
-  implementasi_kebijakan_id            BigInt?
-  implementasi_kebijakan_file_id       BigInt?
-  implementasi_kebijakan_ki_id         BigInt?
-  implementasi_kebijakan_ki_score_id   BigInt?
-  implementasi_kebijakan_ku_id         BigInt?
-  implementasi_kebijakan_ku_score_id   BigInt?
-  evaluasi_kebijakan_id                BigInt?
-  evaluasi_kebijakan_file_id           BigInt?
-  evaluasi_kebijakan_ki_id             BigInt?
-  evaluasi_kebijakan_ki_score_id       BigInt?
-  evaluasi_kebijakan_ku_id             BigInt?
-  evaluasi_kebijakan_ku_score_id       BigInt?
-  transparansi_partisipasi_id          BigInt?
-  transparansi_partisipasi_file_id     BigInt?
-  transparansi_partisipasi_ki_id       BigInt?
-  transparansi_partisipasi_ki_score_id BigInt?
-  transparansi_partisipasi_ku_id       BigInt?
-  transparansi_partisipasi_ku_score_id BigInt?
-  policy_details                       policy_details? @relation(fields: [policy_details_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_details")
-  policy_process                       policy_process? @relation(fields: [policy_process_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_process")
-  policy_status                        policy_status?  @relation(fields: [policy_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_status")
+  id                                             BigInt          @id
+  created_at                                     DateTime?       @db.Timestamp(6)
+  created_by                                     BigInt?
+  modified_by                                    BigInt?
+  updated_at                                     DateTime?       @db.Timestamp(6)
+  assigned_by_admin_at                           DateTime?       @db.Timestamp(6)
+  assigned_by_admin_id                           BigInt?
+  enumerator_id                                  BigInt?
+  name                                           String?
+  processed_by_enumerator_at                     DateTime?       @db.Timestamp(6)
+  processed_by_enumerator_id                     BigInt?
+  sent_by_admin_at                               DateTime?       @db.Timestamp(6)
+  sent_by_admin_id                               BigInt?
+  validated_by_koordinator_at                    DateTime?       @db.Timestamp(6)
+  validated_by_koordinator_id                    BigInt?
+  validated_by_koordinator_utama_at              DateTime?       @db.Timestamp(6)
+  validated_by_koordinator_utama_id              BigInt?
+  verified_by_koordinator_at                     DateTime?       @db.Timestamp(6)
+  verified_by_koordinator_id                     BigInt?
+  policy_details_id                              BigInt?
+  policy_process_id                              BigInt?
+  policy_status_id                               BigInt?
+  perencanaan_kebijakan_id                       BigInt?
+  perencanaan_kebijakan_ki_id                    BigInt?
+  perencanaan_kebijakan_ki_score_id              BigInt?
+  perencanaan_kebijakan_ku_id                    BigInt?
+  perencanaan_kebijakan_ku_score_id              BigInt?
+  perencanaan_kebijakan_file_id                  BigInt?
+  implementasi_kebijakan_id                      BigInt?
+  implementasi_kebijakan_file_id                 BigInt?
+  implementasi_kebijakan_ki_id                   BigInt?
+  implementasi_kebijakan_ki_score_id             BigInt?
+  implementasi_kebijakan_ku_id                   BigInt?
+  implementasi_kebijakan_ku_score_id             BigInt?
+  evaluasi_kebijakan_id                          BigInt?
+  evaluasi_kebijakan_file_id                     BigInt?
+  evaluasi_kebijakan_ki_id                       BigInt?
+  evaluasi_kebijakan_ki_score_id                 BigInt?
+  evaluasi_kebijakan_ku_id                       BigInt?
+  evaluasi_kebijakan_ku_score_id                 BigInt?
+  transparansi_partisipasi_id                    BigInt?
+  transparansi_partisipasi_file_id               BigInt?
+  transparansi_partisipasi_ki_id                 BigInt?
+  transparansi_partisipasi_ki_score_id           BigInt?
+  transparansi_partisipasi_ku_id                 BigInt?
+  transparansi_partisipasi_ku_score_id           BigInt?
+  agency_id                                      BigInt?
+  policy_details                                 policy_details? @relation(fields: [policy_details_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_details")
+  policy_process                                 policy_process? @relation(fields: [policy_process_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_process")
+  policy_status                                  policy_status?  @relation(fields: [policy_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_status")
+  agencies                                       agencies?       @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_policies_assigned_by_admin_idTouser       user?           @relation("policies_assigned_by_admin_idTouser", fields: [assigned_by_admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_policies_enumerator_idTouser              user?           @relation("policies_enumerator_idTouser", fields: [enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_policies_processed_by_enumerator_idTouser user?           @relation("policies_processed_by_enumerator_idTouser", fields: [processed_by_enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@ignore
   @@schema("ikk_new")
 }
 
@@ -613,7 +618,7 @@ model policy_details {
   validationkiscore  Float?
   validationkuscore  Float?
   validationkinote   String?
-  policies           policies[] @ignore
+  policies           policies[]
 
   @@schema("ikk_new")
 }
@@ -625,7 +630,7 @@ model policy_process {
   modified_by BigInt?
   updated_at  DateTime?  @db.Timestamp(6)
   name        String?    @db.VarChar(255)
-  policies    policies[] @ignore
+  policies    policies[]
 
   @@schema("ikk_new")
 }
@@ -649,7 +654,7 @@ model policy_status {
   modified_by BigInt?
   updated_at  DateTime?  @db.Timestamp(6)
   name        String?    @db.VarChar(255)
-  policies    policies[] @ignore
+  policies    policies[]
 
   @@schema("ikk_new")
 }
@@ -801,7 +806,7 @@ model user {
   phone                                                                  String?                   @db.VarChar(255)
   position                                                               String?                   @db.VarChar(255)
   status                                                                 String?                   @db.VarChar(255)
-  username                                                               String?                   @db.VarChar(255)
+  username                                                               String?                   @db.VarChar(255) @unique
   work_unit                                                              String?                   @db.VarChar(255)
   agency_id                                                              BigInt?
   agency_id_panrb                                                        BigInt?
@@ -816,6 +821,9 @@ model user {
   koor_instansi_validator_koor_instansi_validator_validator_idTouser     koor_instansi_validator[] @relation("koor_instansi_validator_validator_idTouser")
   koor_nasional_validator_koor_nasional_validator_koor_nasional_idTouser koor_nasional_validator[] @relation("koor_nasional_validator_koor_nasional_idTouser")
   koor_nasional_validator_koor_nasional_validator_validator_idTouser     koor_nasional_validator[] @relation("koor_nasional_validator_validator_idTouser")
+  policies_policies_assigned_by_admin_idTouser                           policies[]                @relation("policies_assigned_by_admin_idTouser")
+  policies_policies_enumerator_idTouser                                  policies[]                @relation("policies_enumerator_idTouser")
+  policies_policies_processed_by_enumerator_idTouser                     policies[]                @relation("policies_processed_by_enumerator_idTouser")
   policy_policy_created_byTouser                                         policy[]                  @relation("policy_created_byTouser")
   policy_policy_validated_byTouser                                       policy[]                  @relation("policy_validated_byTouser")
   role_user                                                              role_user?
@@ -823,6 +831,7 @@ model user {
   agencies                                                               agencies?                 @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   instansi                                                               instansi?                 @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction)
   surat_penunjukkan                                                      surat_penunjukkan?        @relation(fields: [penunjukkan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  validator_agency                                                       validator_agency[]
 
   @@schema("ikk_new")
 }
@@ -835,6 +844,8 @@ model validator_agency {
   updated_at   DateTime? @db.Timestamp(6)
   agencies_id  BigInt?
   validator_id BigInt?
+  agencies     agencies? @relation(fields: [agencies_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user         user?     @relation(fields: [validator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("ikk_new")
 }
