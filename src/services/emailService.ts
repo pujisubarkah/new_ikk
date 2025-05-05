@@ -10,10 +10,10 @@ export const sendApprovalEmail = async (adminEmail: string, userName: string, us
   });
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"No-Reply IKK" <no-reply@ikk.lan.go.id>`,
     to: userEmail,
-    subject: `User Approved: ${userName}`,
-    text: `Hello Admin,\n\nThe user ${userName} (${userEmail}) sudah disetujui dan sudah bisa mengunakan aplikasi IKK.\n\nSalam,\nYour Application`,
+    subject: `Persetujuan Pengguna: ${userName}`,
+    text: `Halo Admin,\n\nPengguna dengan nama ${userName} (${userEmail}) telah disetujui dan kini dapat menggunakan aplikasi IKK.\n\nSalam hormat,\nTim Penilaian Indeks Kualitas Kebijakan`,
   };
 
   try {
