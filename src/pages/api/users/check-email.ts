@@ -15,9 +15,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     console.log('Cek email:', email);
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { 
-        email: email // No need for type assertion if email is properly typed in your schema
+        email: email as string // Ensure email is explicitly cast to string
       },
     });
 
