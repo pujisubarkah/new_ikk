@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Fetch user with role_id = 4 and their related agencies and policies
         const userWithPolicies = await prisma.role_user.findFirst({
             where: {
-                user_id: user_id,
+                user_id: parseInt(user_id, 10),
                 role_id: 4,
             },
             select: {
