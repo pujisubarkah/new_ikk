@@ -40,7 +40,7 @@ export default function HelpdeskPage() {
       case 3:
         return <SidebarInst>{null}</SidebarInst>
       case 5:
-        return <SidebarEnum>{null}</SidebarEnum>
+        return <SidebarEnum />
       case 4: // bisa jadi default juga
       default:
         return <Sidebar>{null}</Sidebar>
