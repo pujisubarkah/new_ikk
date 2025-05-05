@@ -36,7 +36,14 @@ export default function PolicyPage() {
     const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
     const [policyData, setPolicyData] = useState<Policy | null>(null);
     const [additionalInfo, setAdditionalInfo] = useState("");
-    const [apiQuestions, setApiQuestions] = useState<any[]>([]);
+    type Question = {
+        id: string;
+        dimension_name: string;
+        indicator_question: string;
+        instrument_answer: { level_description: string }[];
+    };
+
+    const [apiQuestions, setApiQuestions] = useState<Question[]>([]);
 
     useEffect(() => {
         const fetchPolicyData = async () => {
@@ -116,7 +123,7 @@ export default function PolicyPage() {
     return (
         <div className="flex min-h-screen bg-gray-50">
             <Sidebar />
-            <div className="flex-1 p-6 space-y-6 ml-0 md:ml-64">
+            <div className="flex-1 p-20 space-y-6 ml-0 md:ml-64">
                 <PolicyCard policy={policyData} />
                 <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
                 <div className="grid grid-cols-1 gap-6">
@@ -240,7 +247,7 @@ function PolicyCard({ policy }: { policy: Policy }) {
     uploadedFiles: Record<string, string>;
     onAnswerChange: (questionId: string, answer: string) => void;
     onLinkUpload: (questionId: string, link: string) => void;
-    apiQuestions: any[];
+    apiQuestions: { id: string; dimension_name: string; indicator_question: string; instrument_answer: { level_description: string }[] }[]; // Define the Question type inline or import it if available
     onSaveAnswer: (questionId: string, questionText: string) => void;
 }) {
     const dimensionName = stepDimensionMap[activeStep];
@@ -251,11 +258,11 @@ function PolicyCard({ policy }: { policy: Policy }) {
     return (
         <div className="bg-white p-6 rounded-xl shadow space-y-6">
                 <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
-                {filteredQuestions.map((item, idx) => (
+                {filteredQuestions.map((item) => (
                     <div key={item.id} className="space-y-4 pb-4 border-b last:border-b-0 last:pb-0">
                         <p className="font-semibold text-gray-800">{item.indicator_question}</p>
                         <div className="space-y-3">
-                            {item.instrument_answer.map((opt: any, i: number) => (
+                            {item.instrument_answer.map((opt, i: number) => (
                                 <label key={i} className="flex items-start gap-3 cursor-pointer">
                                     <input
                                         type="radio"
