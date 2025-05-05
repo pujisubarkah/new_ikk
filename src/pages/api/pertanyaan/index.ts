@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Serialize BigInt agar bisa dikirimkan dalam JSON
-    const serializedQuestions = serializeBigInt(questions);
+    const serializedQuestions = questions.map(question => serializeBigInt(question as Record<string, unknown>));
 
     // Kirim data yang sudah diserialisasi
     res.status(200).json({ data: serializedQuestions });
