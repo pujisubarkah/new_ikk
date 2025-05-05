@@ -10,9 +10,9 @@ export default async function handler(
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { username } = req.query;
+  const username = req.query.username as string;
 
-  if (!username) {
+  if (!username || typeof username !== 'string') {
     return res.status(400).json({ message: 'Missing or invalid username' });
   }
 
