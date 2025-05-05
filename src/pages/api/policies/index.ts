@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '@/lib/prisma';
 import { serializeBigInt } from '@/lib/serializeBigInt'
+import { effect } from 'zod';
+import { progress } from 'framer-motion';
+import { create } from 'domain';
 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -12,11 +15,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const policies = await prisma.policy.findMany({
       select: {
         id: true,
+        created_at: true,
+        created_by: true,
+        validated_by: true,
         name: true,
         is_valid: true,
         sector: true,
         type: true,
         file_url: true,
+        policy_status: true,
+        policy_process: true,
+        progress: true,
+        effective_date: true,
         active_year: true,
         agency_id_panrb: true,
         instansi: {

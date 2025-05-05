@@ -15,6 +15,8 @@ function InstansiKebijakan() {
   const [page, setPage] = useState(1)
 
   interface Policy {
+    instansi: string;
+    active_year: string;
     id: string;
     name: string;
     enumerator: string;
@@ -58,6 +60,15 @@ function InstansiKebijakan() {
       <div className="flex-1 p-8 sm:p-5">
         {/* Title */}
         <h1 className="text-3xl font-semibold mb-6 text-gray-800">📋 Daftar Kebijakan</h1>
+
+        <div className="mb-6">
+          <p className="text-lg font-medium text-gray-700">
+            Instansi: <span className="font-normal">{data.length > 0 ? data[0].instansi : 'NA'}</span>
+          </p>
+          <p className="text-lg font-medium text-gray-700">
+            Tahun penilaian: <span className="font-normal">{data.length > 0 ? data[0].active_year : 'NA'}</span>
+          </p>
+        </div>
 
         {/* Table */}
         <div className="rounded-xl shadow-md border bg-white overflow-hidden">

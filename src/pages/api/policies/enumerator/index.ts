@@ -49,9 +49,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    const serializedPolicies = policies.map(policy => serializeBigInt(policy));
+    const serializedPolicies = policies.map((policy: Record<string, unknown>) => serializeBigInt(policy));
 
-    const rowData = serializedPolicies.map(policy => ({
+    const rowData = serializedPolicies.map((policy: { 
+      id: number | string; 
+      user_policies_enumerator_idTouser: { name: string | null } | null; 
+      name: string; 
+      assigned_by_admin_at: Date | null; 
+      policy_details: { effective_date: Date | null; progress: number | null } | null; 
+      agencies: { name: string | null } | null; 
+      policy_process: { name: string | null } | null; 
+    }) => ({
       id: policy.id,
       enumerator: policy.user_policies_enumerator_idTouser?.name ?? null,
       name: policy.name,
@@ -60,7 +68,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       instansi: policy.agencies?.name ?? null,
       progress_pengisian: policy.policy_details?.progress ?? null,
       status_kebijakan: policy.policy_process?.name ?? null,
-      // policy_status field has been removed from here as well
     }));
 
     return res.status(200).json(rowData);

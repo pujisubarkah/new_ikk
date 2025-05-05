@@ -5,12 +5,17 @@ import * as XLSX from 'xlsx'
 import Sidebar from '@/components/sidebar-admin'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { FaEye } from 'react-icons/fa'
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from "@/components/ui/table"
 
 export default function TabelInstansi() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   
   interface Instansi {
+    instansi_year: any
     instansi_id: { instansi_id: string };
     instansi_name: string;
   }
@@ -43,7 +48,8 @@ export default function TabelInstansi() {
   }, [])
 
   const filteredData = instansiData.filter(item =>
-    item.instansi_name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.instansi_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    || (item.instansi_year?.instansi_year ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const indexOfLastItem = currentPage * itemsPerPage
@@ -88,7 +94,7 @@ export default function TabelInstansi() {
           <div className="mb-4">
             <input
               type="text"
-              placeholder="Cari Instansi..."
+              placeholder="Cari Instansi / Tahun..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-80 px-4 py-2 border border-gray-300 rounded-lg"
@@ -96,52 +102,61 @@ export default function TabelInstansi() {
           </div>
 
           {/* Tabel */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-200">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 border text-left">No</th>
-                  <th className="px-4 py-2 border text-left">Nama Instansi</th>
-                  <th className="px-4 py-2 border text-left">Aksi</th>
-                </tr>
-              </thead>
+          <div className="overflow-x-auto rounded-lg border">
+          <Table>
+            <TableHeader className="bg-gray-100">
+              <TableRow>
+              <TableHead className="text-gray-600">No</TableHead>
+              <TableHead className="text-gray-600">Nama Instansi</TableHead>
+              <TableHead className="text-center text-gray-600">Tahun Penilaian</TableHead>
+              <TableHead className="text-center text-gray-600">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
               {loading && <div className="text-center py-4">Memuat data...</div>}
-          {error && <div className="text-center text-red-500 py-4">{error}</div>}
-              <tbody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((item, index) => (
-                    <tr key={item.instansi_id.instansi_id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border">{indexOfFirstItem + index + 1}</td>
-                      <td className="px-4 py-2 border">{item.instansi_name}</td>
-                        <td className="px-4 py-2 border space-x-1 text-sm">
-                        <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs">
-                          Reset Populasi
-                        </button>
-                        <button className="bg-orange-400 hover:bg-orange-500 text-white px-2 py-1 rounded text-xs">
-                          Reset Verifikasi
-                        </button>
-                        <button
-                          onClick={() => handleLihat(item.instansi_id.instansi_id)}
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                        >
-                          Lihat
-                        </button>
-                        </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="text-center py-4">
-                      Data tidak ditemukan.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              {error && <div className="text-center text-red-500 py-4">{error}</div>}
+              <TableBody>
+              {currentItems.length > 0 ? (
+              currentItems.map((item, index) => (
+                <TableRow 
+                key={item.instansi_id.instansi_id}
+                className="hover:bg-gray-50">
+                <TableCell>{indexOfFirstItem + index + 1}</TableCell>
+                <TableCell>{item.instansi_name}</TableCell>
+                <TableCell className='text-center'>{item.instansi_year.instansi_year}</TableCell>
+                <TableCell>
+                  {/*}
+                <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded text-xs shadow">
+                Reset Populasi
+                </button>
+                <button className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded text-xs shadow">
+                Reset Verifikasi
+                </button>
+                */}
+                <div className="flex justify-center">
+                  <button
+                  onClick={() => handleLihat(item.instansi_id.instansi_id)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-1 rounded text-xs shadow flex items-center justify-center space-x-2"
+                  >
+                  <FaEye />
+                  <span>Lihat</span>
+                  </button>
+                </div>
+                </TableCell>
+                </TableRow>
+              ))
+              ) : (
+                <TableRow>
+                <TableCell colSpan={6} className="text-center py-10 text-gray-500">
+                  Tidak ada data tersedia.
+                </TableCell>
+              </TableRow>
+              )}
+              </TableBody>
+              </Table>
+            </div>
 
-          {/* Pagination */}
-          <div className="flex justify-center items-center mt-6 space-x-2">
+            {/* Pagination */}
+            <div className="flex justify-center items-center mt-6 space-x-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
@@ -149,15 +164,19 @@ export default function TabelInstansi() {
             >
               Prev
             </button>
-            {Array.from({ length: totalPages }, (_, index) => (
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
+              const page = Math.max(1, currentPage - 2) + index;
+              if (page > totalPages) return null;
+              return (
               <button
-                key={index + 1}
-                onClick={() => handlePageChange(index + 1)}
-                className={`px-3 py-1 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-3 py-1 rounded ${currentPage === page ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
               >
-                {index + 1}
+                {page}
               </button>
-            ))}
+              );
+            })}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -165,7 +184,7 @@ export default function TabelInstansi() {
             >
               Next
             </button>
-          </div>
+            </div>
 
         </div>
     </Sidebar>

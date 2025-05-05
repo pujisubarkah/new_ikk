@@ -16,6 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         dimension_name: true,
         indicator_column_code: true,
         indicator_question: true,
+        indicator_description: true,
         instrument_answer: {
           select: {
             level_description: true, // hanya ambil level_description
@@ -25,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Serialize BigInt agar bisa dikirimkan dalam JSON
-    const serializedQuestions = questions.map(question => serializeBigInt(question as Record<string, unknown>));
+    const serializedQuestions = questions.map((question: Record<string, unknown>) => serializeBigInt(question as Record<string, unknown>));
 
     // Kirim data yang sudah diserialisasi
     res.status(200).json({ data: serializedQuestions });

@@ -16,15 +16,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const startDate = new Date(Number(tahunAwal), 0, 1); // 1 Januari tahunAwal
     const endDate = new Date(Number(tahunAkhir), 11, 31, 23, 59, 59); // 31 Desember tahunAkhir
 
-    const policies = await prisma.policies.findMany({
+    const policies = await prisma.policy.findMany({
       where: {
-        created_at: {
+        effective_date: {
           gte: startDate,
           lte: endDate,
         },
       },
       orderBy: {
-        created_at: 'asc',
+        effective_date: 'asc',
       },
     });
 
