@@ -42,6 +42,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       label: '',
       items: [
         { name: 'Daftar Populasi', icon: FileText, href: '/daftar-populasi' },
+        { name: 'Ringkas Kebijakan', icon: FileText, href: '/ringkas' },
+        
       ],
     },
     {
