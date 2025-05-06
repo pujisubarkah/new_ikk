@@ -41,7 +41,7 @@ export default function PolicyPage() {
         dimension_name: string;
         indicator_question: string;
         indicator_description: string;
-        instrument_answer: { level_description: string }[];
+        instrument_answer: { level_id: number; level_description: string }[];
     };
 
     const [apiQuestions, setApiQuestions] = useState<Question[]>([]);
@@ -251,7 +251,9 @@ function PolicyCard({ policy }: { policy: Policy }) {
     onAnswerChange: (questionId: string, answer: string) => void;
     onLinkUpload: (questionId: string, link: string) => void;
     apiQuestions: {
-      indicator_description: string; id: string; dimension_name: string; indicator_question: string; instrument_answer: { level_description: string }[] 
+      indicator_description: string; id: string; dimension_name: string; indicator_question: string; instrument_answer: {
+        level_id: number; level_description: string 
+}[] 
 }[]; // Define the Question type inline or import it if available
     onSaveAnswer: (questionId: string, questionText: string) => void;
 }) {
@@ -294,19 +296,22 @@ function PolicyCard({ policy }: { policy: Policy }) {
                           </button>
                         </div>
                         <div className="space-y-3">
-                            {item.instrument_answer.map((opt, i: number) => (
-                                <label key={i} className="flex items-start gap-3 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name={`question-${item.id}`}
-                                        value={opt.level_description}
-                                        checked={selectedAnswers[item.id] === opt.level_description}
-                                        onChange={() => onAnswerChange(item.id, opt.level_description)}
-                                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                                    />
-                                    <span className="text-gray-700">{opt.level_description}</span>
-                                </label>
-                            ))}
+                          {item.instrument_answer
+                          .sort((a, b) => (a.level_id || 0) - (b.level_id || 0))
+                          .map((opt, i: number) => (
+                            <label key={i} className="flex items-start gap-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`question-${item.id}`}
+                              value={opt.level_description}
+                              checked={selectedAnswers[item.id] === opt.level_description}
+                              onChange={() => onAnswerChange(item.id, opt.level_description)}
+                              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                              style={{ width: '20px', height: '20px' }}
+                            />
+                            <span className="text-gray-700">{opt.level_description}</span>
+                            </label>
+                          ))}
                         </div>
                         <div className="mt-4">
                             <label className="block text-sm font-medium text-gray-700 mb-1">

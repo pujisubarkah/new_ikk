@@ -2,6 +2,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma'; // pastikan path sesuai dengan tempat prisma client kamu
 import { serializeBigInt } from '@/lib/serializeBigInt'
+import { FaLevelDownAlt } from 'react-icons/fa';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -19,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         indicator_description: true,
         instrument_answer: {
           select: {
+            level_id: true,
             level_description: true, // hanya ambil level_description
           },
         },
