@@ -111,42 +111,44 @@ export default function PolicyPage() {
 
     if (!policyData) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
-                <Sidebar />
-                <div className="flex-1 p-6 ml-0 md:ml-64 flex items-center justify-center">
+                <Sidebar>
+                  <div className="w-full px-6 py-8">
+                  <div className="flex justify-between items-center mb-4">
                     <p>Memuat data kebijakan...</p>
                 </div>
-            </div>
+                </div>
+                </Sidebar>
         );
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            <Sidebar />
-            <div className="flex-1 p-20 space-y-6 ml-0 md:ml-64">
+            <Sidebar>
+              <div className="w-full px-6 py-8">
+                <div className="space-y-8">
                 <PolicyCard policy={policyData} />
                 <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
-                <div className="grid grid-cols-1 gap-6">
-                    <QuestionList
-                        activeStep={activeStep}
-                        selectedAnswers={selectedAnswers}
-                        onAnswerChange={handleAnswerChange}
-                        onLinkUpload={handleLinkUpload}
-                        uploadedFiles={uploadedFiles}
-                        apiQuestions={apiQuestions}
-                        onSaveAnswer={handleSaveAnswer}
-                    />
-                       <AdditionalInfoSection
-                        value={additionalInfo}
-                        onChange={(e) => setAdditionalInfo(e.target.value)}
-                        onSave={() => {
-                            toast.success("Informasi tambahan berhasil disimpan");
-                            console.log("Saved additional info:", additionalInfo);
-                        }}
-                    />
+                <div className="space-y-6">
+                  <QuestionList
+                    activeStep={activeStep}
+                    selectedAnswers={selectedAnswers}
+                    onAnswerChange={handleAnswerChange}
+                    onLinkUpload={handleLinkUpload}
+                    uploadedFiles={uploadedFiles}
+                    apiQuestions={apiQuestions}
+                    onSaveAnswer={handleSaveAnswer}
+                  />
+                  <AdditionalInfoSection
+                    value={additionalInfo}
+                    onChange={(e) => setAdditionalInfo(e.target.value)}
+                    onSave={() => {
+                      toast.success("Informasi tambahan berhasil disimpan");
+                      console.log("Saved additional info:", additionalInfo);
+                    }}
+                  />
+                </div>
                 </div>
             </div>
-        </div>
+            </Sidebar>
     );
 }
 
