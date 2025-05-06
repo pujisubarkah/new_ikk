@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         dimension_name: true,
         indicator_column_code: true,
         indicator_question: true,
-        indicator_description: true,
+        // indicator_description: true, // Removed as it does not exist in the schema
         instrument_answer: {
           select: {
             level_id: true,

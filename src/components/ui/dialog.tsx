@@ -6,6 +6,7 @@ import {
   DialogTrigger,
   DialogContent as RadixDialogContent,
   DialogTitle as RadixDialogTitle,
+  DialogDescription as RadixDialogDescription,
 } from "@radix-ui/react-dialog"
 
 export interface DialogProps {
@@ -16,7 +17,6 @@ export interface DialogProps {
 
 const Dialog = React.forwardRef<HTMLDivElement, DialogProps>((props) => {
   const { open, onOpenChange, children } = props
-
   return (
     <RadixDialog open={open} onOpenChange={onOpenChange}>
       {children}
@@ -26,15 +26,13 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>((props) => {
 
 Dialog.displayName = "Dialog"
 
-// Custom DialogContent with centering, overlay and scroll
+// DialogContent with overlay and scroll
 const DialogContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof RadixDialogContent>
 >(({ children, className = "", ...props }, ref) => (
   <DialogPortal>
-    {/* Overlay */}
     <DialogOverlay className="fixed inset-0 bg-black/50" />
-    {/* Content */}
     <RadixDialogContent
       ref={ref}
       {...props}
@@ -47,6 +45,45 @@ const DialogContent = React.forwardRef<
 
 DialogContent.displayName = "DialogContent"
 
+// DialogTitle
 const DialogTitle = RadixDialogTitle
 
-export { Dialog, DialogTrigger, DialogContent, DialogTitle }
+// DialogDescription with default styling
+const DialogDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.ComponentPropsWithoutRef<typeof RadixDialogDescription>
+>(({ children, className = "", ...props }, ref) => (
+  <RadixDialogDescription
+    ref={ref}
+    {...props}
+    className={`text-sm text-gray-600 ${className}`}
+  >
+    {children}
+  </RadixDialogDescription>
+))
+
+DialogDescription.displayName = "DialogDescription"
+
+// DialogHeader wrapper for title & description
+const DialogHeader = ({ children }: { children: React.ReactNode }) => (
+  <div className="mb-4 space-y-1">{children}</div>
+)
+
+DialogHeader.displayName = "DialogHeader"
+
+// DialogFooter wrapper for action buttons
+const DialogFooter = ({ children }: { children: React.ReactNode }) => (
+  <div className="mt-6 flex justify-end gap-2">{children}</div>
+)
+
+DialogFooter.displayName = "DialogFooter"
+
+export {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogHeader,
+  DialogFooter,
+}

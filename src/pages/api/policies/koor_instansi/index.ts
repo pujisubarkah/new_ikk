@@ -37,7 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                                         id: true,
                                         name: true,
                                         is_valid: true,
-                                        effective_date: true,
                                         sector: true,
                                         type: true,
                                         file_url: true,

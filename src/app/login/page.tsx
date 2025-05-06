@@ -47,6 +47,10 @@ export default function Login() {
       const response = await axios.post('/api/login', {
         username,
         password,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        }
       });
   
       console.log('Login Response:', response.data); // Log respons login untuk debugging

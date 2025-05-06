@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "../../components/ui/button";
 import Sidebar from "@/components/sidebar";
 import {
@@ -30,6 +38,7 @@ const initialData: Policy[] = [];
 
 export default function KebijakanTable() {
   const [open, setOpen] = useState(false);
+  const [openSendConfirmation, setOpenSendConfirmation] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("Diajukan");
   const [data, setData] = useState<Policy[]>(initialData);
@@ -38,13 +47,13 @@ export default function KebijakanTable() {
     DISETUJUI: 0,
     DITOLAK: 0,
   });
+  const [sektorLainnya, setSektorLainnya] = useState(false);
 
   const itemsPerPage = 5;
   const filteredData = data.filter((item) => item.status === activeTab);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
-  const [sektorLainnya, setSektorLainnya] = useState(false);
 
   useEffect(() => {
     const fetchPolicies = async () => {
@@ -58,27 +67,22 @@ export default function KebijakanTable() {
         const fetchedData = res.data.user.agencies.policy || [];
         const counts = res.data.policyProcessCounts || {};
 
-        const mappedData = Array.isArray(fetchedData) ? fetchedData.map((item: { id: string; name: string; sector?: string; effective_date?: string; file_url?: string; progress?: string; policy_process: string; policy_status: string }) => ({
-          id: parseInt(item.id, 10),
-          nama: item.name,
-          sektor: item.sector || "Umum",
-          tanggal: item.effective_date
-            ? new Date(item.effective_date).toLocaleDateString('id-ID')
-            : "-",
-          file: item.file_url || "-",
-          enumerator: "NA",
-          progress: item.progress ? `${item.progress}%` : "-",
-          status: mapStatus(item.policy_process),
-          tanggalAssign: "NA",
-          nilai: "-", // Add default value for 'nilai'
-        })) : [];
-
-        setData(mappedData);
-        setProcessCounts({
-          DIAJUKAN: counts.PROSES || 0,
-          DISETUJUI: counts.DISETUJUI || 0,
-          DITOLAK: counts.DITOLAK || 0,
-        });
+        const mappedData = Array.isArray(fetchedData)
+          ? fetchedData.map((item: any) => ({
+              id: parseInt(item.id, 10),
+              nama: item.name,
+              sektor: item.sector || "Umum",
+              tanggal: item.effective_date
+                ? new Date(item.effective_date).toLocaleDateString("id-ID")
+                : "-",
+              file: item.file_url || "-",
+              enumerator: "NA",
+              progress: item.progress ? `${item.progress}%` : "-",
+              status: mapStatus(item.policy_process),
+              tanggalAssign: "NA",
+              nilai: "-",
+            }))
+          : [];
 
         setData(mappedData);
         setProcessCounts({
@@ -100,7 +104,7 @@ export default function KebijakanTable() {
       DISETUJUI: "Disetujui",
       DITOLAK: "Ditolak",
       DIAJUKAN: "Diajukan",
-      SELESAI: "Selesai"
+      SELESAI: "Selesai",
     };
     return statusMap[statusApi] || "Diajukan";
   };
@@ -117,6 +121,11 @@ export default function KebijakanTable() {
 
     console.log("Form submitted");
     setOpen(false);
+  };
+
+  const handleSendPolicies = () => {
+    console.log("Kebijakan dikirim ke Koordinator Nasional");
+    setOpenSendConfirmation(false);
   };
 
   const handleTabChange = (status: string) => {
@@ -154,123 +163,175 @@ export default function KebijakanTable() {
         {/* Header and Add Button */}
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-semibold text-gray-700">Daftar Kebijakan</h2>
+          <div className="flex gap-4">
+            {activeTab === "Diajukan" && (
+              <Dialog open={openSendConfirmation} onOpenChange={setOpenSendConfirmation}>
+                <DialogTrigger asChild>
+                  <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md">
+                    Kirim Kebijakan
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
+                  <DialogHeader>
+                    <div className="text-red-600">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-16 w-16"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 9v2m0 4h.01m-.01-6a9 9 0 110 18 9 9 0 010-18z"
+      />
+    </svg>
+  </div>
+  <DialogDescription className="text-gray-600 mt-4">
+    Anda yakin ingin mengirimkan data kebijakan ke Koordinator Nasional?
+  </DialogDescription>
+</DialogHeader>
+
+                  <DialogFooter>
+                    <div className="mt-6 flex justify-end gap-4">
+                      <Button 
+                        variant="primary" 
+                        onClick={() => setOpenSendConfirmation(false)}
+                        className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                      >
+                        Batal
+                      </Button>
+                      <Button 
+                        onClick={handleSendPolicies}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Kirim
+                      </Button>
+                    </div>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
             <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md">
-              + Tambah Populasi
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-              <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Dropdown Nama Kebijakan */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nama dan Detail Kebijakan
-                </label>
-                <div className="flex gap-4">
-                <select
-                  id="nama_kebijakan"
-                  name="nama_kebijakan"
-                  required
-                  className="w-1/3 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Pilih</option>
-                  <option value="UU">UNDANG UNDANG</option>
-                  <option value="PP">PERATURAN PEMERINTAH</option>
-                  <option value="PERPRES">PERATURAN PRESIDEN</option>
-                  <option value="PERMEN">PERATURAN MENTERI</option>
-                  <option value="PERDA">PERATURAN DAERAH</option>
-                  <option value="PERKADA">PERATURAN KEPALA DAERAH</option>
-                  <option value="PERKAINS">PERATURAN KEPALA INSTANSI</option>
-                  <option value="LAINNYA">LAINNYA</option>
-                </select>
-                <input
-                  type="text"
-                  id="detail_nama_kebijakan"
-                  name="detail_nama_kebijakan"
-                  required
-                  placeholder="Contoh: UU No. 11 Tahun 2020"
-                  className="flex-1 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                />
-                </div>
-              </div>
-
-              {/* Sektor Kebijakan */}
-              <div>
-                <label htmlFor="sektor_kebijakan" className="block text-sm font-medium text-gray-700 mb-2">
-                Sektor Kebijakan
-                </label>
-                <select
-                id="sektor_kebijakan"
-                name="sektor_kebijakan"
-                required
-                onChange={handleSektorChange}
-                className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                >
-                <option value="">Pilih Sektor</option>
-                <option value="Infrastruktur">Infrastruktur</option>
-                <option value="Pangan">Pangan</option>
-                <option value="Ketenagakerjaan">Ketenagakerjaan</option>
-                <option value="Sosial">Sosial</option>
-                <option value="Pendidikan">Pendidikan</option>
-                <option value="Kesehatan">Kesehatan</option>
-                <option value="Aparatur Negara">Aparatur Negara</option>
-                <option value="Perencana">Perencana</option>
-                <option value="Lingkungan">Lingkungan</option>
-                <option value="Lainnya">Lainnya</option>
-                </select>
-                {sektorLainnya && (
-                <input
-                  type="text"
-                  id="sektor_kebijakan_lain"
-                  name="sektor_kebijakan_lain"
-                  placeholder="Sebutkan sektor lainnya"
-                  className="mt-3 w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                />
-                )}
-              </div>
-
-              {/* Tanggal Berlaku */}
-              <div>
-                <label htmlFor="tanggal_berlaku" className="block text-sm font-medium text-gray-700 mb-2">
-                Tanggal Berlaku
-                </label>
-                <input
-                type="date"
-                id="tanggal_berlaku"
-                name="tanggal_berlaku"
-                required
-                className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                Hanya untuk kebijakan yang telah berlaku efektif minimal 1 tahun dan maksimal 2 tahun terakhir.
-                </p>
-              </div>
-
-              {/* Link Drive */}
-              <div>
-                <label htmlFor="link_drive" className="block text-sm font-medium text-gray-700 mb-2">
-                Link Dokumen (Google Drive)
-                </label>
-                <input
-                type="url"
-                id="link_drive"
-                name="link_drive"
-                required
-                placeholder="https://drive.google.com/..."
-                className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-end">
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md">
-                Submit
+              <DialogTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md">
+                + Tambah Populasi
                 </Button>
-              </div>
-              </form>
-            </DialogContent>
-            </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Dropdown Nama Kebijakan */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nama dan Detail Kebijakan
+                  </label>
+                  <div className="flex gap-4">
+                  <select
+                    id="nama_kebijakan"
+                    name="nama_kebijakan"
+                    required
+                    className="w-1/3 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Pilih</option>
+                    <option value="UU">UNDANG UNDANG</option>
+                    <option value="PP">PERATURAN PEMERINTAH</option>
+                    <option value="PERPRES">PERATURAN PRESIDEN</option>
+                    <option value="PERMEN">PERATURAN MENTERI</option>
+                    <option value="PERDA">PERATURAN DAERAH</option>
+                    <option value="PERKADA">PERATURAN KEPALA DAERAH</option>
+                    <option value="PERKAINS">PERATURAN KEPALA INSTANSI</option>
+                    <option value="LAINNYA">LAINNYA</option>
+                  </select>
+                  <input
+                    type="text"
+                    id="detail_nama_kebijakan"
+                    name="detail_nama_kebijakan"
+                    required
+                    placeholder="Contoh: UU No. 11 Tahun 2020"
+                    className="flex-1 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  </div>
+                </div>
+
+                {/* Sektor Kebijakan */}
+                <div>
+                  <label htmlFor="sektor_kebijakan" className="block text-sm font-medium text-gray-700 mb-2">
+                  Sektor Kebijakan
+                  </label>
+                  <select
+                  id="sektor_kebijakan"
+                  name="sektor_kebijakan"
+                  required
+                  onChange={handleSektorChange}
+                  className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                  <option value="">Pilih Sektor</option>
+                  <option value="Infrastruktur">Infrastruktur</option>
+                  <option value="Pangan">Pangan</option>
+                  <option value="Ketenagakerjaan">Ketenagakerjaan</option>
+                  <option value="Sosial">Sosial</option>
+                  <option value="Pendidikan">Pendidikan</option>
+                  <option value="Kesehatan">Kesehatan</option>
+                  <option value="Aparatur Negara">Aparatur Negara</option>
+                  <option value="Perencana">Perencana</option>
+                  <option value="Lingkungan">Lingkungan</option>
+                  <option value="Lainnya">Lainnya</option>
+                  </select>
+                  {sektorLainnya && (
+                  <input
+                    type="text"
+                    id="sektor_kebijakan_lain"
+                    name="sektor_kebijakan_lain"
+                    placeholder="Sebutkan sektor lainnya"
+                    className="mt-3 w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  )}
+                </div>
+
+                {/* Tanggal Berlaku */}
+                <div>
+                  <label htmlFor="tanggal_berlaku" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tanggal Berlaku
+                  </label>
+                  <input
+                  type="date"
+                  id="tanggal_berlaku"
+                  name="tanggal_berlaku"
+                  required
+                  className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                  Hanya untuk kebijakan yang telah berlaku efektif minimal 1 tahun dan maksimal 2 tahun terakhir.
+                  </p>
+                </div>
+
+                {/* Link Drive */}
+                <div>
+                  <label htmlFor="link_drive" className="block text-sm font-medium text-gray-700 mb-2">
+                  Link Dokumen (Google Drive)
+                  </label>
+                  <input
+                  type="url"
+                  id="link_drive"
+                  name="link_drive"
+                  required
+                  placeholder="https://drive.google.com/..."
+                  className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-end">
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md">
+                  Submit
+                  </Button>
+                </div>
+                </form>
+              </DialogContent>
+              </Dialog>
+          </div>
         </div>
 
         {/* Tabs */}
