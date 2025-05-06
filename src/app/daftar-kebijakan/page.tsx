@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogTrigger,
   DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -68,7 +67,7 @@ export default function KebijakanTable() {
         const counts = res.data.policyProcessCounts || {};
 
         const mappedData = Array.isArray(fetchedData)
-          ? fetchedData.map((item: any) => ({
+          ? fetchedData.map((item: { id: string; name: string; sector?: string; effective_date?: string; file_url?: string; progress?: number; policy_process: string }) => ({
               id: parseInt(item.id, 10),
               nama: item.name,
               sektor: item.sector || "Umum",
