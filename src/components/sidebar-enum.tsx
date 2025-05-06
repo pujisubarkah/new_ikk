@@ -6,8 +6,6 @@ import Link from 'next/link'
 import {
   LayoutDashboard,
   FileText,
-  Calendar,
-  Users,
   LifeBuoy,
   User,
 } from 'lucide-react'
