@@ -1,9 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { ReactNode, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
+  LayoutDashboard,
+  FileText,
+  Calendar,
   Users,
   LifeBuoy,
   User,
@@ -16,7 +19,11 @@ import {
 } from '../components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  children: ReactNode
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const [roleName, setRoleName] = useState<string>('')
   const [userName, setUserName] = useState<string>('')
 
@@ -29,13 +36,15 @@ const Sidebar: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.clear()
-    window.location.href = '/login'
+    window.location.href = '/login' // Sesuaikan dengan route login kamu
   }
 
   const sections = [
     {
+      label: '',
       items: [
-        { name: 'Kebijakan', icon: Users, href: '/enum/kebijakan' },
+        { name: 'Dashboard', icon: LayoutDashboard, href: '/enum/dashboard' },
+        { name: 'Kebijakan', icon: FileText, href: '/enum/kebijakan' },
       ],
     },
     {
@@ -49,7 +58,7 @@ const Sidebar: React.FC = () => {
   return (
     <div className="flex">
       {/* Sidebar */}
-      <aside className="w-64 fixed top-0 left-0 h-screen bg-[#16578D] text-white p-6 shadow-lg z-20">
+      <aside className="w-64 h-screen fixed top-0 left-0 bg-[#16578D] text-white p-6 shadow-lg">
         <div className="mb-8 flex flex-col items-center">
           <Image
             src="/lanri.png"
@@ -90,15 +99,13 @@ const Sidebar: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 ml-64 flex flex-col min-h-screen bg-gray-50">
         {/* Header */}
-        <header className="flex justify-between items-center px-6 py-4 bg-white shadow fixed top-0 left-64 w-[calc(100%-16rem)] z-10">
+        <header className="flex justify-between items-center px-6 py-4 bg-white shadow-md fixed top-0 left-64 w-[calc(100%-16rem)] z-10">
           <div className="text-[#16578D] font-bold text-lg">{roleName}</div>
           <div className="flex items-center space-x-3 text-[#16578D]">
             <User className="w-8 h-8" />
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center space-x-2 cursor-pointer">
-                  <span className="font-medium">{userName}</span>
-                </button>
+              <DropdownMenuTrigger className="flex items-center space-x-2 cursor-pointer">
+                <span className="font-medium">{userName}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48 bg-white text-[#16578D] shadow-md">
                 <DropdownMenuItem onClick={() => alert('Ubah Sandi Clicked')}>
@@ -116,8 +123,8 @@ const Sidebar: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 px-6 pt-24 pb-6">
-          {/* Konten utama atau halaman lainnya */}
+        <main className="py-8 px-6 mt-20">
+          {children}
         </main>
       </div>
     </div>
@@ -125,3 +132,4 @@ const Sidebar: React.FC = () => {
 }
 
 export default Sidebar
+
