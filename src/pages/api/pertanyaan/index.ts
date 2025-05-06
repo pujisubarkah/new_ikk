@@ -2,7 +2,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma'; // pastikan path sesuai dengan tempat prisma client kamu
 import { serializeBigInt } from '@/lib/serializeBigInt'
-import { FaLevelDownAlt } from 'react-icons/fa';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
