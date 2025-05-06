@@ -32,7 +32,7 @@ export default function Dashboard() {
       case 3:
         return <SidebarInst>Default Content</SidebarInst>
       case 5:
-        return <SidebarEnum />
+        return <SidebarEnum>Default Content</SidebarEnum>
       case 4: // bisa jadi default juga
       default:
         return <Sidebar>Default Content</Sidebar>
