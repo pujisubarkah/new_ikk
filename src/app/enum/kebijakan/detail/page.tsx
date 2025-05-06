@@ -40,6 +40,7 @@ export default function PolicyPage() {
         id: string;
         dimension_name: string;
         indicator_question: string;
+        indicator_description: string;
         instrument_answer: { level_description: string }[];
     };
 
@@ -249,7 +250,9 @@ function PolicyCard({ policy }: { policy: Policy }) {
     uploadedFiles: Record<string, string>;
     onAnswerChange: (questionId: string, answer: string) => void;
     onLinkUpload: (questionId: string, link: string) => void;
-    apiQuestions: { id: string; dimension_name: string; indicator_question: string; instrument_answer: { level_description: string }[] }[]; // Define the Question type inline or import it if available
+    apiQuestions: {
+      indicator_description: string; id: string; dimension_name: string; indicator_question: string; instrument_answer: { level_description: string }[] 
+}[]; // Define the Question type inline or import it if available
     onSaveAnswer: (questionId: string, questionText: string) => void;
 }) {
     const dimensionName = stepDimensionMap[activeStep];
@@ -262,7 +265,34 @@ function PolicyCard({ policy }: { policy: Policy }) {
                 <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
                 {filteredQuestions.map((item) => (
                     <div key={item.id} className="space-y-4 pb-4 border-b last:border-b-0 last:pb-0">
-                        <p className="font-semibold text-gray-800">{item.indicator_question}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-gray-800">{item.indicator_question}</p>
+                          <button
+                            onClick={() => toast(item.indicator_description, { icon: "💡" })}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="Lihat deskripsi indikator"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                              stroke="currentColor"
+                              className="w-5 h-5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 2a7 7 0 00-7 7c0 2.5 1.5 4.5 3.5 5.5v2.5h7v-2.5c2-1 3.5-3 3.5-5.5a7 7 0 00-7-7z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 21h6"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                         <div className="space-y-3">
                             {item.instrument_answer.map((opt, i: number) => (
                                 <label key={i} className="flex items-start gap-3 cursor-pointer">
