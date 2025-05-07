@@ -47,7 +47,7 @@ export default function KebijakanTable() {
     DITOLAK: 0,
   });
   const [sektorLainnya, setSektorLainnya] = useState(false);
-  // Removed unused isLoading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const itemsPerPage = 5;
   const filteredData = data.filter((item) => item.status === activeTab);
