@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 import { User } from 'lucide-react'
 import SidebarAdmin from '@/components/sidebar-admin'
-import SidebarKoor from '@/components/sidebar-koor'
-import Sidebar from '@/components/sidebar'
-import SidebarInst from '@/components/sidebar-inst'
+import SidebarKoor from '@/components/sidebar-koornas'
+import Sidebar from '@/components/sidebar-koorins'
+import SidebarInst from '@/components/sidebar-verif'
 import SidebarEnum from '@/components/sidebar-enum'
 
 export default function Dashboard() {

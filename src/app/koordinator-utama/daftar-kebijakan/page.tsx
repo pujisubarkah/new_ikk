@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/components/sidebar-koor';
+import Sidebar from '@/components/sidebar-koornas';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';

@@ -41,15 +41,14 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     {
       label: '',
       items: [
-        { name: 'Daftar Populasi', icon: FileText, href: '/daftar-populasi' },
-        { name: 'Ringkas Kebijakan', icon: FileText, href: '/ringkas' },
-        
+          { name: 'Dashboard', icon: FileText, href: '/koordinator-utama/dashboard' },  
+        { name: 'Kebijakan', icon: FileText, href: '/koordinator-utama/daftar-kebijakan' },
       ],
     },
     {
       label: 'Master Data',
       items: [
-        { name: 'Admin Instansi', icon: Users, href: '/admin-instansi' },
+        { name: 'Pengguna', icon: Users, href: '/koordinator-utama/pengguna' },
       ],
     },
     {

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Sidebar from "@/components/sidebar-koor";
+import Sidebar from "@/components/sidebar-koornas";
 import {
   Pagination,
   PaginationContent,

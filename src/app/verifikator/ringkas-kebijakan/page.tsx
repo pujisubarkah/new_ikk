@@ -2,7 +2,7 @@
 
 // pages/index.js
 import { useState } from "react";
-import Sidebar from '@/components/sidebar-inst';
+import Sidebar from '@/components/sidebar-verif';
 import { Paperclip, RefreshCcw, MessageSquare, XCircle } from 'lucide-react';
 
 export default function Home() {

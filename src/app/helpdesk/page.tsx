@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import SidebarAdmin from '@/components/sidebar-admin'
-import SidebarKoor from '@/components/sidebar-koor'
-import SidebarInst from '@/components/sidebar-inst'
+import SidebarKoor from '@/components/sidebar-koornas'
+import SidebarInst from '@/components/sidebar-verif'
 import SidebarEnum from '@/components/sidebar-enum'
-import Sidebar from '@/components/sidebar'
+import Sidebar from '@/components/sidebar-koorins'
 import { User } from 'lucide-react'
 
 export default function HelpdeskPage() {

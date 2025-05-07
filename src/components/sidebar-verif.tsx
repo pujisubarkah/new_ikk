@@ -4,8 +4,8 @@ import React, { ReactNode, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
-  LayoutDashboard,
   FileText,
+  Users,
   LifeBuoy,
   User,
 } from 'lucide-react'
@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from '../components/ui/dropdown-menu'
+} from './ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
@@ -41,8 +41,15 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     {
       label: '',
       items: [
-        { name: 'Dashboard', icon: LayoutDashboard, href: '/enumerator/dashboard' },
-        { name: 'Kebijakan', icon: FileText, href: '/enumerator/kebijakan' },
+        { name: 'Daftar Populasi', icon: FileText, href: '/verifikator/verifikasi-kebijakan' },
+        { name: 'Ringkas Kebijakan', icon: FileText, href: '/verifikator/ringkas-kebijakan' },
+        
+      ],
+    },
+    {
+      label: 'Master Data',
+      items: [
+        { name: 'Admin Instansi', icon: Users, href: '/verifikator/koordinator-instansi' },
       ],
     },
     {

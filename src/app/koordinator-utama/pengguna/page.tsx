@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 import classNames from "classnames";
-import Sidebar from "@/components/sidebar-koor";
+import Sidebar from "@/components/sidebar-koornas";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
