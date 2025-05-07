@@ -1,51 +1,62 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { PrismaClient } from '@prisma/client'
+import prisma from "@/lib/prisma";
+import { serializeBigInt } from "@/lib/serializeBigInt";
+import { NextApiRequest, NextApiResponse } from 'next';
 
-const prisma = new PrismaClient()
+// Helper function to extract the relevant policy data
+const extractPolicyData = (policy: any, agencyName: string) => ({
+    policy_id: policy.id,
+    nama_kebijakan: policy.name,
+    sektor: policy.sector,
+    file_url: policy.file_url,
+    status: policy.policy_process,
+    progress: policy.progress,
+    tanggal_assign: policy.assigned_by_admin_at,
+    tanggal_berlaku: policy.effective_date,
+    instansi: agencyName,
+});
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' })
-  }
-
-  const { koor_instansi_id } = req.query
-
-  if (!koor_instansi_id) {
-    return res.status(400).json({ message: 'koor_instansi_id is required' })
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const data = await prisma.koor_instansi_analis.findMany({
+    const { koordinator_instansi_id } = req.query;
+
+    if (!koordinator_instansi_id) {
+      return res.status(400).json({ error: 'Parameter koordinator_instansi_id diperlukan' });
+    }
+
+    const idNumber = Number(koordinator_instansi_id);
+    if (isNaN(idNumber)) {
+      return res.status(400).json({ error: 'Parameter koordinator_instansi_id harus berupa angka' });
+    }
+
+    // Query the database to get the relevant data
+    const result = await prisma.koor_instansi_analis.findMany({
       where: {
-        koor_instansi_id: BigInt(koor_instansi_id as string),
+        koor_instansi_id: idNumber,
       },
-      include: {
+      select: {
+        koor_instansi_id: true,
+        analis_instansi_id: true,
         user_koor_instansi_analis_analis_instansi_idTouser: {
           select: {
             name: true,
-            agency_id: true,
-            agencies: {
-              select: {
-                name: true,
-              },
-            },
-            policies_policies_analis_instansi_idTouser: {
+            policy_policy_enumerator_idTouser: {
               select: {
                 id: true,
                 name: true,
-                policy_process: {
+                sector: true,
+                file_url: true,
+                policy_process: true,
+                progress: true,
+                effective_date: true,
+                assigned_by_admin_at: true,
+                agency_id: true,
+                agencies: {
                   select: {
                     name: true,
-                  },
-                },
-                policy_details: {
-                  select: {
-                    sector: true,
-                    effective_date: true,
-                    progress: true,
-                    updated_at: true,
-                    file_original_name: true,
-                    base_score: true,
                   },
                 },
               },
@@ -53,50 +64,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         },
       },
-    })
+    });
 
-    // Olah menjadi rowData
-    const rowData = data.flatMap(item => {
-      const user = item.user_koor_instansi_analis_analis_instansi_idTouser
-      const userName = user?.name || 'N/A'
-      const instansi = user?.agencies?.name || 'N/A'
+    // Create an array of row data
+    const rowData: any[] = [];
 
-      return user?.policies_policies_analis_instansi_idTouser.map(policy => ({
-        nama: userName,
-        instansi,
-        nama_kebijakan: policy.name,
-        progress: policy.policy_details?.progress || null,
-        sektor: policy.policy_details?.sector || null,
-        tanggal_efektif: policy.policy_details?.effective_date || null,
-        status: policy.policy_process?.name || null,
-        tanggal_assign: policy.policy_details?.updated_at || null,
-        file:policy.policy_details?.file_original_name || null,
-        nilai:policy.policy_details?.base_score || null,
-      })) || []
-    })
+    // Map the result to a rowData array
+    result.forEach(item => {
+      const user = item.user_koor_instansi_analis_analis_instansi_idTouser;
+      const agencyName = user?.policy_policy_enumerator_idTouser?.[0]?.agencies?.name || '-';
 
-// Grouping by status with count and data array
-const groupedArray = Object.values(
-  rowData.reduce((acc, item) => {
-    const status = item.status || 'TIDAK ADA STATUS'
-    if (!acc[status]) {
-      acc[status] = {
-        status,
-        jumlah: 0,
-        data: []
-      }
-    }
-    acc[status].jumlah += 1
-    acc[status].data.push(item)
-    return acc
-  }, {} as Record<string, { status: string; jumlah: number; data: typeof rowData }>)
-)
+      // Extract policy data for each policy related to the user
+      user?.policy_policy_enumerator_idTouser?.forEach((policy: any) => {
+        rowData.push({
+          koor_instansi_id: item.koor_instansi_id,
+          analis_instansi_id: item.analis_instansi_id,
+          enumerator: user.name,
+          ...extractPolicyData(policy, agencyName),
+        });
+      });
+    });
 
-
-
-res.status(200).json(groupedArray)
+    // Serialize the result and send the response
+    const serializedResult = rowData.map(item => serializeBigInt(item as Record<string, unknown>));
+    return res.status(200).json(serializedResult);
   } catch (error) {
-    console.error('Error fetching data:', error)
-    res.status(500).json({ message: 'Internal Server Error' })
+    console.error('Error fetching data:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

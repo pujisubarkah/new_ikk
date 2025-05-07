@@ -519,60 +519,60 @@ model perencanaan_kebijakan_ku_score {
 }
 
 model policies {
-  id                                             BigInt          @id
-  created_at                                     DateTime?       @db.Timestamp(6)
-  created_by                                     BigInt?
-  modified_by                                    BigInt?
-  updated_at                                     DateTime?       @db.Timestamp(6)
-  assigned_by_admin_at                           DateTime?       @db.Timestamp(6)
-  assigned_by_admin_id                           BigInt?
-  enumerator_id                                  BigInt?
-  name                                           String?
-  processed_by_enumerator_at                     DateTime?       @db.Timestamp(6)
-  processed_by_enumerator_id                     BigInt?
-  sent_by_admin_at                               DateTime?       @db.Timestamp(6)
-  sent_by_admin_id                               BigInt?
-  validated_by_koordinator_at                    DateTime?       @db.Timestamp(6)
-  validated_by_koordinator_id                    BigInt?
-  validated_by_koordinator_utama_at              DateTime?       @db.Timestamp(6)
-  validated_by_koordinator_utama_id              BigInt?
-  verified_by_koordinator_at                     DateTime?       @db.Timestamp(6)
-  verified_by_koordinator_id                     BigInt?
-  policy_details_id                              BigInt?
-  policy_process_id                              BigInt?
-  policy_status_id                               BigInt?
-  perencanaan_kebijakan_id                       BigInt?
-  perencanaan_kebijakan_ki_id                    BigInt?
-  perencanaan_kebijakan_ki_score_id              BigInt?
-  perencanaan_kebijakan_ku_id                    BigInt?
-  perencanaan_kebijakan_ku_score_id              BigInt?
-  perencanaan_kebijakan_file_id                  BigInt?
-  implementasi_kebijakan_id                      BigInt?
-  implementasi_kebijakan_file_id                 BigInt?
-  implementasi_kebijakan_ki_id                   BigInt?
-  implementasi_kebijakan_ki_score_id             BigInt?
-  implementasi_kebijakan_ku_id                   BigInt?
-  implementasi_kebijakan_ku_score_id             BigInt?
-  evaluasi_kebijakan_id                          BigInt?
-  evaluasi_kebijakan_file_id                     BigInt?
-  evaluasi_kebijakan_ki_id                       BigInt?
-  evaluasi_kebijakan_ki_score_id                 BigInt?
-  evaluasi_kebijakan_ku_id                       BigInt?
-  evaluasi_kebijakan_ku_score_id                 BigInt?
-  transparansi_partisipasi_id                    BigInt?
-  transparansi_partisipasi_file_id               BigInt?
-  transparansi_partisipasi_ki_id                 BigInt?
-  transparansi_partisipasi_ki_score_id           BigInt?
-  transparansi_partisipasi_ku_id                 BigInt?
-  transparansi_partisipasi_ku_score_id           BigInt?
-  agency_id                                      BigInt?
-  policy_details                                 policy_details? @relation(fields: [policy_details_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_details")
-  policy_process                                 policy_process? @relation(fields: [policy_process_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_process")
-  policy_status                                  policy_status?  @relation(fields: [policy_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_status")
-  agencies                                       agencies?       @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user_policies_assigned_by_admin_idTouser       user?           @relation("policies_assigned_by_admin_idTouser", fields: [assigned_by_admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user_policies_enumerator_idTouser              user?           @relation("policies_enumerator_idTouser", fields: [enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user_policies_processed_by_enumerator_idTouser user?           @relation("policies_processed_by_enumerator_idTouser", fields: [processed_by_enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                                                  BigInt          @id
+  created_at                                          DateTime?       @db.Timestamp(6)
+  created_by                                          BigInt?
+  modified_by                                         BigInt?
+  updated_at                                          DateTime?       @db.Timestamp(6)
+  assigned_by_admin_at                                DateTime?       @db.Timestamp(6)
+  assigned_by_admin_id                                BigInt?
+  analis_instansi_id                                  BigInt?
+  name                                                String?
+  processed_by_analis_instansi_at                     DateTime?       @db.Timestamp(6)
+  processed_by_analis_instansi_id                     BigInt?
+  sent_by_koor_instansi_at                            DateTime?       @db.Timestamp(6)
+  sent_by_koor_instansi_id                            BigInt?
+  validated_by_verifikator_at                         DateTime?       @db.Timestamp(6)
+  validated_by_verifikator_id                         BigInt?
+  validated_by_koordinator_nasional_at                DateTime?       @db.Timestamp(6)
+  validated_by_koordinator_nasional_id                BigInt?
+  verified_by_koor_instansi_at                        DateTime?       @db.Timestamp(6)
+  verified_by_koor_instansi_id                        BigInt?
+  policy_details_id                                   BigInt?
+  policy_process_id                                   BigInt?
+  policy_status_id                                    BigInt?
+  perencanaan_kebijakan_id                            BigInt?
+  perencanaan_kebijakan_ki_id                         BigInt?
+  perencanaan_kebijakan_ki_score_id                   BigInt?
+  perencanaan_kebijakan_ku_id                         BigInt?
+  perencanaan_kebijakan_ku_score_id                   BigInt?
+  perencanaan_kebijakan_file_id                       BigInt?
+  implementasi_kebijakan_id                           BigInt?
+  implementasi_kebijakan_file_id                      BigInt?
+  implementasi_kebijakan_ki_id                        BigInt?
+  implementasi_kebijakan_ki_score_id                  BigInt?
+  implementasi_kebijakan_ku_id                        BigInt?
+  implementasi_kebijakan_ku_score_id                  BigInt?
+  evaluasi_kebijakan_id                               BigInt?
+  evaluasi_kebijakan_file_id                          BigInt?
+  evaluasi_kebijakan_ki_id                            BigInt?
+  evaluasi_kebijakan_ki_score_id                      BigInt?
+  evaluasi_kebijakan_ku_id                            BigInt?
+  evaluasi_kebijakan_ku_score_id                      BigInt?
+  transparansi_partisipasi_id                         BigInt?
+  transparansi_partisipasi_file_id                    BigInt?
+  transparansi_partisipasi_ki_id                      BigInt?
+  transparansi_partisipasi_ki_score_id                BigInt?
+  transparansi_partisipasi_ku_id                      BigInt?
+  transparansi_partisipasi_ku_score_id                BigInt?
+  agency_id                                           BigInt?
+  policy_details                                      policy_details? @relation(fields: [policy_details_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_details")
+  policy_process                                      policy_process? @relation(fields: [policy_process_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_process")
+  policy_status                                       policy_status?  @relation(fields: [policy_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_policy_status")
+  agencies                                            agencies?       @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_policies_assigned_by_admin_idTouser            user?           @relation("policies_assigned_by_admin_idTouser", fields: [assigned_by_admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_policies_analis_instansi_idTouser              user?           @relation("policies_analis_instansi_idTouser", fields: [analis_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_enumerator_id_fkey")
+  user_policies_processed_by_analis_instansi_idTouser user?           @relation("policies_processed_by_analis_instansi_idTouser", fields: [processed_by_analis_instansi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policies_processed_by_enumerator_id_fkey")
 
   @@schema("ikk_new")
 }
@@ -818,7 +818,7 @@ model user {
   phone                                                                  String?                   @db.VarChar(255)
   position                                                               String?                   @db.VarChar(255)
   status                                                                 String?                   @db.VarChar(255)
-  username                                                               String?                   @db.VarChar(255)
+  username                                                               String?                   @db.VarChar(255) @unique
   work_unit                                                              String?                   @db.VarChar(255)
   agency_id                                                              BigInt?
   agency_id_panrb                                                        BigInt?
@@ -834,8 +834,8 @@ model user {
   koor_nasional_validator_koor_nasional_validator_koor_nasional_idTouser koor_nasional_validator[] @relation("koor_nasional_validator_koor_nasional_idTouser")
   koor_nasional_validator_koor_nasional_validator_validator_idTouser     koor_nasional_validator[] @relation("koor_nasional_validator_validator_idTouser")
   policies_policies_assigned_by_admin_idTouser                           policies[]                @relation("policies_assigned_by_admin_idTouser")
-  policies_policies_enumerator_idTouser                                  policies[]                @relation("policies_enumerator_idTouser")
-  policies_policies_processed_by_enumerator_idTouser                     policies[]                @relation("policies_processed_by_enumerator_idTouser")
+  policies_policies_analis_instansi_idTouser                             policies[]                @relation("policies_analis_instansi_idTouser")
+  policies_policies_processed_by_analis_instansi_idTouser                policies[]                @relation("policies_processed_by_analis_instansi_idTouser")
   policy_policy_assigned_by_admin_idTouser                               policy[]                  @relation("policy_assigned_by_admin_idTouser")
   policy_policy_enumerator_idTouser                                      policy[]                  @relation("policy_enumerator_idTouser")
   policy_policy_processed_by_enumerator_idTouser                         policy[]                  @relation("policy_processed_by_enumerator_idTouser")

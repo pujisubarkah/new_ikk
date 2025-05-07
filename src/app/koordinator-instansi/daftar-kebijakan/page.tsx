@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -31,6 +30,7 @@ interface Policy {
   tanggalAssign: string;
   nilai: string;
   status: string;
+  instansi: string;
 }
 
 const initialData: Policy[] = [];
@@ -47,6 +47,7 @@ export default function KebijakanTable() {
     DITOLAK: 0,
   });
   const [sektorLainnya, setSektorLainnya] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const itemsPerPage = 5;
   const filteredData = data.filter((item) => item.status === activeTab);
@@ -56,32 +57,54 @@ export default function KebijakanTable() {
 
   useEffect(() => {
     const fetchPolicies = async () => {
+      setIsLoading(true);
       const adminInstansiId = localStorage.getItem("id");
-      if (!adminInstansiId) return;
+      if (!adminInstansiId) {
+        setIsLoading(false);
+        return;
+      }
 
       try {
         const res = await axios.get(
-          `/api/policies/koor_instansi?user_id=${adminInstansiId}`
+          `/api/policies/koor_inst?koordinator_instansi_id=${adminInstansiId}`
         );
-        const fetchedData = res.data.user.agencies.policy || [];
+
+        const fetchedData = res.data || [];
         const counts = res.data.policyProcessCounts || {};
 
         const mappedData = Array.isArray(fetchedData)
-          ? fetchedData.map((item: { id: string; name: string; sector?: string; effective_date?: string; file_url?: string; progress?: number; policy_process: string }) => ({
-              id: parseInt(item.id, 10),
-              nama: item.name,
-              sektor: item.sector || "Umum",
-              tanggal: item.effective_date
-                ? new Date(item.effective_date).toLocaleDateString("id-ID")
+        ? fetchedData.map((item) => {
+            let calculatedStatus = "Unknown";
+      
+            if (item.enumerator && item.enumerator !== "-") {
+              calculatedStatus = "Disetujui"; // Jika enumerator ada → artinya disetujui
+            } else if (item.progress > 0 && item.progress < 100) {
+              calculatedStatus = "Diproses";
+            } else if (item.progress === 100) {
+              calculatedStatus = "Selesai";
+            } else {
+              calculatedStatus = "Diajukan";
+            }
+      
+            return {
+              id: parseInt(item.policy_id, 10),
+              nama: item.nama_kebijakan,
+              sektor: item.sektor || "Umum",
+              tanggal: item.tanggal_berlaku
+                ? new Date(item.tanggal_berlaku).toLocaleDateString("id-ID")
                 : "-",
               file: item.file_url || "-",
-              enumerator: "NA",
-              progress: item.progress ? `${item.progress}%` : "-",
-              status: mapStatus(item.policy_process),
-              tanggalAssign: "NA",
+              enumerator: item.enumerator || "Belum Ditentukan",
+              progress: item.progress ? `${parseInt(item.progress, 10)}%` : "-",
+              status: calculatedStatus,
+              tanggalAssign: item.tanggal_assign
+                ? new Date(item.tanggal_assign).toLocaleDateString("id-ID")
+                : "-",
               nilai: "-",
-            }))
-          : [];
+              instansi: item.instansi || "-",
+            };
+          })
+        : [];
 
         setData(mappedData);
         setProcessCounts({
@@ -91,33 +114,27 @@ export default function KebijakanTable() {
         });
       } catch (err) {
         console.error("Gagal fetch data policies", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchPolicies();
   }, []);
 
-  const mapStatus = (statusApi: string) => {
-    const statusMap: Record<string, string> = {
-      PROSES: "Diajukan",
-      DISETUJUI: "Disetujui",
-      DITOLAK: "Ditolak",
-      DIAJUKAN: "Diajukan",
-      SELESAI: "Selesai",
-    };
-    return statusMap[statusApi] || "Diajukan";
-  };
+  
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const file = formData.get("dokumen") as File;
-
-    if (file && !["application/pdf", "image/jpeg", "image/png"].includes(file.type)) {
+    if (
+      file &&
+      !["application/pdf", "image/jpeg", "image/png"].includes(file.type)
+    ) {
       alert("Harap unggah file yang valid (PDF, JPEG, PNG).");
       return;
     }
-
     console.log("Form submitted");
     setOpen(false);
   };
@@ -183,26 +200,25 @@ export default function KebijakanTable() {
                       >
                         <path
                           strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 9v2m0 4h.01m-.01-6a9 9 0 110 18 9 9 0 010-18z"
-      />
-    </svg>
-  </div>
-  <DialogDescription className="text-gray-600 mt-4">
-    Anda yakin ingin mengirimkan data kebijakan ke Koordinator Nasional?
-  </DialogDescription>
-</DialogHeader>
-
+                          strokeLinejoin="round"
+                          d="M12 9v2m0 4h.01m-.01-6a9 9 0 110 18 9 9 0 010-18z"
+                        />
+                      </svg>
+                    </div>
+                    <DialogDescription className="text-gray-600 mt-4">
+                      Anda yakin ingin mengirimkan data kebijakan ke Koordinator Nasional?
+                    </DialogDescription>
+                  </DialogHeader>
                   <DialogFooter>
                     <div className="mt-6 flex justify-end gap-4">
-                      <Button 
-                        variant="primary" 
+                      <Button
+                        variant="secondary"
                         onClick={() => setOpenSendConfirmation(false)}
                         className="border-gray-300 text-gray-700 hover:bg-gray-100"
                       >
                         Batal
                       </Button>
-                      <Button 
+                      <Button
                         onClick={handleSendPolicies}
                         className="bg-green-600 hover:bg-green-700 text-white"
                       >
@@ -213,123 +229,124 @@ export default function KebijakanTable() {
                 </DialogContent>
               </Dialog>
             )}
+
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md">
-                + Tambah Populasi
+                  + Tambah Populasi
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-lg">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Dropdown Nama Kebijakan */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama dan Detail Kebijakan
-                  </label>
-                  <div className="flex gap-4">
-                  <select
-                    id="nama_kebijakan"
-                    name="nama_kebijakan"
-                    required
-                    className="w-1/3 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Pilih</option>
-                    <option value="UU">UNDANG UNDANG</option>
-                    <option value="PP">PERATURAN PEMERINTAH</option>
-                    <option value="PERPRES">PERATURAN PRESIDEN</option>
-                    <option value="PERMEN">PERATURAN MENTERI</option>
-                    <option value="PERDA">PERATURAN DAERAH</option>
-                    <option value="PERKADA">PERATURAN KEPALA DAERAH</option>
-                    <option value="PERKAINS">PERATURAN KEPALA INSTANSI</option>
-                    <option value="LAINNYA">LAINNYA</option>
-                  </select>
-                  <input
-                    type="text"
-                    id="detail_nama_kebijakan"
-                    name="detail_nama_kebijakan"
-                    required
-                    placeholder="Contoh: UU No. 11 Tahun 2020"
-                    className="flex-1 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  {/* Dropdown Nama Kebijakan */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nama dan Detail Kebijakan
+                    </label>
+                    <div className="flex gap-4">
+                      <select
+                        id="nama_kebijakan"
+                        name="nama_kebijakan"
+                        required
+                        className="w-1/3 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Pilih</option>
+                        <option value="UU">UNDANG UNDANG</option>
+                        <option value="PP">PERATURAN PEMERINTAH</option>
+                        <option value="PERPRES">PERATURAN PRESIDEN</option>
+                        <option value="PERMEN">PERATURAN MENTERI</option>
+                        <option value="PERDA">PERATURAN DAERAH</option>
+                        <option value="PERKADA">PERATURAN KEPALA DAERAH</option>
+                        <option value="PERKAINS">PERATURAN KEPALA INSTANSI</option>
+                        <option value="LAINNYA">LAINNYA</option>
+                      </select>
+                      <input
+                        type="text"
+                        id="detail_nama_kebijakan"
+                        name="detail_nama_kebijakan"
+                        required
+                        placeholder="Contoh: UU No. 11 Tahun 2020"
+                        className="flex-1 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Sektor Kebijakan */}
-                <div>
-                  <label htmlFor="sektor_kebijakan" className="block text-sm font-medium text-gray-700 mb-2">
-                  Sektor Kebijakan
-                  </label>
-                  <select
-                  id="sektor_kebijakan"
-                  name="sektor_kebijakan"
-                  required
-                  onChange={handleSektorChange}
-                  className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  >
-                  <option value="">Pilih Sektor</option>
-                  <option value="Infrastruktur">Infrastruktur</option>
-                  <option value="Pangan">Pangan</option>
-                  <option value="Ketenagakerjaan">Ketenagakerjaan</option>
-                  <option value="Sosial">Sosial</option>
-                  <option value="Pendidikan">Pendidikan</option>
-                  <option value="Kesehatan">Kesehatan</option>
-                  <option value="Aparatur Negara">Aparatur Negara</option>
-                  <option value="Perencana">Perencana</option>
-                  <option value="Lingkungan">Lingkungan</option>
-                  <option value="Lainnya">Lainnya</option>
-                  </select>
-                  {sektorLainnya && (
-                  <input
-                    type="text"
-                    id="sektor_kebijakan_lain"
-                    name="sektor_kebijakan_lain"
-                    placeholder="Sebutkan sektor lainnya"
-                    className="mt-3 w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  )}
-                </div>
+                  {/* Sektor Kebijakan */}
+                  <div>
+                    <label htmlFor="sektor_kebijakan" className="block text-sm font-medium text-gray-700 mb-2">
+                      Sektor Kebijakan
+                    </label>
+                    <select
+                      id="sektor_kebijakan"
+                      name="sektor_kebijakan"
+                      required
+                      onChange={handleSektorChange}
+                      className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Pilih Sektor</option>
+                      <option value="Infrastruktur">Infrastruktur</option>
+                      <option value="Pangan">Pangan</option>
+                      <option value="Ketenagakerjaan">Ketenagakerjaan</option>
+                      <option value="Sosial">Sosial</option>
+                      <option value="Pendidikan">Pendidikan</option>
+                      <option value="Kesehatan">Kesehatan</option>
+                      <option value="Aparatur Negara">Aparatur Negara</option>
+                      <option value="Perencana">Perencana</option>
+                      <option value="Lingkungan">Lingkungan</option>
+                      <option value="Lainnya">Lainnya</option>
+                    </select>
+                    {sektorLainnya && (
+                      <input
+                        type="text"
+                        id="sektor_kebijakan_lain"
+                        name="sektor_kebijakan_lain"
+                        placeholder="Sebutkan sektor lainnya"
+                        className="mt-3 w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    )}
+                  </div>
 
-                {/* Tanggal Berlaku */}
-                <div>
-                  <label htmlFor="tanggal_berlaku" className="block text-sm font-medium text-gray-700 mb-2">
-                  Tanggal Berlaku
-                  </label>
-                  <input
-                  type="date"
-                  id="tanggal_berlaku"
-                  name="tanggal_berlaku"
-                  required
-                  className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                  Hanya untuk kebijakan yang telah berlaku efektif minimal 1 tahun dan maksimal 2 tahun terakhir.
-                  </p>
-                </div>
+                  {/* Tanggal Berlaku */}
+                  <div>
+                    <label htmlFor="tanggal_berlaku" className="block text-sm font-medium text-gray-700 mb-2">
+                      Tanggal Berlaku
+                    </label>
+                    <input
+                      type="date"
+                      id="tanggal_berlaku"
+                      name="tanggal_berlaku"
+                      required
+                      className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Hanya untuk kebijakan yang telah berlaku efektif minimal 1 tahun dan maksimal 2 tahun terakhir.
+                    </p>
+                  </div>
 
-                {/* Link Drive */}
-                <div>
-                  <label htmlFor="link_drive" className="block text-sm font-medium text-gray-700 mb-2">
-                  Link Dokumen (Google Drive)
-                  </label>
-                  <input
-                  type="url"
-                  id="link_drive"
-                  name="link_drive"
-                  required
-                  placeholder="https://drive.google.com/..."
-                  className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+                  {/* Link Drive */}
+                  <div>
+                    <label htmlFor="link_drive" className="block text-sm font-medium text-gray-700 mb-2">
+                      Link Dokumen (Google Drive)
+                    </label>
+                    <input
+                      type="url"
+                      id="link_drive"
+                      name="link_drive"
+                      required
+                      placeholder="https://drive.google.com/..."
+                      className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
-                {/* Submit Button */}
-                <div className="flex justify-end">
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md">
-                  Submit
-                  </Button>
-                </div>
+                  {/* Submit Button */}
+                  <div className="flex justify-end">
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md">
+                      Submit
+                    </Button>
+                  </div>
                 </form>
               </DialogContent>
-              </Dialog>
+            </Dialog>
           </div>
         </div>
 
@@ -399,11 +416,15 @@ export default function KebijakanTable() {
                         <td className="px-4 py-3 border">{item.tanggal}</td>
                         <td className="px-4 py-3 border">{item.file}</td>
                         <td className="px-4 py-3 border">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            item.status === "Disetujui" ? "bg-green-100 text-green-800" :
-                            item.status === "Ditolak" ? "bg-red-100 text-red-800" :
-                            "bg-blue-100 text-blue-800"
-                          }`}>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              item.status === "Disetujui"
+                                ? "bg-green-100 text-green-800"
+                                : item.status === "Ditolak"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
                             {item.status}
                           </span>
                         </td>
@@ -420,26 +441,26 @@ export default function KebijakanTable() {
                         </td>
                       </>
                     )}
-                    {activeTab === "Diproses" && (
-                      <>
-                        <td className="px-4 py-3 border">{item.enumerator}</td>
-                        <td className="px-4 py-3 border">
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div 
-                              className="bg-blue-600 h-2.5 rounded-full" 
-                              style={{ width: item.progress }}
-                            ></div>
-                          </div>
-                          <span className="text-xs text-gray-500 mt-1">{item.progress}</span>
-                        </td>
-                        <td className="px-4 py-3 border">{item.tanggalAssign}</td>
-                        <td className="px-4 py-3 border">
-                          <button className="text-green-600 hover:text-green-800 p-1">
-                            <FaPaperPlane size={18} />
-                          </button>
-                        </td>
-                      </>
-                    )}
+                {activeTab === "Diproses" && (
+  <>
+    <td className="px-4 py-3 border">{item.enumerator}</td>
+    <td className="px-4 py-3 border">
+      <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div 
+          className="bg-blue-600 h-2.5 rounded-full" 
+          style={{ width: item.progress }}
+        ></div>
+      </div>
+      <span className="text-xs text-gray-500 mt-1">{item.progress}</span>
+    </td>
+    <td className="px-4 py-3 border">{item.tanggalAssign}</td>
+    <td className="px-4 py-3 border">
+      <button className="text-green-600 hover:text-green-800 p-1">
+        <FaPaperPlane size={18} />
+      </button>
+    </td>
+  </>
+)}
                     {activeTab === "Selesai" && (
                       <>
                         <td className="px-4 py-3 border">{item.enumerator}</td>
