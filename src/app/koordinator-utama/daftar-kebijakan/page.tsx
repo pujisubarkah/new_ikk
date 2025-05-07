@@ -11,7 +11,6 @@ interface DataRow {
     no: number;
     nama: string;
     nip: string;
-    wilayah: string;
     koordinatorinstansiid: string; // <-- Tambah ini
   }
 
@@ -35,7 +34,7 @@ const Page = () => {
             if (id) {
                 try {
                     const response = await axios.get(`/api/koordinator_utama?id=${id}`);
-                    const data: Array<{ name: string; username: string; coordinator_type_name: string; coordinator_instansi_id: string }> = response.data;
+                    const data: Array<{ name: string; username: string; coordinator_instansi_id: string }> = response.data;
 
                     // Format data sesuai dengan struktur yang diinginkan
                     setKoordinatorData(
@@ -43,7 +42,6 @@ const Page = () => {
                           no: index + 1,
                           nama: item.name,
                           nip: item.username,
-                          wilayah: item.coordinator_type_name,
                           koordinatorinstansiid: item.coordinator_instansi_id, // <-- Ambil ID-nya
                         }))
                       );
@@ -60,8 +58,7 @@ const Page = () => {
     const filteredData = koordinatorData.filter(
         (row) =>
             (row.nama?.toLowerCase().includes(search.toLowerCase()) || '') ||
-            (row.nip?.includes(search) || '') ||
-            (row.wilayah?.toLowerCase().includes(search.toLowerCase()) || '')
+            (row.nip?.includes(search) || '') 
     );
 
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
@@ -93,8 +90,7 @@ const Page = () => {
                             <TableRow>
                                 <TableHead className="text-center">No</TableHead>
                                 <TableHead>Nama</TableHead>
-                                <TableHead className="text-center">NIP</TableHead>
-                                <TableHead className="text-center">Wilayah Koordinasi</TableHead>
+                                <TableHead className="text-center">NIP/No Identitas</TableHead>
                                 <TableHead className="text-center">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -104,7 +100,6 @@ const Page = () => {
                                     <TableCell className="text-center">{row.no}</TableCell>
                                     <TableCell>{row.nama}</TableCell>
                                     <TableCell className="text-center">{row.nip}</TableCell>
-                                    <TableCell className="text-center">{row.wilayah}</TableCell>
                                     <TableCell className="text-center">
                                     <Button
   onClick={() => handleClick(row.koordinatorinstansiid)} // ✅ Panggil pakai ID

@@ -13,7 +13,6 @@ interface DataRow {
   no: number;
   nama: string;
   nip: string;
-  wilayah: string;
   validator_id?: string;
   work_unit?: string;
 }
@@ -57,11 +56,10 @@ const Page = () => {
         try {
           setIsLoading(true);
           const response = await axios.get(`/api/koordinator_utama?id=${id}`);
-          const formattedData = response.data.map((item: { name: string; username: string; coordinator_type_name: string; validator_id?: string; work_unit?: string; }, index: number) => ({
+          const formattedData = response.data.map((item: { name: string; username: string; validator_id?: string; work_unit?: string; }, index: number) => ({
             no: index + 1,
             nama: item.name,
             nip: item.username,
-            wilayah: item.coordinator_type_name,
             validator_id: item.validator_id,
             work_unit: item.work_unit,
           }));
@@ -104,17 +102,16 @@ const Page = () => {
 
   const handleTambah = () => {
     if (activeTab === "koordinator") {
-      router.push("/koordinator-utama/verifikator/tambah");
+      router.push("/koordinator-utama/pengguna/tambah-verifikator");
     } else {
-      router.push("/koordinator-utama/pengguna/tambah");
+      router.push("/koordinator-utama/pengguna/tambah-koorinstansi");
     }
   };
 
   // Filter data dengan debounce
   const filteredKoordinatorData = koordinatorData.filter((row) =>
     row.nama.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-    row.nip.includes(debouncedSearch) ||
-    (row.wilayah || "").toLowerCase().includes(debouncedSearch.toLowerCase())
+    row.nip.includes(debouncedSearch) 
   );
 
   return (
@@ -189,8 +186,7 @@ const Page = () => {
                 <tr>
                   <th className="px-6 py-3 border-b">No</th>
                   <th className="px-6 py-3 border-b">Nama</th>
-                  <th className="px-6 py-3 border-b">NIP</th>
-                  <th className="px-6 py-3 border-b">Wilayah Koordinasi</th>
+                  <th className="px-6 py-3 border-b">NIP/No Identitas</th>
                   <th className="px-6 py-3 border-b text-center">Aksi</th>
                 </tr>
               </thead>
@@ -204,7 +200,6 @@ const Page = () => {
                       <td className="px-6 py-4 border-b text-center">{row.no}</td>
                       <td className="px-6 py-4 border-b">{row.nama}</td>
                       <td className="px-6 py-4 border-b">{row.nip}</td>
-                      <td className="px-6 py-4 border-b">{row.wilayah}</td>
                       <td className="px-6 py-4 border-b text-center">
                         <button
                           onClick={() => handleKeluarkan(row.nama)}
