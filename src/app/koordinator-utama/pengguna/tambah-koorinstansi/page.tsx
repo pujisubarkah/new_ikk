@@ -12,6 +12,7 @@ interface FormData {
   nip: string
   nik: string
   instansi: string
+  tahun_aktif: string
   email: string
   role: string
   password: string
@@ -26,6 +27,10 @@ interface Role {
 }
 
 interface Instansi {
+  instansi: {
+    agency_id: string
+    agency_name: string
+  }
   id: string
   name: string
   category: string
@@ -37,8 +42,9 @@ const TambahPengguna: React.FC = () => {
     nip: "",
     nik: "",
     instansi: "",
+    tahun_aktif: "2025",
     email: "",
-    role: "",
+    role: "4",
     password: "",
     jabatan: "",
     telepon: "",
@@ -135,11 +141,20 @@ const TambahPengguna: React.FC = () => {
             className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="" disabled>Pilih Instansi</option>
-            {instansis.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-            ))}
+                 {instansis
+                 .filter((item, index, self) => 
+                   index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
+                 )
+                 .sort((a, b) => {
+                   const idA = a.instansi?.agency_id || '';
+                   const idB = b.instansi?.agency_id || '';
+                   return idA.localeCompare(idB);
+                 })
+                 .map((item) => (
+                   <option key={item.id} value={item.instansi?.agency_id || ''}>
+                   {item.instansi?.agency_name || "NA"}
+                   </option>
+                 ))}
           </select>
         </div>
         <div>
