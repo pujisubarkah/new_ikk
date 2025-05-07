@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import React, { useState, useEffect } from "react";
-import Sidebar from "@/components/sidebar-koor";
+import Sidebar from "@/components/sidebar-koornas";
 
 interface KebijakanDetail {
   no: number;

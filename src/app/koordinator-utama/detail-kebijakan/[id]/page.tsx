@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input"; // Pastikan kamu punya komponen Input
 import { Textarea } from "@/components/ui/textarea"; // Pastikan kamu punya komponen Textarea
-import Sidebar from "@/components/sidebar-koor";
+import Sidebar from "@/components/sidebar-koornas";
 
 interface Policy {
   instansi: string;
