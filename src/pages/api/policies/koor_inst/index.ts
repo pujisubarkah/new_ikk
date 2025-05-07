@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { PrismaClient } from "@prisma/client";
 import { serializeBigInt } from "@/lib/serializeBigInt"; 
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 // Type untuk data dari Prisma
 type PolicyData = {
@@ -12,16 +10,20 @@ type PolicyData = {
     agency_id?: bigint | number | string;
     agencies?: {
       name?: string;
-      policies?: {
-        id: string;
-        name: string;
-        policy_details?: {
-          progress?: number;
-          effective_date?: string;
-        };
-        policy_process?: {
-          name?: string;
-        };
+      policy?: {
+        enumerator_id: bigint | number | string | null;
+        user_policy_enumerator_idTouser: { name: string | null } | null; 
+        name: string; 
+        assigned_by_admin_at: Date | null; 
+        effective_date: Date | null; 
+        progress: number | null;
+        policy_process: string | null;
+        policy_status: string | null;
+        sector: string | null;
+        type: string | null;
+        file_url: string | null;
+        id: string | number;
+        is_valid: boolean;
       }[];
     };
   };
@@ -34,6 +36,7 @@ type FormattedPolicy = {
   sektor: string;
   tanggal_berlaku: string;
   file: string;
+  enumerator_id: string;
   enumerator: string;
   progress: string;
   tanggalAssign: string;
@@ -47,10 +50,10 @@ const countPolicyProcessNames = (data: PolicyData[]) => {
 
   data.forEach(item => {
     const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
-    const policies = user?.agencies?.policies || [];
+    const policies = user?.agencies?.policy || [];
 
     policies.forEach(policy => {
-      const processName = policy.policy_process?.name || 'UNKNOWN';
+      const processName = policy.policy_process || 'UNKNOWN';
       counts[processName] = (counts[processName] || 0) + 1;
     });
   });
@@ -63,10 +66,11 @@ export async function getKoordinatorInstansiAdminInstansi(
   res: NextApiResponse
 ) {
   try {
+
     const { koor_instansi_id } = req.query;
 
-    if (!koor_instansi_id) {
-      return res.status(400).json({ error: "koor_instansi_id is required" });
+    if (!koor_instansi_id || isNaN(Number(koor_instansi_id))) {
+      return res.status(400).json({ error: "koor_instansi_id must be a valid number" });
     }
 
     const rawRecords = await prisma.koor_instansi_validator.findMany({
@@ -85,22 +89,26 @@ export async function getKoordinatorInstansiAdminInstansi(
             agencies: {
               select: {
                 name: true,
-                policies: {
+                policy: {
                   select: {
                     id: true,
                     name: true,
-                    policy_details: {
-                      select: {
-                        progress: true,
-                        effective_date: true,
-                      },
-                    },
-                    policy_process: {
-                      select: {
+                    is_valid: true,
+                    sector: true,
+                    type: true,
+                    file_url: true,
+                    progress: true,
+                    policy_process: true,
+                    policy_status: true,
+                    effective_date: true,
+                    assigned_by_admin_at: true,
+                    enumerator_id: true,
+                    user_policy_enumerator_idTouser: {
+                      select: { 
                         name: true,
                       },
                     },
-                  },
+                },
                 },
               },
             },
@@ -109,24 +117,25 @@ export async function getKoordinatorInstansiAdminInstansi(
       },
     });
 
-    const records = rawRecords.map(record => serializeBigInt(record)) as PolicyData[];
+    const records = rawRecords.map((record: Record<string, unknown>) => serializeBigInt(record)) as PolicyData[];
     const policyProcessCounts = countPolicyProcessNames(records);
 
     const formattedPolicies: FormattedPolicy[] = records.flatMap(item => {
       const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
-      const policies = user?.agencies?.policies || [];
+      const policies = user?.agencies?.policy || [];
 
       return policies.map(policy => ({
-        id: policy.id,
+        id: String(policy.id),
         nama: policy.name,
-        sektor: "Umum",
-        tanggal_berlaku: policy.policy_details?.effective_date || "-",
-        file: "-",
-        enumerator: "-",
-        progress: (policy.policy_details?.progress ?? "-") + "%",
-        tanggalAssign: "-",
+        sektor: policy.sector || "-",
+        tanggal_berlaku: policy.effective_date instanceof Date? policy.effective_date.toISOString(): policy.effective_date || "-",
+        file: policy.file_url || "-",
+        enumerator_id: String(policy.enumerator_id || "-"),
+        enumerator: policy.user_policy_enumerator_idTouser?.name || "-",
+        progress: (policy.progress ?? "-") + "%",
+        tanggalAssign: policy.assigned_by_admin_at instanceof Date ? policy.assigned_by_admin_at.toISOString() : policy.assigned_by_admin_at || "-",
         nilai: "-",
-        status: policy.policy_process?.name || "UNKNOWN",
+        status: policy.policy_process || "UNKNOWN",
       }));
     });
 

@@ -43,6 +43,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                                         progress: true,
                                         policy_process: true,
                                         policy_status: true,
+                                        effective_date: true,
+                                        enumerator_id: true,
+                                        assigned_by_admin_at: true,
+                                        user_policy_enumerator_idTouser: {
+                                          select: { 
+                                            name: true,
+                                          },
+                                        },
                                     },
                                 },
                             },

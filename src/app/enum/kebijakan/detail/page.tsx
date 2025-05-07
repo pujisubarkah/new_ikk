@@ -198,7 +198,7 @@ function PolicyCard({ policy }: { policy: Policy }) {
                 <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${policy.progress_pengisian}%` }} />
               </div>
               <span className="text-blue-600 text-sm font-medium">
-                {policy.progress_pengisian.toFixed(2)}%
+                {Number(policy.progress_pengisian).toFixed(2)}%
               </span>
             </div>
           </div>
