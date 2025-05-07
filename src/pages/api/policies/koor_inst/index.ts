@@ -1,159 +1,102 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { serializeBigInt } from "@/lib/serializeBigInt"; 
-import prisma from "@/lib/prisma";
+import { NextApiRequest, NextApiResponse } from 'next'
+import { PrismaClient } from '@prisma/client'
 
-// Type untuk data dari Prisma
-type PolicyData = {
-  user_koordinator_instansi_admin_instansi_admin_instansi_idTouser?: {
-    name?: string;
-    username?: string;
-    agency_id?: bigint | number | string;
-    agencies?: {
-      name?: string;
-      policy?: {
-        enumerator_id: bigint | number | string | null;
-        user_policy_enumerator_idTouser: { name: string | null } | null; 
-        name: string; 
-        assigned_by_admin_at: Date | null; 
-        effective_date: Date | null; 
-        progress: number | null;
-        policy_process: string | null;
-        policy_status: string | null;
-        sector: string | null;
-        type: string | null;
-        file_url: string | null;
-        id: string | number;
-        is_valid: boolean;
-      }[];
-    };
-  };
-};
+const prisma = new PrismaClient()
 
-// Type untuk hasil formatted policy
-type FormattedPolicy = {
-  id: string;
-  nama: string;
-  sektor: string;
-  tanggal_berlaku: string;
-  file: string;
-  enumerator_id: string;
-  enumerator: string;
-  progress: string;
-  tanggalAssign: string;
-  nilai: string;
-  status: string;
-};
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ message: 'Method not allowed' })
+  }
 
-// Fungsi untuk menghitung jumlah status proses kebijakan
-const countPolicyProcessNames = (data: PolicyData[]) => {
-  const counts: Record<string, number> = {};
+  const { koor_instansi_id } = req.query
 
-  data.forEach(item => {
-    const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
-    const policies = user?.agencies?.policy || [];
+  if (!koor_instansi_id) {
+    return res.status(400).json({ message: 'koor_instansi_id is required' })
+  }
 
-    policies.forEach(policy => {
-      const processName = policy.policy_process || 'UNKNOWN';
-      counts[processName] = (counts[processName] || 0) + 1;
-    });
-  });
-
-  return counts;
-};
-
-export async function getKoordinatorInstansiAdminInstansi(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
   try {
-
-    const { koor_instansi_id } = req.query;
-
-    if (!koor_instansi_id || isNaN(Number(koor_instansi_id))) {
-      return res.status(400).json({ error: "koor_instansi_id must be a valid number" });
-    }
-
-    const rawRecords = await prisma.koor_instansi_validator.findMany({
+    const data = await prisma.koor_instansi_analis.findMany({
       where: {
         koor_instansi_id: BigInt(koor_instansi_id as string),
       },
-      select: {
-        id: true,
-        koor_instansi_id: true,
-        validator_id: true,
-        user_koor_instansi_validator_koor_instansi_idTouser: {
+      include: {
+        user_koor_instansi_analis_analis_instansi_idTouser: {
           select: {
             name: true,
-            username: true,
             agency_id: true,
             agencies: {
               select: {
                 name: true,
-                policy: {
+              },
+            },
+            policies_policies_analis_instansi_idTouser: {
+              select: {
+                id: true,
+                name: true,
+                policy_process: {
                   select: {
-                    id: true,
                     name: true,
-                    is_valid: true,
-                    sector: true,
-                    type: true,
-                    file_url: true,
-                    progress: true,
-                    policy_process: true,
-                    policy_status: true,
-                    effective_date: true,
-                    assigned_by_admin_at: true,
-                    enumerator_id: true,
-                    user_policy_enumerator_idTouser: {
-                      select: { 
-                        name: true,
-                      },
-                    },
+                  },
                 },
+                policy_details: {
+                  select: {
+                    sector: true,
+                    effective_date: true,
+                    progress: true,
+                    updated_at: true,
+                    file_original_name: true,
+                    base_score: true,
+                  },
                 },
               },
             },
           },
         },
       },
-    });
+    })
 
-    const records = rawRecords.map((record: Record<string, unknown>) => serializeBigInt(record)) as PolicyData[];
-    const policyProcessCounts = countPolicyProcessNames(records);
+    // Olah menjadi rowData
+    const rowData = data.flatMap(item => {
+      const user = item.user_koor_instansi_analis_analis_instansi_idTouser
+      const userName = user?.name || 'N/A'
+      const instansi = user?.agencies?.name || 'N/A'
 
-    const formattedPolicies: FormattedPolicy[] = records.flatMap(item => {
-      const user = item.user_koordinator_instansi_admin_instansi_admin_instansi_idTouser;
-      const policies = user?.agencies?.policy || [];
+      return user?.policies_policies_analis_instansi_idTouser.map(policy => ({
+        nama: userName,
+        instansi,
+        nama_kebijakan: policy.name,
+        progress: policy.policy_details?.progress || null,
+        sektor: policy.policy_details?.sector || null,
+        tanggal_efektif: policy.policy_details?.effective_date || null,
+        status: policy.policy_process?.name || null,
+        tanggal_assign: policy.policy_details?.updated_at || null,
+        file:policy.policy_details?.file_original_name || null,
+        nilai:policy.policy_details?.base_score || null,
+      })) || []
+    })
 
-      return policies.map(policy => ({
-        id: String(policy.id),
-        nama: policy.name,
-        sektor: policy.sector || "-",
-        tanggal_berlaku: policy.effective_date instanceof Date? policy.effective_date.toISOString(): policy.effective_date || "-",
-        file: policy.file_url || "-",
-        enumerator_id: String(policy.enumerator_id || "-"),
-        enumerator: policy.user_policy_enumerator_idTouser?.name || "-",
-        progress: (policy.progress ?? "-") + "%",
-        tanggalAssign: policy.assigned_by_admin_at instanceof Date ? policy.assigned_by_admin_at.toISOString() : policy.assigned_by_admin_at || "-",
-        nilai: "-",
-        status: policy.policy_process || "UNKNOWN",
-      }));
-    });
+// Grouping by status with count and data array
+const groupedArray = Object.values(
+  rowData.reduce((acc, item) => {
+    const status = item.status || 'TIDAK ADA STATUS'
+    if (!acc[status]) {
+      acc[status] = {
+        status,
+        jumlah: 0,
+        data: []
+      }
+    }
+    acc[status].jumlah += 1
+    acc[status].data.push(item)
+    return acc
+  }, {} as Record<string, { status: string; jumlah: number; data: typeof rowData }>)
+)
 
-    res.status(200).json({
-      data: formattedPolicies,
-      policyProcessCounts,
-    });
+
+
+res.status(200).json(groupedArray)
   } catch (error) {
-    console.error("Error fetching data:", error);
-    res.status(500).json({ error: "Failed to fetch data" });
-  }
-}
-
-// Default API handler
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === "GET") {
-    await getKoordinatorInstansiAdminInstansi(req, res);
-  } else {
-    res.status(405).json({ error: "Method Not Allowed" });
+    console.error('Error fetching data:', error)
+    res.status(500).json({ message: 'Internal Server Error' })
   }
 }
