@@ -47,7 +47,7 @@ export default function KebijakanTable() {
     DITOLAK: 0,
   });
   const [sektorLainnya, setSektorLainnya] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const itemsPerPage = 5;
   const filteredData = data.filter((item) => item.status === activeTab);
@@ -55,10 +55,19 @@ export default function KebijakanTable() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
+  // Fungsi untuk mapping status dari API ke tab UI
+  const getStatusFromData = (item: any): string => {
+    if (item.enumerator && item.enumerator !== "-") return "Disetujui";
+    if (item.progress > 0 && item.progress < 100) return "Diproses";
+    if (item.progress === 100) return "Selesai";
+    return "Diajukan";
+  };
+
   useEffect(() => {
     const fetchPolicies = async () => {
       setIsLoading(true);
       const adminInstansiId = localStorage.getItem("id");
+
       if (!adminInstansiId) {
         setIsLoading(false);
         return;
@@ -73,38 +82,29 @@ export default function KebijakanTable() {
         const counts = res.data.policyProcessCounts || {};
 
         const mappedData = Array.isArray(fetchedData)
-        ? fetchedData.map((item) => {
-            let calculatedStatus = "Unknown";
-      
-            if (item.enumerator && item.enumerator !== "-") {
-              calculatedStatus = "Disetujui"; // Jika enumerator ada → artinya disetujui
-            } else if (item.progress > 0 && item.progress < 100) {
-              calculatedStatus = "Diproses";
-            } else if (item.progress === 100) {
-              calculatedStatus = "Selesai";
-            } else {
-              calculatedStatus = "Diajukan";
-            }
-      
-            return {
-              id: parseInt(item.policy_id, 10),
-              nama: item.nama_kebijakan,
-              sektor: item.sektor || "Umum",
-              tanggal: item.tanggal_berlaku
-                ? new Date(item.tanggal_berlaku).toLocaleDateString("id-ID")
-                : "-",
-              file: item.file_url || "-",
-              enumerator: item.enumerator || "Belum Ditentukan",
-              progress: item.progress ? `${parseInt(item.progress, 10)}%` : "-",
-              status: calculatedStatus,
-              tanggalAssign: item.tanggal_assign
-                ? new Date(item.tanggal_assign).toLocaleDateString("id-ID")
-                : "-",
-              nilai: "-",
-              instansi: item.instansi || "-",
-            };
-          })
-        : [];
+          ? fetchedData.map((item) => {
+              const calculatedStatus = getStatusFromData(item);
+              const progressNum = parseInt(item.progress, 10);
+
+              return {
+                id: parseInt(item.policy_id, 10),
+                nama: item.nama_kebijakan,
+                sektor: item.sektor || "Umum",
+                tanggal: item.tanggal_berlaku
+                  ? new Date(item.tanggal_berlaku).toLocaleDateString("id-ID")
+                  : "-",
+                file: item.file_url || "-",
+                enumerator: item.enumerator || "Belum Ditentukan",
+                progress: isNaN(progressNum) ? "0%" : `${progressNum}%`,
+                status: calculatedStatus,
+                tanggalAssign: item.tanggal_assign
+                  ? new Date(item.tanggal_assign).toLocaleDateString("id-ID")
+                  : "-",
+                nilai: "-",
+                instansi: item.instansi || "-",
+              };
+            })
+          : [];
 
         setData(mappedData);
         setProcessCounts({
@@ -122,12 +122,11 @@ export default function KebijakanTable() {
     fetchPolicies();
   }, []);
 
-  
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const file = formData.get("dokumen") as File;
+
     if (
       file &&
       !["application/pdf", "image/jpeg", "image/png"].includes(file.type)
@@ -135,6 +134,7 @@ export default function KebijakanTable() {
       alert("Harap unggah file yang valid (PDF, JPEG, PNG).");
       return;
     }
+
     console.log("Form submitted");
     setOpen(false);
   };
@@ -340,7 +340,10 @@ export default function KebijakanTable() {
 
                   {/* Submit Button */}
                   <div className="flex justify-end">
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md">
+                    <Button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md"
+                    >
                       Submit
                     </Button>
                   </div>
@@ -406,7 +409,16 @@ export default function KebijakanTable() {
               </tr>
             </thead>
             <tbody>
-              {currentData.length > 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-4">
+                    <div className="flex justify-center items-center">
+                      <span className="animate-spin h-6 w-6 border-4 border-blue-500 border-t-transparent rounded-full"></span>
+                      <span className="ml-2">Memuat data...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : currentData.length > 0 ? (
                 currentData.map((item, index) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 border">{startIndex + index + 1}</td>
@@ -441,26 +453,26 @@ export default function KebijakanTable() {
                         </td>
                       </>
                     )}
-                {activeTab === "Diproses" && (
-  <>
-    <td className="px-4 py-3 border">{item.enumerator}</td>
-    <td className="px-4 py-3 border">
-      <div className="w-full bg-gray-200 rounded-full h-2.5">
-        <div 
-          className="bg-blue-600 h-2.5 rounded-full" 
-          style={{ width: item.progress }}
-        ></div>
-      </div>
-      <span className="text-xs text-gray-500 mt-1">{item.progress}</span>
-    </td>
-    <td className="px-4 py-3 border">{item.tanggalAssign}</td>
-    <td className="px-4 py-3 border">
-      <button className="text-green-600 hover:text-green-800 p-1">
-        <FaPaperPlane size={18} />
-      </button>
-    </td>
-  </>
-)}
+                    {activeTab === "Diproses" && (
+                      <>
+                        <td className="px-4 py-3 border">{item.enumerator}</td>
+                        <td className="px-4 py-3 border">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-blue-600 h-2.5 rounded-full"
+                              style={{ width: item.progress }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-gray-500 mt-1 block text-center">{item.progress}</span>
+                        </td>
+                        <td className="px-4 py-3 border">{item.tanggalAssign}</td>
+                        <td className="px-4 py-3 border">
+                          <button className="text-green-600 hover:text-green-800 p-1">
+                            <FaPaperPlane size={18} />
+                          </button>
+                        </td>
+                      </>
+                    )}
                     {activeTab === "Selesai" && (
                       <>
                         <td className="px-4 py-3 border">{item.enumerator}</td>
