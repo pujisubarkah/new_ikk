@@ -11,7 +11,7 @@ import {
 import { Button } from "../../../components/ui/button";
 import Sidebar from "@/components/sidebar-koorins";
 import {
-  FaHourglassHalf,
+  FaHourglassHalf, // Ensure this is used in the code or remove it if unnecessary
   FaCheckCircle,
   FaTimesCircle,
   FaEye,
@@ -89,12 +89,12 @@ export default function KebijakanTable() {
               return {
                 id: parseInt(item.policy_id, 10),
                 nama: item.nama_kebijakan,
-                sektor: item.sektor || "Umum",
+                sektor: item.sektor,
                 tanggal: item.tanggal_berlaku
                   ? new Date(item.tanggal_berlaku).toLocaleDateString("id-ID")
                   : "-",
                 file: item.file_url || "-",
-                enumerator: item.enumerator || "Belum Ditentukan",
+                enumerator: item.enumerator,
                 progress: isNaN(progressNum) ? "0%" : `${progressNum}%`,
                 status: calculatedStatus,
                 tanggalAssign: item.tanggal_assign

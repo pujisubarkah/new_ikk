@@ -8,7 +8,6 @@ const extractPolicyData = (policy: any, agencyName: string) => ({
     nama_kebijakan: policy.name,
     sektor: policy.sector,
     file_url: policy.file_url,
-    status: policy.policy_process,
     progress: policy.progress,
     tanggal_assign: policy.assigned_by_admin_at,
     tanggal_berlaku: policy.effective_date,
@@ -67,7 +66,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Create an array of row data
-    const rowData: any[] = [];
+    interface RowData {
+        koor_instansi_id: number;
+        analis_instansi_id: number;
+        enumerator: string;
+        policy_id: number;
+        nama_kebijakan: string;
+        sektor: string;
+        file_url: string;
+        progress: number;
+        tanggal_assign: Date | null;
+        tanggal_berlaku: Date | null;
+        instansi: string;
+    }
+
+    const rowData: RowData[] = [];
 
     // Map the result to a rowData array
     result.forEach(item => {
