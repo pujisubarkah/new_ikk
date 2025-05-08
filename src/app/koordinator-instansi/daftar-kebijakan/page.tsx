@@ -67,25 +67,53 @@ export default function KebijakanTable() {
     const fetchPolicies = async () => {
       setIsLoading(true);
       const adminInstansiId = localStorage.getItem("id");
-
+  
       if (!adminInstansiId) {
         setIsLoading(false);
         return;
       }
-
+  
       try {
+        // Fetch policy data
         const res = await axios.get(
           `/api/policies/koor_inst?koordinator_instansi_id=${adminInstansiId}`
         );
-
+  
+        // Fetch process counts for summary cards
+        const countsRes = await axios.get(
+          `/api/policies/process?assigned_by_admin_id=${adminInstansiId}`
+        );
+  
         const fetchedData = res.data || [];
-        const counts = res.data.policyProcessCounts || {};
-
+        const countsData = countsRes.data?.data || [];
+  
+        // Initialize counts
+        const initialCounts = {
+          DIAJUKAN: 0,
+          DISETUJUI: 0,
+          DITOLAK: 0,
+        };
+  
+        // Process counts data
+        countsData.forEach((item: any) => {
+          switch (item.policy_process) {
+            case "DISETUJUI":
+              initialCounts.DISETUJUI = item.count;
+              break;
+            case "DITOLAK":
+              initialCounts.DITOLAK = item.count;
+              break;
+            case "PROSES":
+              initialCounts.DIAJUKAN = item.count;
+              break;
+          }
+        });
+  
         const mappedData = Array.isArray(fetchedData)
           ? fetchedData.map((item) => {
               const calculatedStatus = getStatusFromData(item);
               const progressNum = parseInt(item.progress, 10);
-
+  
               return {
                 id: parseInt(item.policy_id, 10),
                 nama: item.nama_kebijakan,
@@ -105,20 +133,16 @@ export default function KebijakanTable() {
               };
             })
           : [];
-
+  
         setData(mappedData);
-        setProcessCounts({
-          DIAJUKAN: counts.PROSES || 0,
-          DISETUJUI: counts.DISETUJUI || 0,
-          DITOLAK: counts.DITOLAK || 0,
-        });
+        setProcessCounts(initialCounts);
       } catch (err) {
         console.error("Gagal fetch data policies", err);
       } finally {
         setIsLoading(false);
       }
     };
-
+  
     fetchPolicies();
   }, []);
 
