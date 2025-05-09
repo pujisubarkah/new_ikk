@@ -396,7 +396,7 @@ model instrument_question {
 }
 
 model koor_instansi_analis {
-  id                                                 BigInt    @id
+  id                                                 BigInt    @id @default(autoincrement())
   created_at                                         DateTime? @db.Timestamp(6)
   created_by                                         BigInt?
   modified_by                                        BigInt?
@@ -824,7 +824,7 @@ model user {
   agency_id_panrb                                                        BigInt?
   active_year                                                            BigInt?
   penunjukkan_id                                                         BigInt?
-  ikk_file                                                               ikk_file[]
+  ikk_file                                                               ikk_file[] 
   ikk_ki_score                                                           ikk_ki_score[]
   ikk_ku_score                                                           ikk_ku_score[]
   koor_instansi_analis_koor_instansi_analis_analis_instansi_idTouser     koor_instansi_analis[]    @relation("koor_instansi_analis_analis_instansi_idTouser")
