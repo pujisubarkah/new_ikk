@@ -1,54 +1,19 @@
+
 import prisma from '@/lib/prisma';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const {
-    created_by,
-    modified_by = null,
-    koor_instansi_id,
-    analis_instansi_id,
-  } = req.body;
+  const { koor_instansi_id } = req.query;
 
-  // Validasi input
-  if (
-    !koor_instansi_id ||
-    !analis_instansi_id ||
-    Array.isArray(koor_instansi_id) ||
-    Array.isArray(analis_instansi_id)
-  ) {
-    return res.status(400).json({ error: 'Missing or invalid koor_instansi_id or analis_instansi_id' });
+  if (!koor_instansi_id || Array.isArray(koor_instansi_id)) {
+    return res.status(400).json({ error: 'Invalid koor_instansi_id' });
   }
 
   try {
-    // Opsional: Cek apakah sudah ada relasi yang sama
-    const existing = await prisma.koor_instansi_analis.findFirst({
-      where: {
-        koor_instansi_id: BigInt(koor_instansi_id),
-        analis_instansi_id: BigInt(analis_instansi_id),
-      },
-    });
-
-    if (existing) {
-      return res.status(409).json({ error: 'Relation already exists' });
-    }
-
-    // Insert data baru
-    await prisma.koor_instansi_analis.create({
-      data: {
-        created_by: created_by ? BigInt(created_by) : undefined,
-        modified_by: modified_by ? BigInt(modified_by) : undefined,
-        koor_instansi_id: BigInt(koor_instansi_id),
-        analis_instansi_id: BigInt(analis_instansi_id),
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    });
-
-    // Ambil ulang data seperti GET
     const data = await prisma.koor_instansi_analis.findMany({
       where: {
         koor_instansi_id: BigInt(koor_instansi_id),
@@ -79,7 +44,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         },
       },
-    });
+    }) as Array<{
+      user_koor_instansi_analis_koor_instansi_idTouser: {
+        id: number;
+        name: string;
+        username: string;
+        work_unit: string;
+        agency_id: number | null;
+        agencies: { name: string } | null;
+      } | null;
+      user_koor_instansi_analis_analis_instansi_idTouser: {
+        id: number;
+        name: string;
+        username: string;
+        work_unit: string;
+        agency_id: number | null;
+        agencies: { name: string } | null;
+      } | null;
+    }>;
 
     const koorUser = data[0]?.user_koor_instansi_analis_koor_instansi_idTouser;
 
@@ -98,17 +80,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .map((item) => item.user_koor_instansi_analis_analis_instansi_idTouser)
       .filter(Boolean)
       .map((analis) => ({
-        id: analis.id.toString(),
-        nama: analis.name,
-        nip: analis.username,
-        unit_kerja: analis.work_unit,
-        agency_id: analis.agency_id?.toString() ?? null,
-        agency_name: analis.agencies?.name ?? null,
+        id: analis?.id?.toString() ?? '',
+        nama: analis?.name ?? '',
+        nip: analis?.username ?? '',
+        unit_kerja: analis?.work_unit ?? null,
+        agency_id: analis?.agency_id?.toString() ?? null,
+        agency_name: analis?.agencies?.name ?? null,
       }));
 
-    return res.status(201).json({ koor_instansi, analis_instansi });
+    return res.status(200).json({ koor_instansi, analis_instansi });
   } catch (error) {
-    console.error('Error creating entry:', error);
-    return res.status(500).json({ error: 'Failed to create entry', detail: error instanceof Error ? error.message : error });
+    console.error('Error fetching data:', error);
+    return res.status(500).json({ error: 'Failed to fetch data', detail: error instanceof Error ? error.message : error });
   }
 }

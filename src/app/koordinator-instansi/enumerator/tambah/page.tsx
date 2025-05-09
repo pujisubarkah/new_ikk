@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -13,7 +14,7 @@ interface FormData {
   nik: string
   instansi: string
   email: string
-  role: string
+  role_id: number
   password: string
   jabatan: string
   telepon: string
@@ -33,7 +34,7 @@ const TambahPengguna: React.FC = () => {
     nik: "",
     instansi: "",
     email: "",
-    role: "Enumerator", // Default role Enumerator
+    role_id: 5, // Set default role_id ke 5
     password: "",
     jabatan: "",
     telepon: "",
@@ -41,20 +42,36 @@ const TambahPengguna: React.FC = () => {
   })
 
   const [instansis, setInstansis] = useState<Instansi[]>([])
+  const [agencyId, setAgencyId] = useState<string | null>(null) // State untuk menyimpan agency_id
   const router = useRouter()
 
   useEffect(() => {
-    const fetchInstansi = async () => {
+    const fetchAgencyIdAndInstansi = async () => {
       try {
-        const res = await fetch("/api/instansi")
-        const data = await res.json()
-        setInstansis(data)
+        const koorInstansiId = localStorage.getItem("id");
+    
+        if (!koorInstansiId) {
+          console.error("ID koor_instansi tidak ditemukan di localStorage.");
+          return;
+        }
+    
+        // Panggil API dengan koor_instansi_id sebagai query param
+        const response = await axios.get(`/api/koorinstansi/info?koor_instansi_id=${koorInstansiId}`);
+        const { agency_id } = response.data;
+
+        if (agency_id) {
+          setAgencyId(agency_id)
+          
+          // Setelah mendapatkan agency_id, ambil data instansi terkait
+          const instansiResponse = await axios.post("/api/analis_instansi", { agencyId })
+          setInstansis(instansiResponse.data)
+        }
       } catch (err) {
-        console.error("Failed to fetch instansi", err)
+        console.error("Failed to fetch agency_id and instansi", err)
       }
     }
 
-    fetchInstansi()
+    fetchAgencyIdAndInstansi()
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -76,7 +93,7 @@ const TambahPengguna: React.FC = () => {
   }
 
   return (
-      <Sidebar>
+    <Sidebar>
       <div className="w-full px-6 py-8 bg-white shadow-md rounded-lg">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <h1 className="text-3xl font-semibold text-gray-800">Tambah Analis Instansi</h1>
@@ -169,11 +186,11 @@ const TambahPengguna: React.FC = () => {
               <select
                 id="role"
                 name="role"
-                value={formData.role}
+                value={formData.role_id} // Ubah value ke role_id
                 disabled
                 className="w-full max-w-xs border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700"
               >
-                <option value="Enumerator">Enumerator</option>
+                <option value={5}>Enumerator</option> {/* Default role_id: 5 */}
               </select>
             </div>
           </div>
