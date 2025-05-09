@@ -67,8 +67,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         : null;
 
       const analis_instansi = data
-        .filter((item) => item.user_koor_instansi_analis_analis_instansi_idTouser)
-        .map((item) => {
+        .filter((item: { user_koor_instansi_analis_analis_instansi_idTouser: any }) => item.user_koor_instansi_analis_analis_instansi_idTouser)
+        .map((item: { user_koor_instansi_analis_analis_instansi_idTouser: any }) => {
           const analis = item.user_koor_instansi_analis_analis_instansi_idTouser!;
           return {
             id: analis.id.toString(),

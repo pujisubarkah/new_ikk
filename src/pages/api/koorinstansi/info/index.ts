@@ -14,10 +14,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      // Ambil langsung data yang dibutuhkan
+      const koorId = BigInt(koor_instansi_id as string);
+
+      // Ambil data dari koor_instansi_analis
       const record = await prisma.koor_instansi_analis.findFirst({
         where: {
-          koor_instansi_id: BigInt(koor_instansi_id as string),
+          koor_instansi_id: koorId,
         },
         select: {
           koor_instansi_id: true,
@@ -31,14 +33,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      // Ambil agency_id dari tabel user berdasarkan koor_instansi_id
+      // Ambil agency_id dari user
       const user = await prisma.user.findUnique({
         where: {
-          id: record.koor_instansi_id ?? undefined,
+          id: koorId,
         },
         select: {
           id: true,
           agency_id: true,
+          agency_id_panrb: true,
         },
       });
 
@@ -48,12 +51,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      // Gabungkan hasil sesuai format yang diinginkan
       const result = {
-        koor_instansi_id: serializeBigInt({ value: record.koor_instansi_id }),
-        analis_instansi_id: record.analis_instansi_id !== null ? serializeBigInt({ value: record.analis_instansi_id }).value : null,
-        agency_id: user.agency_id !== null ? serializeBigInt({ value: user.agency_id }).value : null,
-        user_id: serializeBigInt({ value: user.id }),
+        koor_instansi_id: serializeBigInt({ koor_instansi_id: record.koor_instansi_id }),
+        agency_id: user.agency_id_panrb ? serializeBigInt({ agency_id_panrb: user.agency_id_panrb }) : null,
       };
 
       return res.status(200).json(result);

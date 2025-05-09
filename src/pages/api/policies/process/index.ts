@@ -21,7 +21,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      const formatted = result.map(item => ({
+      type GroupedPolicy = {
+        assigned_by_admin_id: bigint;
+        policy_process: string;
+        _count: {
+          _all: number;
+        };
+      };
+
+      const formatted = result.map((item: GroupedPolicy) => ({
         assigned_by_admin_id: item.assigned_by_admin_id,
         policy_process: item.policy_process,
         count: item._count._all,

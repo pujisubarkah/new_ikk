@@ -14,6 +14,7 @@ const userSchema = z.object({
   username: z.string().optional(),
   nik: z.string().optional(),
   role_id: z.number().optional(),
+  work_unit: z.string().optional(),
   agency_id: z.string().optional(),
   agency_id_panrb: z.string().optional(),
   penunjukkan_id: z.string().optional(),
@@ -40,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           OR: [{ deleted: null }, { deleted: '0' }],
           ...(role_id && {
             id: {
-              in: roleUsers?.map((ru: { user_id: bigint; }) => ru.user_id) || []
+              in: roleUsers?.map((ru: { user_id: bigint }) => ru.user_id) || []
             }
           }),
         },
@@ -89,29 +90,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Fetch users error:', error);
       res.status(500).json({ error: 'Failed to fetch users', detail: error });
     }
-
   } else if (req.method === 'POST') {
     try {
-      console.log('Received body:', req.body); // Log raw request body
-      
+      console.log('Received body:', req.body);
+
       const parsed = userSchema.safeParse(req.body);
       if (!parsed.success) {
-        console.log('Validation errors:', parsed.error.format()); // Log validation errors
+        console.log('Validation errors:', parsed.error.format());
         return res.status(400).json({ error: 'Invalid input', details: parsed.error.format() });
       }
 
       const body = parsed.data;
-      console.log('Parsed body:', body); // Log parsed data
+      console.log('Parsed body:', body);
 
+      // Check if email already exists
       const existing = await prisma.user.findFirst({ where: { email: body.email } });
       if (existing) {
-        console.log('Email already exists:', body.email); // Log duplicate email
+        console.log('Email already exists:', body.email);
         return res.status(400).json({ error: 'Email already in use' });
       }
 
+      // Hash password
       const hashedPassword = await bcrypt.hash(body.password, 10);
-      console.log('Password hashed successfully'); // Log password hashing
+      console.log('Password hashed successfully');
 
+      // Create User
       const user = await prisma.user.create({
         data: {
           name: body.name,
@@ -122,6 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ...(body.phone && { phone: body.phone }),
           ...(body.username && { username: body.username }),
           ...(body.nik && { nik: body.nik }),
+          ...(body.work_unit && { work_unit: body.work_unit }),
           ...(body.agency_id && { agency_id: BigInt(body.agency_id) }),
           ...(body.agency_id_panrb && { agency_id_panrb: BigInt(body.agency_id_panrb) }),
           ...(body.penunjukkan_id && { penunjukkan_id: BigInt(body.penunjukkan_id) }),
@@ -132,16 +136,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      console.log('User created:', user); // Log created user
+      console.log('User created:', user);
 
+      // Assign Role if provided
       if (body.role_id) {
         const roleUser = await prisma.role_user.create({
           data: {
             user_id: user.id,
             role_id: BigInt(body.role_id),
-          }
+          },
         });
-        console.log('Role assigned:', roleUser); // Log role assignment
+        console.log('Role assigned:', roleUser);
+
+        // Special handling for Koordinator Instansi (role_id === 3)
+        if (Number(body.role_id) === 4) {
+          const koorInsert = await prisma.koor_instansi_validator.create({
+            data: {
+              koor_instansi_id: user.id,
+            },
+          });
+          console.log('Inserted into koor_instansi_validator:', koorInsert);
+        }
+
+        // Special handling for Analis Instansi (role_id === 5 or whatever your role ID is)
+        if (Number(body.role_id) === 4) {
+          const koorInsertAnalis = await prisma.koor_instansi_analis.create({
+            data: {
+              koor_instansi_id: user.id,
+            },
+          });
+          console.log('Inserted into koor_instansi_analis:', koorInsertAnalis);
+        }
       }
 
       res.status(201).json(serializeBigInt(user));
@@ -149,7 +174,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Create user error:', error);
       res.status(400).json({ error: 'Failed to create user', detail: error });
     }
-
   } else {
     res.setHeader('Allow', ['GET', 'POST']);
     res.status(405).end(`Method ${req.method} Not Allowed`);

@@ -410,7 +410,7 @@ model koor_instansi_analis {
 }
 
 model koor_instansi_validator {
-  id                                                  BigInt    @id
+  id                                                  BigInt    @id @default(autoincrement())
   created_at                                          DateTime? @db.Timestamp(6)
   created_by                                          BigInt?
   modified_by                                         BigInt?
@@ -424,7 +424,7 @@ model koor_instansi_validator {
 }
 
 model koor_nasional_validator {
-  id                                                  BigInt    @id
+  id                                                  BigInt    @id @default(autoincrement())
   created_at                                          DateTime? @db.Timestamp(6)
   created_by                                          BigInt?
   modified_by                                         BigInt?

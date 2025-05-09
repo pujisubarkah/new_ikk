@@ -7,18 +7,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import Sidebar from "@/components/sidebar-koorins"
+import { toast } from "sonner"
 
 interface FormData {
-  nama: string
-  nip: string
-  nik: string
+  name: string
+  username: string
+  work_unit: string
   instansi: string
   email: string
   role_id: number
   password: string
-  jabatan: string
-  telepon: string
-  status: string
+  position: string
+  phone: string
+  status: "Aktif" | "Non Aktif"
 }
 
 interface Instansi {
@@ -29,45 +30,46 @@ interface Instansi {
 
 const TambahPengguna: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    nama: "",
-    nip: "",
-    nik: "",
+    name: "",
+    username: "",
+    work_unit: "",
     instansi: "",
     email: "",
-    role_id: 5, // Set default role_id ke 5
+    role_id: 5,
     password: "",
-    jabatan: "",
-    telepon: "",
-    status: "",
+    position: "",
+    phone: "",
+    status: "Aktif",
   })
 
   const [instansis, setInstansis] = useState<Instansi[]>([])
-  const [agencyId, setAgencyId] = useState<string | null>(null) // State untuk menyimpan agency_id
   const router = useRouter()
 
   useEffect(() => {
     const fetchAgencyIdAndInstansi = async () => {
       try {
-        const koorInstansiId = localStorage.getItem("id");
-    
-        if (!koorInstansiId) {
-          console.error("ID koor_instansi tidak ditemukan di localStorage.");
-          return;
-        }
-    
-        // Panggil API dengan koor_instansi_id sebagai query param
-        const response = await axios.get(`/api/koorinstansi/info?koor_instansi_id=${koorInstansiId}`);
-        const { agency_id } = response.data;
+        const koorInstansiId = localStorage.getItem("id") // Mengambil koorInstansiId dari localStorage
 
-        if (agency_id) {
-          setAgencyId(agency_id)
-          
-          // Setelah mendapatkan agency_id, ambil data instansi terkait
-          const instansiResponse = await axios.post("/api/analis_instansi", { agencyId })
-          setInstansis(instansiResponse.data)
+        if (!koorInstansiId) {
+          toast.warning("ID koordinator instansi tidak ditemukan")
+          return
+        }
+
+        // Menambahkan koorInstansiId ke dalam formData secara otomatis
+        setFormData((prev) => ({ ...prev, koorInstansiId })) // Update koorInstansiId ke dalam form data
+
+        const response = await axios.get(`/api/koorinstansi/info?koor_instansi_id=${koorInstansiId}`)
+        const agencyId = response.data.agency_id?.agency_id_panrb
+
+        if (agencyId) {
+          setFormData((prev) => ({ ...prev, instansi: agencyId }))
+
+          const instansiDetail = await axios.get(`/api/instansi/${agencyId}`)
+          setInstansis([instansiDetail.data])
         }
       } catch (err) {
-        console.error("Failed to fetch agency_id and instansi", err)
+        toast.error("Gagal memuat data instansi")
+        console.error("Gagal memuat data instansi", err)
       }
     }
 
@@ -84,8 +86,19 @@ const TambahPengguna: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Form Data:", formData)
-    // TODO: Kirim data ke backend
+    
+    const loadingToast = toast.loading("Sedang menambahkan pengguna...")
+    
+    try {
+      await axios.post("/api/analis_instansi/create", formData)
+      toast.dismiss(loadingToast)
+      toast.success("Pengguna berhasil ditambahkan!")
+      router.push("/koordinator-instansi/enumerator")
+    } catch (error) {
+      toast.dismiss(loadingToast)
+      toast.error("Gagal menambahkan pengguna")
+      console.error("Gagal menambahkan pengguna:", error)
+    }
   }
 
   const handleBack = () => {
@@ -102,30 +115,22 @@ const TambahPengguna: React.FC = () => {
           {/* Left Section */}
           <div className="grid gap-4">
             <div>
-              <Label htmlFor="nip">NIP</Label>
-              <Input id="nip" name="nip" value={formData.nip} onChange={handleChange} required />
+              <Label htmlFor="username">NIP</Label>
+              <Input id="username" name="username" value={formData.username} onChange={handleChange} required />
             </div>
             <div>
-              <Label htmlFor="nik">NIK</Label>
-              <Input id="nik" name="nik" value={formData.nik} onChange={handleChange} required />
+              <Label htmlFor="nik">Unit Kerja</Label>
+              <Input id="Work_unit" name="work_unit" value={formData.work_unit} onChange={handleChange} required />
             </div>
             <div>
               <Label htmlFor="instansi">Nama Instansi</Label>
-              <select
+              <Input
                 id="instansi"
                 name="instansi"
-                value={formData.instansi}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-md p-2"
-              >
-                <option value="" disabled>Pilih Instansi</option>
-                {instansis.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+                value={instansis[0]?.name || "Memuat instansi..."}
+                disabled
+                className="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700"
+              />
             </div>
             <div>
               <Label htmlFor="email">Email Aktif</Label>
@@ -140,21 +145,21 @@ const TambahPengguna: React.FC = () => {
           {/* Right Section */}
           <div className="grid gap-4">
             <div>
-              <Label htmlFor="nama">Nama</Label>
-              <Input id="nama" name="nama" value={formData.nama} onChange={handleChange} required />
+              <Label htmlFor="name">Nama</Label>
+              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div>
-              <Label htmlFor="jabatan">Jabatan</Label>
-              <Input id="jabatan" name="jabatan" value={formData.jabatan} onChange={handleChange} required />
+              <Label htmlFor="position">Jabatan</Label>
+              <Input id="position" name="position" value={formData.position} onChange={handleChange} required />
             </div>
             <div>
-              <Label htmlFor="telepon">Nomor Telepon Aktif</Label>
+              <Label htmlFor="phone">Nomor Telepon Aktif</Label>
               <div className="relative">
                 <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">+62</span>
                 <Input
-                  id="telepon"
-                  name="telepon"
-                  value={formData.telepon}
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
                   required
                   className="pl-14"
@@ -172,7 +177,6 @@ const TambahPengguna: React.FC = () => {
                 required
                 className="w-full border border-gray-300 rounded-md p-2"
               >
-                <option value="" disabled>Pilih Status</option>
                 <option value="Aktif">Aktif</option>
                 <option value="Non Aktif">Non Aktif</option>
               </select>
@@ -186,11 +190,11 @@ const TambahPengguna: React.FC = () => {
               <select
                 id="role"
                 name="role"
-                value={formData.role_id} // Ubah value ke role_id
+                value={formData.role_id}
                 disabled
                 className="w-full max-w-xs border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700"
               >
-                <option value={5}>Enumerator</option> {/* Default role_id: 5 */}
+                <option value={5}>Analis Instansi</option>
               </select>
             </div>
           </div>
