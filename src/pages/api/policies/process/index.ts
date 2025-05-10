@@ -22,11 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       type GroupedPolicy = {
-        assigned_by_admin_id: bigint;
-        policy_process: string;
-        _count: {
-          _all: number;
-        };
+          assigned_by_admin_id: bigint | null;
+          policy_process: string | null;
+          _count: {
+              _all: number;
+          };
       };
 
       const formatted = result.map((item: GroupedPolicy) => ({

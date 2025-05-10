@@ -197,6 +197,11 @@ model ikk_ki_score {
   c_total_score                                     Float?       @default(dbgenerated("(((0.35 * (c1)::numeric) + (0.35 * (c2)::numeric)) + (0.30 * (c3)::numeric))")) @db.Real
   d_total_score                                     Float?       @default(dbgenerated("((0.50 * (d1)::numeric) + (0.50 * (d2)::numeric))")) @db.Real
   ikk_total_score                                   Float?       @default(dbgenerated("(((((0.20 * (((0.375 * (a1)::numeric) + (0.375 * (a2)::numeric)) + (0.25 * (a3)::numeric))) + (0.30 * (((0.35 * (b1)::numeric) + (0.35 * (b2)::numeric)) + (0.30 * (b3)::numeric)))) + (0.30 * (((0.35 * (c1)::numeric) + (0.35 * (c2)::numeric)) + (0.30 * (c3)::numeric)))) + (0.15 * ((0.50 * (d1)::numeric) + (0.50 * (d2)::numeric)))) + (0.05 * (\nCASE\n    WHEN jf THEN 1\n    ELSE 0\nEND)::numeric))")) @db.Real
+  informasi_a                                       String?      @db.VarChar
+  informasi_b                                       String?      @db.VarChar
+  informasi_c                                       String?      @db.VarChar
+  informasi_d                                       String?      @db.VarChar
+  informasi_jf                                      String?      @db.VarChar
   active_year_ikk_ki_score_active_yearToactive_year active_year? @relation("ikk_ki_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_active_year_fk")
   agencies                                          agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_agencies_fk")
   policy                                            policy?      @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_policies_fk")
@@ -229,6 +234,11 @@ model ikk_ku_score {
   c_total_score                                     Float?       @default(dbgenerated("(((0.35 * (c1)::numeric) + (0.35 * (c2)::numeric)) + (0.30 * (c3)::numeric))")) @db.Real
   d_total_score                                     Float?       @default(dbgenerated("((0.50 * (d1)::numeric) + (0.50 * (d2)::numeric))")) @db.Real
   ikk_total_score                                   Float?       @default(dbgenerated("(((((0.20 * (((0.375 * (a1)::numeric) + (0.375 * (a2)::numeric)) + (0.25 * (a3)::numeric))) + (0.30 * (((0.35 * (b1)::numeric) + (0.35 * (b2)::numeric)) + (0.30 * (b3)::numeric)))) + (0.30 * (((0.35 * (c1)::numeric) + (0.35 * (c2)::numeric)) + (0.30 * (c3)::numeric)))) + (0.15 * ((0.50 * (d1)::numeric) + (0.50 * (d2)::numeric)))) + (0.05 * (\nCASE\n    WHEN jf THEN 1\n    ELSE 0\nEND)::numeric))")) @db.Real
+  catatan_a                                         String?      @db.VarChar
+  catatan_b                                         String?      @db.VarChar
+  catatan_c                                         String?      @db.VarChar
+  catatan_d                                         String?      @db.VarChar
+  catatan_jf                                        String?      @db.VarChar
   active_year_ikk_ku_score_active_yearToactive_year active_year? @relation("ikk_ku_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_active_year_fk")
   agencies                                          agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_agencies_fk")
   policy                                            policy?      @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_verif_score_policies_fk")
@@ -424,7 +434,7 @@ model koor_instansi_validator {
 }
 
 model koor_nasional_validator {
-  id                                                  BigInt    @id @default(autoincrement())
+  id                                                  BigInt    @id
   created_at                                          DateTime? @db.Timestamp(6)
   created_by                                          BigInt?
   modified_by                                         BigInt?
@@ -577,24 +587,25 @@ model policies {
   @@schema("ikk_new")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model policy {
-  id                                           BigInt         @id(map: "policies_pk")
-  created_at                                   DateTime?      @db.Timestamp(6)
+  id                                           BigInt         @id(map: "policy_baru_pkey") @default(autoincrement())
+  created_at                                   DateTime?      @db.Timestamptz(6)
   created_by                                   BigInt?
   name                                         String?
+  name_detail                                  String?
   agency_id                                    BigInt?
   validated_by                                 BigInt?
   is_valid                                     Boolean?
-  sector                                       String?        @db.VarChar
-  file_url                                     String?        @db.VarChar
-  type                                         String?        @db.VarChar
+  sector                                       String?
+  lainnya                                      String?
+  file_url                                     String?
+  type                                         String?
   agency_id_panrb                              BigInt?
   active_year                                  BigInt?
-  policy_status                                String?        @db.VarChar
-  policy_process                               String?        @db.VarChar
-  progress                                     BigInt?
-  effective_date                               DateTime?      @db.Timestamp(6)
+  policy_status                                String?
+  policy_process                               String?
+  progress                                     String?
+  effective_date                               DateTime?      @db.Date
   enumerator_id                                BigInt?
   assigned_by_admin_id                         BigInt?
   processed_by_enumerator_id                   BigInt?
@@ -602,13 +613,13 @@ model policy {
   ikk_file                                     ikk_file[]
   ikk_ki_score                                 ikk_ki_score[]
   ikk_ku_score                                 ikk_ku_score[]
-  agencies                                     agencies?      @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_agencies_fk")
-  user_policy_assigned_by_admin_idTouser       user?          @relation("policy_assigned_by_admin_idTouser", fields: [assigned_by_admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_assigned_by_admin_id FK")
-  user_policy_enumerator_idTouser              user?          @relation("policy_enumerator_idTouser", fields: [enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_enumerator_id_fk")
-  instansi                                     instansi?      @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "policy_instansi_fk")
-  user_policy_processed_by_enumerator_idTouser user?          @relation("policy_processed_by_enumerator_idTouser", fields: [processed_by_enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_processed_by_enumerator_id FK")
-  user_policy_created_byTouser                 user?          @relation("policy_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_user_fk")
-  user_policy_validated_byTouser               user?          @relation("policy_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_user_validated_FK")
+  agencies                                     agencies?      @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_agency_id_fkey")
+  instansi                                     instansi?      @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_agency_id_panrb_fkey")
+  user_policy_assigned_by_admin_idTouser       user?          @relation("policy_assigned_by_admin_idTouser", fields: [assigned_by_admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_assigned_by_admin_id_fkey")
+  user_policy_created_byTouser                 user?          @relation("policy_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_created_by_fkey")
+  user_policy_enumerator_idTouser              user?          @relation("policy_enumerator_idTouser", fields: [enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_enumerator_id_fkey")
+  user_policy_processed_by_enumerator_idTouser user?          @relation("policy_processed_by_enumerator_idTouser", fields: [processed_by_enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_processed_by_enumerator_id_fkey")
+  user_policy_validated_byTouser               user?          @relation("policy_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_validated_by_fkey")
 
   @@schema("ikk_new")
 }
@@ -824,7 +835,7 @@ model user {
   agency_id_panrb                                                        BigInt?
   active_year                                                            BigInt?
   penunjukkan_id                                                         BigInt?
-  ikk_file                                                               ikk_file[] 
+  ikk_file                                                               ikk_file[]
   ikk_ki_score                                                           ikk_ki_score[]
   ikk_ku_score                                                           ikk_ku_score[]
   koor_instansi_analis_koor_instansi_analis_analis_instansi_idTouser     koor_instansi_analis[]    @relation("koor_instansi_analis_analis_instansi_idTouser")
@@ -837,9 +848,9 @@ model user {
   policies_policies_analis_instansi_idTouser                             policies[]                @relation("policies_analis_instansi_idTouser")
   policies_policies_processed_by_analis_instansi_idTouser                policies[]                @relation("policies_processed_by_analis_instansi_idTouser")
   policy_policy_assigned_by_admin_idTouser                               policy[]                  @relation("policy_assigned_by_admin_idTouser")
+  policy_policy_created_byTouser                                         policy[]                  @relation("policy_created_byTouser")
   policy_policy_enumerator_idTouser                                      policy[]                  @relation("policy_enumerator_idTouser")
   policy_policy_processed_by_enumerator_idTouser                         policy[]                  @relation("policy_processed_by_enumerator_idTouser")
-  policy_policy_created_byTouser                                         policy[]                  @relation("policy_created_byTouser")
   policy_policy_validated_byTouser                                       policy[]                  @relation("policy_validated_byTouser")
   role_user                                                              role_user?
   active_year_user_active_yearToactive_year                              active_year?              @relation("user_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "user_active_year_fk")

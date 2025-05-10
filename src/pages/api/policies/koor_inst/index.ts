@@ -4,14 +4,14 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 // Helper function to extract the relevant policy data
 const extractPolicyData = (policy: any, agencyName: string) => ({
-    policy_id: policy.id,
-    nama_kebijakan: policy.name,
-    sektor: policy.sector,
-    file_url: policy.file_url,
-    progress: policy.progress,
-    tanggal_assign: policy.assigned_by_admin_at,
-    tanggal_berlaku: policy.effective_date,
-    instansi: agencyName,
+  policy_id: policy.id,
+  nama_kebijakan: policy.name,
+  sektor: policy.sector,
+  file_url: policy.file_url,
+  progress: policy.progress,
+  tanggal_assign: policy.assigned_by_admin_at,
+  tanggal_berlaku: policy.effective_date,
+  instansi: agencyName,
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -39,10 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       select: {
         koor_instansi_id: true,
         analis_instansi_id: true,
-        user_koor_instansi_analis_analis_instansi_idTouser: {
+        user_koor_instansi_analis_koor_instansi_idTouser: {
           select: {
             name: true,
-            policy_policy_enumerator_idTouser: {
+            policy_policy_created_byTouser: {
               select: {
                 id: true,
                 name: true,
@@ -62,44 +62,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             },
           },
         },
+        user_koor_instansi_analis_analis_instansi_idTouser: { // Moved outside and corrected
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
+    // Log the result from the database
+    console.log("Result from database:", result);
+
     // Create an array of row data
     interface RowData {
-        koor_instansi_id: number;
-        analis_instansi_id: number;
-        enumerator: string;
-        policy_id: number;
-        nama_kebijakan: string;
-        sektor: string;
-        file_url: string;
-        progress: number;
-        tanggal_assign: Date | null;
-        tanggal_berlaku: Date | null;
-        instansi: string;
+      koor_instansi_id: number;
+      analis_instansi_id: number;
+      enumerator: string;
+      policy_id: number;
+      nama_kebijakan: string;
+      policy_process: string;
+      sektor: string;
+      file_url: string;
+      progress: number;
+      tanggal_assign: Date | null;
+      tanggal_berlaku: Date | null;
+      instansi: string;
     }
 
     const rowData: RowData[] = [];
 
     // Map the result to a rowData array
     result.forEach(item => {
-      const user = item.user_koor_instansi_analis_analis_instansi_idTouser;
-      const agencyName = user?.policy_policy_enumerator_idTouser?.[0]?.agencies?.name || '-';
+      const user = item.user_koor_instansi_analis_koor_instansi_idTouser || null; // Adjusted to use the correct property
+      const agencyName = user?.policy_policy_created_byTouser?.[0]?.agencies?.name || '-';
+
+      // The enumerator's name is taken from the user associated with 'analis_instansi_id'
+      const enumeratorName = item.user_koor_instansi_analis_analis_instansi_idTouser?.name || '-';
 
       // Extract policy data for each policy related to the user
-      user?.policy_policy_enumerator_idTouser?.forEach((policy: any) => {
+      user?.policy_policy_created_byTouser?.forEach((policy: any) => {
         rowData.push({
-          koor_instansi_id: item.koor_instansi_id,
-          analis_instansi_id: item.analis_instansi_id,
-          enumerator: user.name,
+          koor_instansi_id: item.koor_instansi_id ? Number(item.koor_instansi_id) : 0,
+          analis_instansi_id: item.analis_instansi_id ? Number(item.analis_instansi_id) : 0,
+          enumerator: enumeratorName, // Set enumerator as user.name
+          policy_process: policy.policy_process || '',
           ...extractPolicyData(policy, agencyName),
         });
       });
     });
 
     // Serialize the result and send the response
-    const serializedResult = rowData.map(item => serializeBigInt(item as Record<string, unknown>));
+    const serializedResult = rowData.map(item => serializeBigInt(item as unknown as Record<string, unknown>));
     return res.status(200).json(serializedResult);
   } catch (error) {
     console.error('Error fetching data:', error);
