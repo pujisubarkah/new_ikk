@@ -42,7 +42,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       label: '',
       items: [
           { name: 'Dashboard', icon: FileText, href: '/koordinator-utama/dashboard' },  
-        { name: 'Kebijakan', icon: FileText, href: '/koordinator-utama/daftar-kebijakan' },
+          { name: 'Data Kebijakan', icon: FileText, href: '/koordinator-utama/daftar-kebijakan' },
+        { name: 'Verifikator', icon: User, href: '/koordinator-utama/verifikator' },
       ],
     },
     {

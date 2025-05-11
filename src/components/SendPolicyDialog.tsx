@@ -13,6 +13,11 @@ interface SendPolicyDialogProps {
   disabled?: boolean; // Optional disabled state
 }
 
+interface SendPolicyDialogProps {
+  onSend: () => void;
+  children?: React.ReactNode;
+}
+
 export default function SendPolicyDialog({ onSuccess, disabled }: SendPolicyDialogProps) {
   const [openSendConfirmation, setOpenSendConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
