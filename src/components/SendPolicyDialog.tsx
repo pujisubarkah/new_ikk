@@ -1,4 +1,3 @@
-// components/SendPolicyDialog.tsx
 "use client";
 import { useState } from "react";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -11,29 +10,39 @@ import { useRouter } from "next/navigation";
 interface SendPolicyDialogProps {
   onSuccess?: () => void; // Optional callback for success
   disabled?: boolean; // Optional disabled state
+  selectedPolicyIds: string[]; // Array of policy IDs selected for sending
 }
 
-interface SendPolicyDialogProps {
-  onSend: () => void;
-  children?: React.ReactNode;
-}
-
-export default function SendPolicyDialog({ onSuccess, disabled }: SendPolicyDialogProps) {
+export default function SendPolicyDialog({ onSuccess, disabled, selectedPolicyIds }: SendPolicyDialogProps) {
   const [openSendConfirmation, setOpenSendConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSendPolicies = async () => {
+    console.log("handleSendPolicies called");
     setIsLoading(true);
+
     try {
       const userId = localStorage.getItem("id");
+      console.log("User ID from localStorage:", userId);
+
       if (!userId) throw new Error("User ID tidak ditemukan");
 
-      const res = await axios.post("/api/policies/send", {}, {
-        headers: {
-          "X-User-Id": userId,
-        },
+      if (selectedPolicyIds?.length === 0) {
+  toast.error("Tidak ada kebijakan yang dipilih untuk dikirim");
+  console.log("selectedPolicyIds is empty");
+  return;
+}
+
+
+      console.log("Selected Policy IDs:", selectedPolicyIds);
+
+      const res = await axios.post("/api/policies/update-status", {
+        policyIds: selectedPolicyIds,
+        userId: userId, // Mengirimkan user ID dari localStorage
       });
+
+      console.log("API response:", res);
 
       if (res.status === 200) {
         toast.success("Kebijakan berhasil dikirim ke Koordinator Nasional");
@@ -46,6 +55,7 @@ export default function SendPolicyDialog({ onSuccess, disabled }: SendPolicyDial
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Gagal mengirim kebijakan";
       toast.error(errorMessage);
+      console.error("Error in handleSendPolicies:", err);
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +64,7 @@ export default function SendPolicyDialog({ onSuccess, disabled }: SendPolicyDial
   return (
     <Dialog open={openSendConfirmation} onOpenChange={setOpenSendConfirmation}>
       <DialogTrigger asChild>
-        <Button 
+        <Button
           className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-200"
           disabled={disabled}
         >

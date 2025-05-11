@@ -14,51 +14,69 @@ export default function AddPolicyFormDialog({ onPolicyAdded }: AddPolicyFormDial
   const [sektorLainnya, setSektorLainnya] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
+  e.preventDefault();
+  const form = e.currentTarget;
+  const formData = new FormData(form);
 
-    try {
-      const userId = localStorage.getItem("id");
-      if (!userId) throw new Error("User ID tidak ditemukan");
+  try {
+    const userId = localStorage.getItem("id");
+    if (!userId) throw new Error("User ID tidak ditemukan");
 
-      const payload = {
-        nama_kebijakan: formData.get("nama_kebijakan") as string,
-        detail_nama_kebijakan: formData.get("detail_nama_kebijakan") as string,
-        sektor_kebijakan: formData.get("sektor_kebijakan") as string,
-        sektor_kebijakan_lain: sektorLainnya
-          ? formData.get("sektor_kebijakan_lain") as string
-          : null,
-        tanggal_berlaku: formData.get("tanggal_berlaku") as string,
-        link_drive: formData.get("link_drive") as string,
-      };
+    const tanggalBerlaku = formData.get("tanggal_berlaku") as string;
+    const dateInput = new Date(tanggalBerlaku);
+    const today = new Date();
+    const minDate = new Date(today);
+    const maxDate = new Date(today);
 
-      toast.loading("Menyimpan kebijakan...");
-      const res = await fetch("/api/populasi", {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    minDate.setFullYear(today.getFullYear() - 2); // Maksimum 2 tahun yang lalu
+    maxDate.setFullYear(today.getFullYear() - 1); // Minimum 1 tahun yang lalu
 
-      if (!res.ok) {
-        throw new Error("Gagal menyimpan data.");
-      }
-
+    // Validasi tanggal
+    if (dateInput < minDate || dateInput > maxDate) {
       toast.dismiss();
-      toast.success("Kebijakan berhasil ditambahkan!");
-      setOpen(false);
-      form.reset();
-      setSektorLainnya(false);
-      onPolicyAdded(); // Trigger refresh di parent component
-    } catch (err) {
-      toast.dismiss();
-      const errorMessage =
-        err instanceof Error ? err.message : "Terjadi kesalahan saat mengirim data.";
-      toast.error(errorMessage);
+      toast.error("Tanggal kebijakan harus berada di antara 1 hingga 2 tahun terakhir.");
+      return;
     }
-  };
+
+    const payload = {
+      nama_kebijakan: formData.get("nama_kebijakan") as string,
+      detail_nama_kebijakan: formData.get("detail_nama_kebijakan") as string,
+      sektor_kebijakan: formData.get("sektor_kebijakan") as string,
+      sektor_kebijakan_lain: sektorLainnya
+        ? formData.get("sektor_kebijakan_lain") as string
+        : null,
+      tanggal_berlaku: formData.get("tanggal_berlaku") as string,
+      link_drive: formData.get("link_drive") as string,
+      created_by: userId, // 🔥 Tambahkan ini
+    };
+
+    toast.loading("Menyimpan kebijakan...");
+    const res = await fetch("/api/policies/create", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error("Gagal menyimpan data.");
+    }
+
+    toast.dismiss();
+    toast.success("Kebijakan berhasil ditambahkan!");
+    setOpen(false);
+    form.reset();
+    setSektorLainnya(false);
+    onPolicyAdded(); // Trigger refresh di parent component
+  } catch (err) {
+    toast.dismiss();
+    const errorMessage =
+      err instanceof Error ? err.message : "Terjadi kesalahan saat mengirim data.";
+    toast.error(errorMessage);
+  }
+};
+
 
   const handleSektorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSektorLainnya(e.target.value === "Lainnya");
