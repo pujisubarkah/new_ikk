@@ -2,18 +2,17 @@
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/sidebar-enum";
 import { FaArrowLeft } from "react-icons/fa";
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { toast } from "sonner";
 
 type Policy = {
     id: string;
-    enumerator: string;
-    name: string;
+    nama_kebijakan: string;
+    status_kebijakan: string;
     tanggal_proses: string;
-    tanggal_berlaku: string;
     instansi: string;
     progress_pengisian: number;
-    status_kebijakan: string;
+   
 };
 
 const steps = [
@@ -30,52 +29,67 @@ const stepDimensionMap: Record<number, string> = {
     3: "Transparansi dan Partisipasi Publik",
 };
 
+type Question = {
+    id: string;
+    dimension_name: string;
+    indicator_question: string;
+    indicator_description: string;
+    instrument_answer: { level_id: number; level_description: string }[];
+};
+
+
 export default function PolicyPage() {
+    const params = useParams();
+    const policyId = params?.id as string;
+  
     const [activeStep, setActiveStep] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
     const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
     const [policyData, setPolicyData] = useState<Policy | null>(null);
     const [additionalInfo, setAdditionalInfo] = useState("");
-    type Question = {
-        id: string;
-        dimension_name: string;
-        indicator_question: string;
-        indicator_description: string;
-        instrument_answer: { level_id: number; level_description: string }[];
-    };
-
     const [apiQuestions, setApiQuestions] = useState<Question[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchPolicyData = async () => {
-            const enumerator_id = localStorage.getItem("id");
-            if (!enumerator_id) return;
+
+      useEffect(() => {
+        const fetchData = async () => {
             try {
-                const res = await fetch(`/api/policies/enumerator?enumerator_id=${enumerator_id}`);
-                const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    setPolicyData(data[0]);
+                setLoading(true);
+                setError(null);
+                
+                if (!policyId) {
+                    throw new Error("Policy ID not found in URL");
                 }
-            } catch (error) {
-                console.error("Gagal mengambil data kebijakan:", error);
+
+                // Fetch policy data
+                const policyRes = await fetch(`/api/policies/${policyId}`);
+                if (!policyRes.ok) {
+                    throw new Error("Failed to fetch policy data");
+                }
+                const policyData = await policyRes.json();
+                setPolicyData(policyData.data); // ✅ langsung ambil bagian "data"
+
+                // Fetch questions
+                const questionsRes = await fetch("/api/pertanyaan");
+                if (!questionsRes.ok) {
+                    throw new Error("Failed to fetch questions");
+                }
+                const questionsData = await questionsRes.json();
+                if (Array.isArray(questionsData.data)) {
+                    setApiQuestions(questionsData.data);
+                }
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                setError(err instanceof Error ? err.message : "An unknown error occurred");
+            } finally {
+                setLoading(false);
             }
         };
 
-        const fetchQuestions = async () => {
-            try {
-                const res = await fetch("/api/pertanyaan");
-                const data = await res.json();
-                if (Array.isArray(data.data)) {
-                    setApiQuestions(data.data);
-                }
-            } catch (error) {
-                console.error("Gagal mengambil pertanyaan:", error);
-            }
-        };
+        fetchData();
+    }, [policyId]);
 
-        fetchPolicyData();
-        fetchQuestions();
-    }, []);
 
     const handleAnswerChange = (questionId: string, answer: string) => {
         setSelectedAnswers((prev) => ({
@@ -110,15 +124,46 @@ export default function PolicyPage() {
         });
     };
 
+     if (loading) {
+        return (
+            <Sidebar>
+                <div className="w-full px-6 py-8">
+                    <div className="flex justify-between items-center mb-4">
+                        <p>Memuat data kebijakan...</p>
+                    </div>
+                </div>
+            </Sidebar>
+        );
+    }
+
+ if (error) {
+        return (
+            <Sidebar>
+                <div className="w-full px-6 py-8">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h3 className="text-red-600 font-medium">Error</h3>
+                        <p className="text-red-500 mt-1">{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm"
+                        >
+                            Coba Lagi
+                        </button>
+                    </div>
+                </div>
+            </Sidebar>
+        );
+    }
+
     if (!policyData) {
         return (
-                <Sidebar>
-                  <div className="w-full px-6 py-8">
-                  <div className="flex justify-between items-center mb-4">
-                    <p>Memuat data kebijakan...</p>
+            <Sidebar>
+                <div className="w-full px-6 py-8">
+                    <div className="flex justify-between items-center mb-4">
+                        <p>Data kebijakan tidak ditemukan</p>
+                    </div>
                 </div>
-                </div>
-                </Sidebar>
+            </Sidebar>
         );
     }
 
@@ -168,11 +213,11 @@ function PolicyCard({ policy }: { policy: Policy }) {
           onClick={() => router.back()}
         >
           <FaArrowLeft />
-          <span>Kembali</span>
+           <span>Kembali</span>
         </button>
         <div className="mb-4">
           <small className="text-gray-500 text-sm">{policy.instansi}</small>
-          <h2 className="text-xl font-bold text-gray-800 mt-1">{policy.name}</h2>
+          <h2 className="text-xl font-bold text-gray-800 mt-1">{policy.nama_kebijakan}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -184,7 +229,7 @@ function PolicyCard({ policy }: { policy: Policy }) {
           <div>
             <small className="text-gray-500 text-sm">Tanggal Pengesahan</small>
             <strong className="text-gray-800 mt-1 block">
-              {new Date(policy.tanggal_berlaku).toLocaleDateString('id-ID', {
+              {new Date(policy.tanggal_proses).toLocaleDateString('id-ID', {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric'

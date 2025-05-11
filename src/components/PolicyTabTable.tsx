@@ -37,33 +37,59 @@ export default function PolicyTabTable() {
   const [selectedAnalystId, setSelectedAnalystId] = useState<number | null>(null);
   const router = useRouter();
 
-  const filteredData = data.filter((item) => item.status === activeTab);
+  // Map tab names to API status values
+  const statusMap = {
+    "Diajukan": "DIAJUKAN",
+    "Disetujui": "DISETUJUI",
+    "Diproses": "PROSES",
+    "Selesai": "SELESAI"
+  };
+
+  const filteredData = data.filter((item) => 
+    item.status === statusMap[activeTab as keyof typeof statusMap]
+  );
   const totalPages = Math.ceil(filteredData.length / 5);
   const startIndex = (currentPage - 1) * 5;
   const currentData = filteredData.slice(startIndex, startIndex + 5);
-
-  const getStatusFromData = (item: any): string => {
-    if (item.enumerator && item.enumerator !== "-") return "Disetujui";
-    if (item.progress > 0 && item.progress < 100) return "Diproses";
-    if (item.progress === 100) return "Selesai";
-    return "Diajukan";
-  };
 
   const fetchPolicies = async () => {
     setIsLoading(true);
     try {
       const adminInstansiId = localStorage.getItem("id");
+      console.log('Admin ID:', adminInstansiId); // Debug log
+      
       if (!adminInstansiId) {
         toast.error("ID admin tidak ditemukan");
         return;
       }
 
-      const res = await axios.get(`/api/policies/koor_inst?koordinator_instansi_id=${adminInstansiId}`);
-      const fetchedData = res.data || [];
+      let endpoint = "";
+      switch (activeTab) {
+        case "Diajukan":
+          endpoint = `/api/policies/${adminInstansiId}/diajukan`;
+          break;
+        case "Disetujui":
+          endpoint = `/api/policies/${adminInstansiId}/disetujui`;
+          break;
+        case "Diproses":
+          endpoint = `/api/policies/${adminInstansiId}/diproses`;
+          break;
+        case "Selesai":
+          endpoint = `/api/policies/${adminInstansiId}/selesai`;
+          break;
+        default:
+          endpoint = `/api/policies/${adminInstansiId}/diajukan`;
+      }
+
+      console.log('Fetching from endpoint:', endpoint); // Debug log
+      const res = await axios.get(endpoint);
+      console.log('API Response:', res.data); // Debug log
+      
+      const fetchedData = res.data?.data || [];
 
       const mappedData = Array.isArray(fetchedData)
         ? fetchedData.map((item) => ({
-            id: parseInt(item.policy_id, 10),
+            id: parseInt(item.id, 10),
             nama: item.nama_kebijakan || "-",
             sektor: item.sektor || "-",
             tanggal: item.tanggal_berlaku
@@ -71,16 +97,19 @@ export default function PolicyTabTable() {
               : "-",
             file: item.file_url || "-",
             enumerator: item.enumerator || "-",
-            progress: isNaN(parseInt(item.progress)) ? "0%" : `${parseInt(item.progress)}%`,
-            tanggalAssign: item.tanggal_assign
-              ? new Date(item.tanggal_assign).toLocaleDateString("id-ID")
+            progress: item.progress 
+              ? `${item.progress}%` 
+              : "0%",
+            tanggalAssign: item.tanggal_proses || item.tanggal_assign
+              ? new Date(item.tanggal_proses || item.tanggal_assign).toLocaleDateString("id-ID")
               : "-",
             nilai: "-",
             instansi: item.instansi || "-",
-            status: getStatusFromData(item),
+            status: item.proses || "-",
           }))
         : [];
 
+      console.log('Mapped Data:', mappedData); // Debug log
       setData(mappedData);
     } catch (err) {
       console.error("Gagal fetch data policies", err);
@@ -102,7 +131,7 @@ export default function PolicyTabTable() {
 
   useEffect(() => {
     fetchPolicies();
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     if (openAnalystModal) {
@@ -154,18 +183,18 @@ export default function PolicyTabTable() {
   return (
     <>
       {/* Tombol Kirim Kebijakan (hanya di tab Diajukan) */}
-{activeTab === "Diajukan" && data.some((item) => item.status === "Diajukan") && (
-  <div className="mt-6 flex justify-end">
-    <SendPolicyDialog onSend={() => console.log("Policy sent")}>
-      <button className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white shadow-md hover:bg-green-700 transition-colors duration-200">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-        </svg>
-        Kirim Kebijakan
-      </button>
-    </SendPolicyDialog>
-  </div>
-)}
+      {activeTab === "Diajukan" && data.some((item) => item.status === "DIAJUKAN") && (
+        <div className="mt-6 flex justify-end">
+          <SendPolicyDialog onSend={() => console.log("Policy sent")}>
+            <button className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white shadow-md hover:bg-green-700 transition-colors duration-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+              </svg>
+              Kirim Kebijakan
+            </button>
+          </SendPolicyDialog>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex space-x-2 mb-6">
@@ -191,6 +220,7 @@ export default function PolicyTabTable() {
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border">No</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border">Nama Kebijakan</th>
+              
               {activeTab === "Diajukan" && (
                 <>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border">Tanggal Berlaku</th>
@@ -237,6 +267,7 @@ export default function PolicyTabTable() {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 border">{startIndex + index + 1}</td>
                   <td className="px-4 py-3 border">{item.nama}</td>
+                  
                   {activeTab === "Diajukan" && (
                     <>
                       <td className="px-4 py-3 border">{item.tanggal}</td>
@@ -255,9 +286,9 @@ export default function PolicyTabTable() {
                       <td className="px-4 py-3 border">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
-                            item.status === "Disetujui"
+                            item.status === "DISETUJUI"
                               ? "bg-green-100 text-green-800"
-                              : item.status === "Ditolak"
+                              : item.status === "DITOLAK"
                               ? "bg-red-100 text-red-800"
                               : "bg-blue-100 text-blue-800"
                           }`}
@@ -270,7 +301,7 @@ export default function PolicyTabTable() {
 
                   {activeTab === "Disetujui" && (
                     <>
-                      <td className="px-4 py-3 border">{item.enumerator}</td>
+                      <td className="px-4 py-3 border">{item.enumerator || "Belum ditetapkan"}</td>
                       <td className="px-4 py-3 border">{item.tanggal}</td>
                       <td className="px-4 py-3 border">
                         <button
@@ -297,12 +328,12 @@ export default function PolicyTabTable() {
                       </td>
                       <td className="px-4 py-3 border">{item.tanggalAssign}</td>
                       <td className="px-4 py-3 border">
-                        <button className="text-green-600 hover:text-green-800 p-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z m0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
-                            <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                          </svg>
-                        </button>
+                      <button 
+  onClick={() => router.push(`/koordinator-instansi/daftar-kebijakan/prosesdetail/${item.id}`)}
+  className="text-green-600 hover:text-green-800 p-1"
+>
+  <FaEye size={18} />
+</button>
                       </td>
                     </>
                   )}
@@ -312,7 +343,10 @@ export default function PolicyTabTable() {
                       <td className="px-4 py-3 border">{item.enumerator}</td>
                       <td className="px-4 py-3 border">{item.nilai}</td>
                       <td className="px-4 py-3 border">
-                        <button className="text-blue-600 hover:text-blue-800 p-1">
+                        <button 
+                          onClick={() => router.push(`/kebijakan/detail/${item.id}`)}
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                        >
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 4C7.58 4 4 7.58 4 12s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z" />
                             <path d="M12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" />
@@ -353,7 +387,6 @@ export default function PolicyTabTable() {
         </div>
       )}
 
-    
       {/* Analyst Assignment Modal */}
       {openAnalystModal && selectedPolicy && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
