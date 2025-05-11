@@ -3,81 +3,48 @@ import prisma from "@/lib/prisma";
 import { serializeBigInt } from "@/lib/serializeBigInt";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
   try {
-    const { enumerator_id } = req.query;
+    switch (req.method) {
+      case "GET": {
+        const { enumerator_id } = req.query;
 
-    if (!enumerator_id || isNaN(Number(enumerator_id))) {
-      return res.status(400).json({ message: "Invalid enumerator_id" });
-    }
+        if (!enumerator_id) {
+          return res.status(400).json({ message: "`enumerator_id` is required" });
+        }
 
-    const policies = await prisma.policy.findMany({
-      where: {
-        enumerator_id: BigInt(enumerator_id as string),
-      },
-      select: {
-        enumerator_id: true,
-        id: true,
-        name: true,
-        policy_process: true,
-        policy_status: true,
-        progress: true,
-        effective_date: true,
-        assigned_by_admin_at: true,
-        user_policy_enumerator_idTouser: {
-          select: { 
-            name: true,
+        const policies = await prisma.policy.findMany({
+          where: {
+            enumerator_id: BigInt(enumerator_id as string),
           },
-        },
-        agency_id: true,
-        agencies: { 
           select: {
-            name: true, // Ambil nama agency terkait
-            agency_id_panrb: true, // Ambil agency_id_panrb
-            active_year: true, // Ambil tahun aktif
-            instansi: { // Pastikan instansi disertakan dalam select
+            name: true,
+            effective_date: true,
+            user_policy_enumerator_idTouser: {
               select: {
-                agency_id: true, // Ambil agency_id dari instansi
-                agency_name: true, // Ambil nama instansi
+                name: true,
+                username: true,
               },
             },
           },
-        },
-      },
-    });
+        });
 
-    const serializedPolicies = policies.map((policy: Record<string, unknown>) => serializeBigInt(policy));
+        // Format kostum baris
+        const formatted = policies.map((policy) => ({
+          nama_kebijakan: policy.name,
+          tanggal_berlaku: policy.effective_date,
+          enumerator: policy.user_policy_enumerator_idTouser
+            ? `${policy.user_policy_enumerator_idTouser.name} `
+            : null,
+        }));
 
-    const rowData = serializedPolicies.map((policy: { 
-      id: number | string; 
-      user_policy_enumerator_idTouser: { name: string | null } | null; 
-      name: string; 
-      assigned_by_admin_at: Date | null; 
-      effective_date: Date | null;
-      agencies: { active_year: number | null; instansi: {agency_name: string | null} } | null; 
-      progress: number | null;
-      policy_process: string | null;
-    }) => ({
-      id: policy.id,
-      enumerator: policy.user_policy_enumerator_idTouser?.name ?? null,
-      name: policy.name,
-      tanggal_proses: policy.assigned_by_admin_at ?? null,
-      tanggal_berlaku: policy.effective_date ?? null,
-      instansi: policy.agencies?.instansi?.agency_name ?? null,
-      active_year: policy.agencies?.active_year ?? null, 
-      progress_pengisian: policy.progress ?? null,
-      status_kebijakan: policy.policy_process ?? null,
-    }));
+        return res.status(200).json(serializeBigInt({ data: formatted }));
+      }
 
-    return res.status(200).json(rowData);
+      default:
+        return res.status(405).json({ message: "Method not allowed" });
+    }
   } catch (error) {
-    console.error("[POLICY_BY_ENUMERATOR_GET_ERROR]", error);
-    return res.status(500).json({ 
-      message: "Something went wrong", 
-      error: error instanceof Error ? error.message : "Unknown error" 
-    });
+    console.error("API Error:", error);
+    return res.status(500).json({ message: "Internal server error", error });
   }
 }
