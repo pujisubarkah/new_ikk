@@ -1,25 +1,46 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { Progress } from "@/components/ui/progress";
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar-koornas";
+
+interface Instansi {
+  id: string;
+  name: string;
+}
 
 interface KebijakanDetail {
   no: number;
   nama: string;
-  progress: number;
-  enumerator: string;
-  tanggal: string;
+  sektor: string;
+  file: string;
   id: string;
 }
 
 const Page = () => {
   const { id } = useParams() ?? { id: "" };
   const router = useRouter();
+  const [instansi, setInstansi] = useState<Instansi | null>(null);
   const [kebijakanData, setKebijakanData] = useState<KebijakanDetail[]>([]);
 
-  // Fetch data from API based on agency_id
+  // Fetch instansi data based on ID
+  useEffect(() => {
+    const fetchInstansi = async () => {
+      try {
+        const response = await fetch(`/api/instansi/${id}`);
+        const data = await response.json();
+        setInstansi(data); // Assuming `data` contains agency_name and id
+      } catch (error) {
+        console.error("Failed to fetch instansi data", error);
+      }
+    };
+
+    if (id) {
+      fetchInstansi();
+    }
+  }, [id]);
+
+  // Fetch kebijakan data based on agency_id
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -29,12 +50,11 @@ const Page = () => {
         const policies = data?.[0]?.agencies?.policies || [];
 
         // Map the policies to match KebijakanDetail structure
-        const mappedData: KebijakanDetail[] = policies.map((policy: { name: string; progress: number; enumerator: string; tanggal_proses: string; id: string }, index: number) => ({
+        const mappedData: KebijakanDetail[] = policies.map((policy: { name: string; sector: string; file: string; id: string }, index: number) => ({
           no: index + 1,
           nama: policy.name,
-          progress: policy.progress,
-          enumerator: policy.enumerator,
-          tanggal: new Date(policy.tanggal_proses).toLocaleDateString(),
+          sektor: policy.sector || "-",
+          file: policy.file || "-",
           id: policy.id,
         }));
 
@@ -59,9 +79,9 @@ const Page = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6 bg-gray-50">
+      <div className="flex-1 p-20 bg-gray-50">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
-          Daftar Kebijakan Instansi - {decodeURIComponent(String(id))}
+          Daftar Kebijakan yang Diajukan - {instansi?.name || decodeURIComponent(String(id))}
         </h1>
 
         {/* Back Button */}
@@ -78,9 +98,8 @@ const Page = () => {
               <tr>
                 <th className="px-6 py-3 border-b">No</th>
                 <th className="px-6 py-3 border-b">Nama Kebijakan</th>
-                <th className="px-6 py-3 border-b">Proses Penilaian</th>
-                <th className="px-6 py-3 border-b">Enumerator</th>
-                <th className="px-6 py-3 border-b">Tanggal Proses</th>
+                <th className="px-6 py-3 border-b">Sektor</th>
+                <th className="px-6 py-3 border-b">File</th>
                 <th className="px-6 py-3 border-b text-center">Aksi</th>
               </tr>
             </thead>
@@ -92,15 +111,8 @@ const Page = () => {
                 >
                   <td className="px-6 py-4 border-b text-center">{item.no}</td>
                   <td className="px-6 py-4 border-b">{item.nama}</td>
-                  <td className="px-6 py-4 border-b w-56">
-                    <Progress value={item.progress} />
-                  </td>
-                  <td className="px-6 py-4 border-b text-center">
-                    {item.enumerator}
-                  </td>
-                  <td className="px-6 py-4 border-b text-center">
-                    {item.tanggal}
-                  </td>
+                  <td className="px-6 py-4 border-b">{item.sektor}</td>
+                  <td className="px-6 py-4 border-b">{item.file}</td>
                   <td className="px-6 py-4 border-b text-center">
                     <button
                       onClick={() =>
@@ -122,4 +134,3 @@ const Page = () => {
 };
 
 export default Page;
-
