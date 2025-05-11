@@ -29,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         effective_date: true,
         file_url: true,
         policy_process: true,
+        policy_status: true,
         agencies: {
           select: {
             name: true,
@@ -43,6 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       instansi: policy.agencies?.name || '',
       tanggal_berlaku: policy.effective_date,
       proses: policy.policy_process,
+      policy_status: policy.policy_status,
       file_url: policy.file_url
     }));
 

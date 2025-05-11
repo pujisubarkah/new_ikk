@@ -1,5 +1,4 @@
-"use client";
-import { useState } from "react";
+import React, { forwardRef, useState } from "react";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FaPaperPlane } from "react-icons/fa";
@@ -7,55 +6,75 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-interface SendPolicyDialogProps {
-  onSuccess?: () => void; // Optional callback for success
-  disabled?: boolean; // Optional disabled state
-  selectedPolicyIds: string[]; // Array of policy IDs selected for sending
+// Tipe data policy sesuai dengan respons dari backend
+interface PolicyResponse {
+  id: number;
+  name: string;
+  policy_status: string; // Sesuai field di backend
 }
 
-export default function SendPolicyDialog({ onSuccess, disabled, selectedPolicyIds }: SendPolicyDialogProps) {
+// Props untuk komponen dialog
+interface SendPolicyDialogProps {
+  onSuccess?: () => void;
+  disabled?: boolean;
+  selectedPolicyIds?: string[];
+}
+
+// Forward ref ke button
+const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPolicyDialogProps> = (
+  { onSuccess, disabled, selectedPolicyIds },
+  ref
+) => {
   const [openSendConfirmation, setOpenSendConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSendPolicies = async () => {
-    console.log("handleSendPolicies called");
     setIsLoading(true);
-
     try {
       const userId = localStorage.getItem("id");
-      console.log("User ID from localStorage:", userId);
-
       if (!userId) throw new Error("User ID tidak ditemukan");
 
-      if (selectedPolicyIds?.length === 0) {
-  toast.error("Tidak ada kebijakan yang dipilih untuk dikirim");
-  console.log("selectedPolicyIds is empty");
-  return;
-}
+      let policiesToSend = selectedPolicyIds || [];
 
+      // Jika tidak ada policy dipilih, ambil dari API
+      if (policiesToSend.length === 0) {
+        const res = await axios.get<{ data: PolicyResponse[] }>(`/api/policies/${userId}/diajukan`);
 
-      console.log("Selected Policy IDs:", selectedPolicyIds);
+        // Pastikan res.data dan res.data.data ada dan bertipe array
+        if (res.data && Array.isArray(res.data.data)) {
+          policiesToSend = res.data.data
+            .filter((policy) => policy.policy_status === "BELUM_TERVERIFIKASI")
+            .map((policy) => policy.id.toString());
+        } else {
+          toast.error("Gagal mengambil daftar kebijakan");
+          console.error("Data tidak valid:", res.data);
+          return;
+        }
+      }
 
-      const res = await axios.post("/api/policies/update-status", {
-        policyIds: selectedPolicyIds,
-        userId: userId, // Mengirimkan user ID dari localStorage
+      if (policiesToSend.length === 0) {
+        toast.error("Tidak ada kebijakan yang memenuhi syarat untuk dikirim");
+        return;
+      }
+
+      // Kirim ke API untuk update status
+      const sendRes = await axios.post("/api/policies/update-status", {
+        policyIds: policiesToSend,
+        userId: userId,
       });
 
-      console.log("API response:", res);
-
-      if (res.status === 200) {
+      if (sendRes.status === 200) {
         toast.success("Kebijakan berhasil dikirim ke Koordinator Nasional");
         setOpenSendConfirmation(false);
-        onSuccess?.(); // Call success callback if provided
-        router.refresh(); // Refresh the page to update data
+        onSuccess?.();
+        router.refresh();
       } else {
-        throw new Error(res.data.message || "Gagal mengirim kebijakan");
+        throw new Error(sendRes.data.message || "Gagal mengirim kebijakan");
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Gagal mengirim kebijakan";
       toast.error(errorMessage);
-      console.error("Error in handleSendPolicies:", err);
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +84,7 @@ export default function SendPolicyDialog({ onSuccess, disabled, selectedPolicyId
     <Dialog open={openSendConfirmation} onOpenChange={setOpenSendConfirmation}>
       <DialogTrigger asChild>
         <Button
+          ref={ref as React.Ref<HTMLButtonElement>}
           className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-200"
           disabled={disabled}
         >
@@ -118,4 +138,6 @@ export default function SendPolicyDialog({ onSuccess, disabled, selectedPolicyId
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default React.forwardRef(SendPolicyDialog);
