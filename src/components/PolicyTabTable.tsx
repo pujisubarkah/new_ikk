@@ -114,7 +114,24 @@ export default function PolicyTabTable() {
 
       // Map the raw fetched data to the Policy interface structure
       const mappedData = Array.isArray(fetchedData)
-        ? fetchedData.map((item: any) => ({ // Use 'any' or a specific backend type if available
+        ? fetchedData.map((item: { 
+            id: string; 
+            nama_kebijakan?: string; 
+            sektor?: string; 
+            tanggal_berlaku?: string; 
+            file_url?: string; 
+            enumerator?: { nama?: string }; 
+            nama_analis?: string; 
+            analis?: { nama?: string }; 
+            progress?: number; 
+            tanggal_proses?: string; 
+            tanggal_assign?: string; 
+            nilai?: string; 
+            instansi?: { nama?: string }; 
+            nama_instansi?: string; 
+            proses?: string; 
+            status?: string; 
+          }) => ({
             id: parseInt(item.id, 10),
             nama: item.nama_kebijakan || "-",
             sektor: item.sektor || "-", // Include sector if available
@@ -129,7 +146,7 @@ export default function PolicyTabTable() {
               : "0%",
             // Use the most relevant date for assignment/processing
             tanggalAssign: item.tanggal_proses || item.tanggal_assign
-              ? new Date(item.tanggal_proses || item.tanggal_assign).toLocaleDateString("id-ID", { year: 'numeric', month: 'long', day: 'numeric' }) // Format date
+              ? new Date(item.tanggal_proses ?? item.tanggal_assign ?? "").toLocaleDateString("id-ID", { year: 'numeric', month: 'long', day: 'numeric' }) // Format date
               : "-",
             nilai: item.nilai || "-", // Get score if available
             // Attempt to get agency name from possible fields
@@ -166,7 +183,7 @@ export default function PolicyTabTable() {
       console.log('Fetched Analysts:', res.data); // Debug log
 
       // Map the response data to the Analyst interface
-      const fetchedAnalysts = (res.data?.data || res.data || []).map((analyst: any) => ({
+      const fetchedAnalysts = (res.data?.data || res.data || []).map((analyst: { id: string; nama?: string; name?: string }) => ({
          id: parseInt(analyst.id, 10),
          // Look for name in common properties
          name: analyst.nama || analyst.name || "Nama Analis Tidak Tersedia"
