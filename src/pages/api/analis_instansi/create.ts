@@ -44,12 +44,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       phone,
       work_unit,
       koorInstansiId,
-      password,
+      password: inputPassword,
       status
     } = validationResult.data;
 
     // Gunakan password dari body atau default
-    const finalPassword = password || '12345678';
+    const finalPassword = inputPassword || '12345678';
     const hashedPassword = await bcrypt.hash(finalPassword, SALT_ROUNDS);
 
     // Cari koordinator
@@ -107,7 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Hilangkan password sebelum dikirim ke client
-    const { password: _, ...userData } = newUser;
+    const { password, ...userData } = newUser;
 
     return res.status(201).json({
       success: true,
