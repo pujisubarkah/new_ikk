@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { serializeBigInt } from "@/lib/serializeBigInt";
+
 
 export default async function handler(
   req: NextApiRequest,
