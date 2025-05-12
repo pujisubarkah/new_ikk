@@ -1,20 +1,21 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query; // Dynamic parameter for PUT and DELETE
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const { id } = req.query;
 
-  // Ensure that `id` exists and is not an array
   if (!id || Array.isArray(id)) {
     return res.status(400).json({ error: 'ID is required as a query parameter' });
   }
 
-  // Handle GET request
   if (req.method === 'GET') {
     const { koor_instansi_id } = req.query;
 
     if (!koor_instansi_id || Array.isArray(koor_instansi_id)) {
-      return res.status(400).json({ error: 'koor_instansi_id is required as a query parameter' });
+      return res.status(400).json({ error: 'koor_instansi_id is required' });
     }
 
     try {
@@ -66,9 +67,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         : null;
 
+      // Helper function to validate structure
+      function isValidAnalisisRecord(item: unknown): item is {
+        user_koor_instansi_analis_analis_instansi_idTouser: {
+          id: bigint;
+          name: string | null;
+          username: string | null;
+          work_unit: string | null;
+          agency_id: bigint | null;
+          agencies: { name: string | null } | null;
+        } | null
+      } {
+        return (
+          typeof item === 'object' &&
+          item !== null &&
+          'user_koor_instansi_analis_analis_instansi_idTouser' in item
+        );
+      }
+
       const analis_instansi = data
-        .filter((item: { user_koor_instansi_analis_analis_instansi_idTouser: any }) => item.user_koor_instansi_analis_analis_instansi_idTouser)
-        .map((item: { user_koor_instansi_analis_analis_instansi_idTouser: any }) => {
+        .filter(isValidAnalisisRecord)
+        .filter((item) => item.user_koor_instansi_analis_analis_instansi_idTouser !== null)
+        .map((item) => {
           const analis = item.user_koor_instansi_analis_analis_instansi_idTouser!;
           return {
             id: analis.id.toString(),
@@ -86,6 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'Failed to fetch data' });
     }
   }
+
 
   // Handle PUT request to update an existing enumerator by id
   if (req.method === 'PUT') {

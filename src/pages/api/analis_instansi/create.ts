@@ -120,7 +120,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // 8. Return response without password
-    const { password: _, ...userData } = newUser;
+    const { password: userPassword, ...userData } = newUser;
 
     return res.status(201).json({
       success: true,

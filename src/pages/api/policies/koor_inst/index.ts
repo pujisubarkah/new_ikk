@@ -3,12 +3,23 @@ import { serializeBigInt } from "@/lib/serializeBigInt";
 import { NextApiRequest, NextApiResponse } from 'next';
 
 // Helper function to extract the relevant policy data
-const extractPolicyData = (policy: any, agencyName: string) => ({
-  policy_id: policy.id,
-  nama_kebijakan: policy.name,
-  sektor: policy.sector,
-  file_url: policy.file_url,
-  progress: policy.progress,
+interface Policy {
+  id: bigint;
+  name: string | null;
+  sector: string | null;
+  file_url: string | null;
+  progress: string | null;
+  assigned_by_admin_at: Date | null;
+  effective_date: Date | null;
+  policy_process: string | null;
+}
+
+const extractPolicyData = (policy: Policy, agencyName: string) => ({
+  policy_id: Number(policy.id),
+  nama_kebijakan: policy.name || '',
+  sektor: policy.sector || null,
+  file_url: policy.file_url || '', // Ensure this is always a string
+  progress: policy.progress ? parseInt(policy.progress) : 0, // Convert to number
   tanggal_assign: policy.assigned_by_admin_at,
   tanggal_berlaku: policy.effective_date,
   instansi: agencyName,
@@ -31,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Parameter koordinator_instansi_id harus berupa angka' });
     }
 
-    // Query the database to get the relevant data
+    // Query the database
     const result = await prisma.koor_instansi_analis.findMany({
       where: {
         koor_instansi_id: idNumber,
@@ -52,7 +63,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 progress: true,
                 effective_date: true,
                 assigned_by_admin_at: true,
-                agency_id: true,
                 agencies: {
                   select: {
                     name: true,
@@ -62,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             },
           },
         },
-        user_koor_instansi_analis_analis_instansi_idTouser: { // Moved outside and corrected
+        user_koor_instansi_analis_analis_instansi_idTouser: {
           select: {
             name: true,
           },
@@ -70,20 +80,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    // Log the result from the database
-    console.log("Result from database:", result);
-
-    // Create an array of row data
+    // Define RowData interface with optional/nullable fields
     interface RowData {
+      [key: string]: unknown; // Add index signature
       koor_instansi_id: number;
       analis_instansi_id: number;
       enumerator: string;
       policy_id: number;
       nama_kebijakan: string;
       policy_process: string;
-      sektor: string;
-      file_url: string;
-      progress: number;
+      sektor: string | null;
+      file_url: string; // Changed to non-nullable string
+      progress: number; // Changed to number
       tanggal_assign: Date | null;
       tanggal_berlaku: Date | null;
       instansi: string;
@@ -91,31 +99,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const rowData: RowData[] = [];
 
-    // Map the result to a rowData array
     result.forEach(item => {
-      const user = item.user_koor_instansi_analis_koor_instansi_idTouser || null; // Adjusted to use the correct property
+      const user = item.user_koor_instansi_analis_koor_instansi_idTouser;
       const agencyName = user?.policy_policy_created_byTouser?.[0]?.agencies?.name || '-';
-
-      // The enumerator's name is taken from the user associated with 'analis_instansi_id'
       const enumeratorName = item.user_koor_instansi_analis_analis_instansi_idTouser?.name || '-';
 
-      // Extract policy data for each policy related to the user
-      user?.policy_policy_created_byTouser?.forEach((policy: any) => {
+      user?.policy_policy_created_byTouser?.forEach((policy: Policy) => {
         rowData.push({
           koor_instansi_id: item.koor_instansi_id ? Number(item.koor_instansi_id) : 0,
           analis_instansi_id: item.analis_instansi_id ? Number(item.analis_instansi_id) : 0,
-          enumerator: enumeratorName, // Set enumerator as user.name
+          enumerator: enumeratorName,
           policy_process: policy.policy_process || '',
           ...extractPolicyData(policy, agencyName),
         });
       });
     });
 
-    // Serialize the result and send the response
-    const serializedResult = rowData.map(item => serializeBigInt(item as unknown as Record<string, unknown>));
+    const serializedResult = rowData.map(item => serializeBigInt(item));
     return res.status(200).json(serializedResult);
   } catch (error) {
     console.error('Error fetching data:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
+    });
   }
 }
