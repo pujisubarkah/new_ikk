@@ -38,7 +38,6 @@ model agencies {
   active_year                                   BigInt?
   active_year_agencies_active_yearToactive_year active_year?       @relation("agencies_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "agencies_active_year_fk")
   instansi                                      instansi?          @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "agencies_instansi_fk")
-  ikk_file                                      ikk_file[]
   ikk_ki_score                                  ikk_ki_score[]
   ikk_ku_score                                  ikk_ku_score[]
   policies                                      policies[]
@@ -148,27 +147,27 @@ model helpdesk {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model ikk_file {
-  id                                            BigInt       @id(map: "ikk_file_pk")
-  agency_id                                     BigInt?
+  id                                            BigInt        @id(map: "ikk_file_pk")
   policy_id                                     BigInt?
   active_year                                   BigInt?
-  file_url_a1                                   String?      @db.VarChar
-  file_url_a2                                   String?      @db.VarChar
-  file_url_a3                                   String?      @db.VarChar
-  file_url_b1                                   String?      @db.VarChar
-  file_url_b2                                   String?      @db.VarChar
-  file_url_b3                                   String?      @db.VarChar
-  file_url_c1                                   String?      @db.VarChar
-  file_url_c2                                   String?      @db.VarChar
-  file_url_c3                                   String?      @db.VarChar
-  file_url_d1                                   String?      @db.VarChar
-  file_url_d2                                   String?      @db.VarChar
-  file_url_jf                                   String?      @db.VarChar
+  file_url_a1                                   String?       @db.VarChar
+  file_url_a2                                   String?       @db.VarChar
+  file_url_a3                                   String?       @db.VarChar
+  file_url_b1                                   String?       @db.VarChar
+  file_url_b2                                   String?       @db.VarChar
+  file_url_b3                                   String?       @db.VarChar
+  file_url_c1                                   String?       @db.VarChar
+  file_url_c2                                   String?       @db.VarChar
+  file_url_c3                                   String?       @db.VarChar
+  file_url_d1                                   String?       @db.VarChar
+  file_url_d2                                   String?       @db.VarChar
+  file_url_jf                                   String?       @db.VarChar
   created_by                                    BigInt?
-  active_year_ikk_file_active_yearToactive_year active_year? @relation("ikk_file_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_active_year_fk")
-  agencies                                      agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_agencies_fk")
-  policy                                        policy?      @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_policy_fk")
-  user                                          user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_user_fk")
+  iki_score_id                                  BigInt?
+  active_year_ikk_file_active_yearToactive_year active_year?  @relation("ikk_file_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_active_year_fk")
+  ikk_ki_score                                  ikk_ki_score? @relation(fields: [iki_score_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  policy                                        policy?       @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_policy_fk")
+  user                                          user?         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_file_user_fk")
 
   @@schema("ikk_new")
 }
@@ -202,6 +201,8 @@ model ikk_ki_score {
   informasi_c                                       String?      @db.VarChar
   informasi_d                                       String?      @db.VarChar
   informasi_jf                                      String?      @db.VarChar
+  modified_by                                       BigInt?
+  ikk_file                                          ikk_file[]
   active_year_ikk_ki_score_active_yearToactive_year active_year? @relation("ikk_ki_score_active_yearToactive_year", fields: [active_year], references: [active_year], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_active_year_fk")
   agencies                                          agencies?    @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_agencies_fk")
   policy                                            policy?      @relation(fields: [policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ikk_instansi_score_policies_fk")

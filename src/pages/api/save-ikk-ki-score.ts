@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 
-// Schema validasi menggunakan zod
 const ScoreSchema = z.object({
   policy_id: z.union([z.string(), z.number()]),
   a1: z.union([z.string(), z.number()]).optional(),
@@ -31,17 +30,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method tidak diizinkan' });
   }
 
-  // Validasi body
   let parsed;
   try {
     parsed = ScoreSchema.parse(req.body);
-  } catch (err: any) {
-    console.error('❌ Validasi gagal:', err.errors);
-    return res.status(400).json({
-      message: 'Validasi input gagal',
-      issues: err.errors,
-      received: process.env.NODE_ENV === 'development' ? req.body : undefined,
-    });
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      console.error('❌ Validasi gagal:', err.errors);
+      return res.status(400).json({
+        message: 'Validasi input gagal',
+        issues: err.errors,
+        received: process.env.NODE_ENV === 'development' ? req.body : undefined,
+      });
+    }
+    console.error('❌ Validasi gagal:', err);
+    return res.status(400).json({ message: 'Validasi input gagal' });
   }
 
   const {
@@ -67,10 +69,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } = parsed;
 
   try {
-    // Upsert ke Prisma
     await prisma.ikk_ki_score.upsert({
       where: {
-        id: BigInt(policy_id), // Replace with the correct unique identifier field
+        id: BigInt(policy_id),
       },
       update: {
         a1: a1 ? BigInt(a1) : undefined,
@@ -90,9 +91,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         informasi_c,
         informasi_d,
         informasi_jf,
+        modified_by: created_by ? BigInt(created_by) : undefined, // Menggunakan modified_by untuk operasi update
       },
       create: {
-        id: BigInt(policy_id), // Ensure the 'id' field is included
+        id: BigInt(policy_id),
         policy_id: BigInt(policy_id),
         a1: a1 ? BigInt(a1) : undefined,
         a2: a2 ? BigInt(a2) : undefined,
@@ -111,16 +113,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         informasi_c,
         informasi_d,
         informasi_jf,
+        created_by: created_by ? BigInt(created_by) : undefined, // Menggunakan created_by untuk operasi create
       },
     });
 
-    return res.status(200).json({ message: 'Jawaban berhasil disimpan' });
-  } catch (error: any) {
+    return res.status(200).json({ message: 'Data berhasil disimpan' });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('❌ Gagal menyimpan ke database:', error);
+      return res.status(500).json({
+        message: 'Terjadi kesalahan saat menyimpan',
+        error: error.message,
+        body: process.env.NODE_ENV === 'development' ? parsed : undefined,
+      });
+    }
     console.error('❌ Gagal menyimpan ke database:', error);
-    return res.status(500).json({
-      message: 'Terjadi kesalahan saat menyimpan',
-      error: error.message,
-      body: process.env.NODE_ENV === 'development' ? parsed : undefined,
-    });
+    return res.status(500).json({ message: 'Terjadi kesalahan saat menyimpan' });
   }
 }
