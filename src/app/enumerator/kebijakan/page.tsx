@@ -7,6 +7,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from "@/components/ui/button"
 import Sidebar from "@/components/sidebar-enum"
+import { toast } from 'sonner'
 
 // Define the Policy interface with strict status types
 interface Policy {
@@ -77,8 +78,10 @@ export default function KebijakanTable() {
         
         setPolicies([...masukPolicies, ...prosesPolicies])
       } catch (err) {
-        console.error('Error fetching policies:', err)
-        setError('Gagal memuat data')
+       console.error('Error fetching policies:', err)
+  toast.error('Gagal Memuat Data', {
+    description: 'Terjadi kesalahan saat memuat kebijakan. Silakan coba lagi.',
+  })
         setPolicies([])
       } finally {
         setLoading(false)

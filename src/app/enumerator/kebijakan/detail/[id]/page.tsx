@@ -155,7 +155,7 @@ export default function PolicyPage() {
 
     // Simpan semua jawaban
     const handleSaveAllAnswers = async () => {
-        const answersToSubmit: Record<string, any> = {};
+        const answersToSubmit: Record<string, number> = {};
         const infoToSubmit: Record<string, string> = {};
         let unansweredCount = 0;
 
