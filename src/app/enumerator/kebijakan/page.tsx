@@ -29,7 +29,6 @@ export default function KebijakanTable() {
   const [activeTab, setActiveTab] = useState('masuk')
   const [policies, setPolicies] = useState<Policy[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
