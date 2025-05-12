@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from "@/components/ui/button"
 import Sidebar from "@/components/sidebar-enum"
 
+// Define the Policy interface with strict status types
 interface Policy {
   id: string;
   name: string;
@@ -34,29 +35,46 @@ export default function KebijakanTable() {
     const fetchPolicies = async () => {
       try {
         setLoading(true)
-        const enumeratorId = localStorage.getItem('id')
-        if (!enumeratorId) throw new Error("ID Enumerator tidak ditemukan di localStorage")
+        const enumeratorId = typeof window !== 'undefined' ? localStorage.getItem('id') : null;
+        if (!enumeratorId) throw new Error("ID Enumerator tidak ditemukan di localStorage");
 
         const masukRes = await fetch(`/api/policies/${enumeratorId}/masuk`)
         const prosesRes = await fetch(`/api/policies/${enumeratorId}/proses`)
-        const masukData = await masukRes.json()
-        const prosesData = await prosesRes.json()
+        const masukData: { data: MasukPolicy[] } = await masukRes.json()
+        const prosesData: { data: ProsesPolicy[] } = await prosesRes.json()
 
-        const masukPolicies = (masukData.data || []).map((item: any) => ({
+        interface MasukPolicy {
+          id: string;
+          nama_kebijakan: string;
+          enumerator: string;
+          tanggal_berlaku?: string;
+        }
+
+        interface ProsesPolicy {
+          id: string;
+          nama_kebijakan: string;
+          enumerator: string;
+          progress: string;
+        }
+
+        // Explicitly type the mapped objects to match Policy interface
+        const masukPolicies: Policy[] = (masukData.data || []).map((item) => ({
           id: item.id,
           name: item.nama_kebijakan,
           enumerator: item.enumerator,
           tanggal_berlaku: item.tanggal_berlaku,
-          status_kebijakan: 'MASUK'
+          status_kebijakan: 'MASUK' as const // Explicitly type as 'MASUK'
         }))
-        const prosesPolicies = (prosesData.data || []).map((item: any) => ({
+        
+        const prosesPolicies: Policy[] = (prosesData.data || []).map((item) => ({
           id: item.id,
           name: item.nama_kebijakan,
           enumerator: item.enumerator,
           progress_pengisian: Number(item.progress),
-          status_kebijakan: 'PROSES',
+          status_kebijakan: 'PROSES' as const, // Explicitly type as 'PROSES'
           tanggal_proses: new Date().toISOString()
         }))
+        
         setPolicies([...masukPolicies, ...prosesPolicies])
       } catch (err) {
         console.error('Error fetching policies:', err)
@@ -78,6 +96,14 @@ export default function KebijakanTable() {
   const countDiproses = policies.filter(p => p.status_kebijakan === 'PROSES' && (p.progress_pengisian || 0) < 100).length
   const countSelesai = policies.filter(p => p.status_kebijakan === 'PROSES' && (p.progress_pengisian || 0) === 100).length
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+  
   return (
     <Sidebar>
       <div className="w-full px-6 py-8">
