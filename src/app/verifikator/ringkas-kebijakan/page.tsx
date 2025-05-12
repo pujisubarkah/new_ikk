@@ -31,50 +31,35 @@ export default function Home() {
   };
 
   const handleSummarize = async () => {
-    if (!file) return alert("Please upload a PDF file");
+  if (!file) return alert("Please upload a PDF file");
 
-    setIsLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+  setIsLoading(true);
+  const formData = new FormData();
+  formData.append("file", file);
 
-    try {
-      const res = await fetch("/api/summarize", {
-        method: "POST",
-        body: formData,
-      });
+  try {
+    const res = await fetch("/api/summarize", {
+      method: "POST",
+      body: formData,
+    });
 
-      const data = await res.json();
-      if (res.ok) {
-        if (!data.summary) {
-          setError("The document does not contain enough text to summarize.");
-          setSummary(""); // Clear previous summary
-        } else {
-          // Extract document topic (You can integrate NLP or ML model for this)
-          const extractedTopic = extractTopicFromText(data.summary);
-
-          if (!validTopics.includes(extractedTopic)) {
-            setError(`This document is not relevant to the expected topic: ${extractedTopic}`);
-            setSummary(""); // Clear summary if topic is incorrect
-          } else {
-            setSummary(data.summary);
-            setError(""); // Clear error if successful
-          }
-
-          setDocumentTopic(extractedTopic); // Set extracted topic for display
-        }
-      } else {
-        setError(data.error || "Failed to summarize");
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        setError("An error occurred: " + error.message);
-      } else {
-        setError("An unknown error occurred");
-      }
-    } finally {
-      setIsLoading(false);
+    const data = await res.json();
+    if (res.ok) {
+      setSummary(data.summary); // Update dengan hasil rangkuman
+    } else {
+      setError(data.message || "Failed to summarize");
     }
-  };
+  } catch (error) {
+    if (error instanceof Error) {
+      setError("An error occurred: " + error.message);
+    } else {
+      setError("An unknown error occurred");
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   // Dummy function to simulate topic extraction. This can be replaced with a proper NLP model
   const extractTopicFromText = (text: string) => {

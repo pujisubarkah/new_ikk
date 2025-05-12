@@ -20,7 +20,7 @@ type Policy = {
     nama_kebijakan: string;
     status_kebijakan: string;
     tanggal_proses: string;
-    instansi_id: string;
+    instansi: string;
     progress_pengisian: number;
     nilai_akhir: number;
 };
@@ -54,6 +54,7 @@ const stepDimensionMap: Record<number, string> = {
 
 export default function PolicyPage() {
     const params = useParams();
+    const router = useRouter();
     const policyId = params?.id as string;
     const [activeStep, setActiveStep] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, { description: string; score: number }>>({});
@@ -72,22 +73,23 @@ export default function PolicyPage() {
             try {
                 setLoading(true);
                 setError(null);
-                if (!policyId) throw new Error("Policy ID not found in URL");
+                if (!policyId) throw new Error("Policy ID tidak ditemukan di URL");
 
                 const policyRes = await fetch(`/api/policies/${policyId}`);
-                if (!policyRes.ok) throw new Error("Failed to fetch policy data");
+                if (!policyRes.ok) throw new Error("Gagal memuat data kebijakan");
                 const policyData = await policyRes.json();
                 setPolicyData(policyData.data);
 
                 const questionsRes = await fetch("/api/pertanyaan");
-                if (!questionsRes.ok) throw new Error("Failed to fetch questions");
+                if (!questionsRes.ok) throw new Error("Gagal memuat pertanyaan");
                 const questionsData = await questionsRes.json();
+
                 if (Array.isArray(questionsData.data)) {
                     setApiQuestions(questionsData.data);
                 }
             } catch (err) {
                 console.error("Error fetching data:", err);
-                setError(err instanceof Error ? err.message : "An unknown error occurred");
+                setError(err instanceof Error ? err.message : "Terjadi kesalahan saat memuat data");
             } finally {
                 setLoading(false);
             }
@@ -114,10 +116,8 @@ export default function PolicyPage() {
             "Evaluasi dan Keberlanjutan Kebijakan": "c",
             "Transparansi dan Partisipasi Publik": "d",
         };
-
         const prefix = prefixMap[dimension];
         if (!prefix) return null;
-
         const order = questionIndex % 3 + 1;
         return `file_url_${prefix}${order}`;
     };
@@ -140,12 +140,10 @@ export default function PolicyPage() {
                     [fileName]: link
                 })
             });
-
             setUploadedFiles(prev => ({
                 ...prev,
                 [questionId]: link
             }));
-
             toast.success("File berhasil disimpan");
         } catch (error) {
             console.error("Gagal menyimpan file:", error);
@@ -153,28 +151,24 @@ export default function PolicyPage() {
         }
     };
 
-    // Simpan semua jawaban
-    const handleSaveAllAnswers = async () => {
-        const answersToSubmit: Record<string, number> = {};
-        const infoToSubmit: Record<string, string> = {};
-        let unansweredCount = 0;
-
-        apiQuestions.forEach((item) => {
-            const answer = selectedAnswers[item.id];
-            if (answer?.score) {
-                answersToSubmit[item.indicator_column_code] = answer.score;
-            } else {
-                unansweredCount++;
-            }
-
-            if (uploadedFiles[item.id]) {
-                infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
-                    uploadedFiles[item.id];
-            }
+    // Simpan semua jawaban dan kirim ke koordinator
+    const handleConfirm = async () => {
+        const unansweredQuestions = apiQuestions.filter((item) => {
+            return !selectedAnswers[item.id]; // Cek apakah sama sekali belum dipilih
         });
 
-        if (unansweredCount > 0) {
-            toast.info(`Masih ada ${unansweredCount} pertanyaan yang belum terisi`);
+        if (unansweredQuestions.length > 0) {
+            const pesan = `Masih ada ${unansweredQuestions.length} pertanyaan yang belum dijawab:\n\n${unansweredQuestions
+                .map(q => `- ${q.indicator_question}`)
+                .join('\n')}`;
+            alert(pesan);
+
+            const firstUnansweredId = unansweredQuestions[0].id;
+            const elemen = document.getElementById(`question-${firstUnansweredId}`);
+            if (elemen) {
+                elemen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
             return;
         }
 
@@ -182,32 +176,59 @@ export default function PolicyPage() {
         const userId = localStorage.getItem("id");
 
         try {
-            const response = await fetch("/api/save-ikk-ki-score", {
+            const answersToSubmit: Record<string, number> = {};
+            const infoToSubmit: Record<string, string> = {};
+
+            apiQuestions.forEach((item) => {
+                const answer = selectedAnswers[item.id];
+                if (answer?.score !== undefined) {
+                    answersToSubmit[item.indicator_column_code] = answer.score;
+                }
+                if (uploadedFiles[item.id]) {
+                    infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
+                        uploadedFiles[item.id];
+                }
+            });
+
+            // Simpan jawaban
+            const saveResponse = await fetch("/api/save-ikk-ki-score", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     policy_id: policyId,
-                    agency_id: policyData?.instansi_id || "",
                     created_by: userId,
-                    status: "submitted",
+                    active_year: 2025,
                     ...answersToSubmit,
                     ...infoToSubmit
                 }),
             });
 
-            if (!response.ok) throw new Error("Gagal menyimpan atau mengirim jawaban");
-            toast.success("Jawaban berhasil disimpan dan dikirim ke koordinator");
-        } catch (error) {
-            console.error(error);
-            toast.error("Gagal menyimpan atau mengirim jawaban");
+            if (!saveResponse.ok) throw new Error("Gagal menyimpan jawaban");
+
+            // Kirim ke koordinator
+            const sendResponse = await fetch("/api/policies/send_to_ki", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-enumerator-id": userId || ""
+                },
+                body: JSON.stringify({ id: policyId })
+            });
+
+            if (!sendResponse.ok) {
+                const errorData = await sendResponse.json();
+                throw new Error(errorData.error || "Gagal mengirim ke koordinator");
+            }
+
+            toast.success("Jawaban berhasil dikirim ke koordinator");
+            router.push(`/enumerator/kebijakan`);
+        } catch (error: any) {
+            console.error('Error:', error);
+            toast.error(error.message || "Gagal mengirim ke koordinator");
         } finally {
             setIsSaving(false);
             setOpen(false);
         }
-    };
-
-    const handleConfirm = () => {
-        handleSaveAllAnswers();
     };
 
     if (loading) {
@@ -254,7 +275,6 @@ export default function PolicyPage() {
             <div className="w-full px-6 py-8">
                 <div className="space-y-8">
                     <PolicyCard policy={policyData} />
-
                     {/* Tombol Simpan & Kirim */}
                     <div className="flex justify-end">
                         <Dialog open={open} onOpenChange={setOpen}>
@@ -285,9 +305,7 @@ export default function PolicyPage() {
                             </DialogContent>
                         </Dialog>
                     </div>
-
                     <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
-
                     <div className="space-y-6">
                         <QuestionList
                             activeStep={activeStep}
@@ -332,7 +350,7 @@ function PolicyCard({ policy }: { policy: Policy }) {
                 <span>Kembali</span>
             </button>
             <div className="mb-4">
-                <small className="text-gray-500 text-sm">{policy.instansi_id}</small>
+                <small className="text-gray-500 text-sm">{policy.instansi}</small>
                 <h2 className="text-xl font-bold text-gray-800 mt-1">{policy.nama_kebijakan}</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -358,7 +376,10 @@ function PolicyCard({ policy }: { policy: Policy }) {
                     <small className="text-gray-500 text-sm">Progres Pengisian</small>
                     <div className="flex items-center gap-2 mt-1">
                         <div className="w-full bg-gray-200 rounded-full h-2.5 flex-1">
-                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${policy.progress_pengisian}%` }} />
+                            <div
+                                className="bg-blue-600 h-2.5 rounded-full"
+                                style={{ width: `${policy.progress_pengisian}%` }}
+                            ></div>
                         </div>
                         <span className="text-blue-600 text-sm font-medium">
                             {Number(policy.progress_pengisian).toFixed(2)}%
@@ -427,7 +448,7 @@ function QuestionList({
         <div className="bg-white p-6 rounded-xl shadow space-y-6">
             <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
             {filteredQuestions.map((item, index) => (
-                <div key={item.id} className="space-y-4 pb-4 border-b last:border-b-0">
+                <div key={item.id} id={`question-${item.id}`} className="space-y-4 pb-4 border-b last:border-b-0">
                     <div className="flex items-center gap-2">
                         <p className="font-semibold text-gray-800">{item.indicator_question}</p>
                         <button
@@ -442,20 +463,22 @@ function QuestionList({
                         </button>
                     </div>
                     <div className="space-y-3">
-                        {item.instrument_answer.sort((a, b) => a.level_id - b.level_id).map((opt) => (
-                            <label key={opt.level_id} className="flex items-start gap-3 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name={`question-${item.id}`}
-                                    checked={selectedAnswers[item.id]?.description === opt.level_description}
-                                    onChange={() =>
-                                        onAnswerChange(item.id, opt.level_description, Number(opt.level_score))
-                                    }
-                                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
-                                />
-                                <span className="text-gray-700">{opt.level_description}</span>
-                            </label>
-                        ))}
+                        {item.instrument_answer
+                            .sort((a, b) => a.level_id - b.level_id)
+                            .map((opt) => (
+                                <label key={opt.level_id} className="flex items-start gap-3 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`question-${item.id}`}
+                                        checked={selectedAnswers[item.id]?.description === opt.level_description}
+                                        onChange={() =>
+                                            onAnswerChange(item.id, opt.level_description, Number(opt.level_score))
+                                        }
+                                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                    />
+                                    <span className="text-gray-700">{opt.level_description}</span>
+                                </label>
+                            ))}
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">

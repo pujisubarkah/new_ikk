@@ -21,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       select: {
         id: true,
         name: true,
+        name_detail: true,
         progress: true,
         user_policy_processed_by_enumerator_idTouser: {
           select: {
@@ -33,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const formatted = policies.map((policy) => ({
       id: policy.id,
-      nama_kebijakan: policy.name,
+     nama_kebijakan: `${policy.name}${policy.name_detail ? ` - ${policy.name_detail}` : ""}`,
       progress: policy.progress,
       enumerator: policy.user_policy_processed_by_enumerator_idTouser
         ? `${policy.user_policy_processed_by_enumerator_idTouser.name}`

@@ -21,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       select: {
         id: true,
         name: true,
+        name_detail: true,
         effective_date: true,
         user_policy_enumerator_idTouser: {
           select: {
@@ -32,13 +33,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const formatted = policies.map((policy) => ({
-      id: policy.id,
-      nama_kebijakan: policy.name,
-      tanggal_berlaku: policy.effective_date,
-      enumerator: policy.user_policy_enumerator_idTouser
-        ? `${policy.user_policy_enumerator_idTouser.name}`
-        : null,
-    }));
+  id: policy.id,
+  nama_kebijakan: `${policy.name}${policy.name_detail ? ` - ${policy.name_detail}` : ""}`,
+  tanggal_berlaku: policy.effective_date,
+  enumerator: policy.user_policy_enumerator_idTouser
+    ? `${policy.user_policy_enumerator_idTouser.name}`
+    : null,
+}));
 
     return res.status(200).json(serializeBigInt({ data: formatted }));
   } catch (error) {

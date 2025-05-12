@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       select: {
         id: true,
         name: true,
+        name_detail: true,
         progress: true,
         policy_process: true,
         assigned_by_admin_at: true,
@@ -46,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const formatted = {
       id: policy.id,
-      nama_kebijakan: policy.name,
+      nama_kebijakan: `${policy.name}${policy.name_detail ? ` - ${policy.name_detail}` : ""}`,
       tanggal_proses: policy.assigned_by_admin_at,
       status_kebijakan: policy.policy_process,
       instansi: policy.instansi?.agency_name ?? null,

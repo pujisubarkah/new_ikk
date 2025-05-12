@@ -9,24 +9,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const {
         policy_id,
-        agency_id,
         created_by,
         ...fileUrls
     } = req.body;
 
+    // Validasi wajib
+    if (!policy_id || !created_by) {
+        return res.status(400).json({ error: "policy_id dan created_by wajib disertakan" });
+    }
+
     try {
         // Upsert ke tabel ikk_file
         await prisma.ikk_file.upsert({
-            where: { id: BigInt(policy_id) },
+            where: { id: BigInt(policy_id) }, // Pastikan id sesuai dengan struktur tabel
             update: {
-                ...(agency_id && { agency_id: BigInt(agency_id) }),
-                created_by: created_by ? BigInt(created_by) : undefined,
+                created_by: BigInt(created_by),
                 ...fileUrls,
             },
             create: {
                 policy_id: BigInt(policy_id),
-                ...(agency_id && { agency_id: BigInt(agency_id) }),
-                created_by: created_by ? BigInt(created_by) : undefined,
+                created_by: BigInt(created_by),
                 ...fileUrls,
             },
         });
