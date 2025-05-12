@@ -106,13 +106,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: { analis_instansi_id: newUser.id }
     });
 
-    // Hilangkan password sebelum dikirim ke client
-    const { password, ...userData } = newUser;
+   
 
     return res.status(201).json({
       success: true,
       data: {
-        user: serializeBigInt(userData),
+        user: serializeBigInt(newUser),
         relation: serializeBigInt(relation)
       }
     });
