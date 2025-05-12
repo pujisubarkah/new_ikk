@@ -48,10 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       status
     } = validationResult.data;
 
-    // ✅ Hanya satu kali deklarasi `password`
-    const finalPassword = password || '12345678'; // Gunakan default jika tidak disediakan
+    // Gunakan password dari body atau default
+    const finalPassword = password || '12345678';
     const hashedPassword = await bcrypt.hash(finalPassword, SALT_ROUNDS);
 
+    // Cari koordinator
     const koorUser = await prisma.user.findUnique({
       where: { id: BigInt(koorInstansiId) },
       select: { id: true, agency_id_panrb: true }
@@ -63,6 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
+    // Cek apakah user sudah ada
     const existingUser = await prisma.user.findFirst({
       where: { OR: [{ email }, { username }] }
     });
@@ -77,7 +79,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const [newUser, relation] = await prisma.$transaction([ 
+    // Buat user baru dan relasi dalam transaksi
+    const [newUser, relation] = await prisma.$transaction([
       prisma.user.create({
         data: {
           name,
@@ -97,11 +100,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     ]);
 
+    // Update relasi dengan ID user baru
     await prisma.koor_instansi_analis.update({
       where: { id: relation.id },
       data: { analis_instansi_id: newUser.id }
     });
 
+    // Hilangkan password sebelum dikirim ke client
     const { password: _, ...userData } = newUser;
 
     return res.status(201).json({
