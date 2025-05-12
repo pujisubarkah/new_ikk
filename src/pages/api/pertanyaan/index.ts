@@ -20,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         instrument_answer: {
           select: {
             level_id: true,
+            level_score: true,
             level_description: true, // hanya ambil level_description
           },
         },
