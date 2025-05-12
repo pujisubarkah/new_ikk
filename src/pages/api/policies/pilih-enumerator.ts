@@ -3,11 +3,10 @@ import prisma from "@/lib/prisma";
 import { serializeBigInt } from "@/lib/serializeBigInt";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Log seluruh request body untuk debugging
   console.log("Received request body:", req.body);
 
   if (req.method !== "POST" && req.method !== "PUT") {
-    return res.status(405).json({ 
+    return res.status(405).json({
       error: "Method not allowed",
       received_body: req.body,
       allowed_methods: ["POST", "PUT"]
@@ -16,9 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { policyId, analystId } = req.body;
 
-  // Validasi dengan menambahkan received_body
   if (!policyId || !analystId) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: "Policy ID and Analyst ID are required",
       received_body: req.body,
       required_fields: {
@@ -29,11 +27,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Convert string IDs to BigInt dengan error handling
-    let policyIdBigInt, analystIdBigInt;
+    let policyIdBigInt: bigint;
+    let analystIdBigInt: bigint;
+
     try {
-      policyIdBigInt = BigInt(policyId); // Menggunakan policyId dari request body
-      analystIdBigInt = BigInt(analystId); // Menggunakan analystId dari request body
+      policyIdBigInt = BigInt(policyId);
+      analystIdBigInt = BigInt(analystId);
     } catch (e) {
       return res.status(400).json({
         error: "Invalid ID format",
@@ -43,18 +42,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Debugging: Periksa data sebelum diupdate
     console.log(`Trying to update policy with ID: ${policyIdBigInt} and analyst ID: ${analystIdBigInt}`);
 
-    // Update policy dengan transaction untuk rollback jika error
     const result = await prisma.$transaction(async (prisma) => {
       const updatedPolicy = await prisma.policy.update({
-        where: { id: policyIdBigInt }, // Menggunakan id sebagai key pencarian
+        where: { id: policyIdBigInt },
         data: {
-          enumerator_id: analystIdBigInt, // Mengupdate enumerator_id
-          processed_by_enumerator_id: analystIdBigInt, // Mengupdate processed_by_enumerator_id
-          assigned_by_admin_at: new Date(), // Timestamp untuk assigned
-          policy_process: "PROSES" // Status proses
+          enumerator_id: analystIdBigInt,
+          processed_by_enumerator_id: analystIdBigInt,
+          assigned_by_admin_at: new Date(),
+          policy_process: "PROSES"
         }
       });
 
@@ -64,7 +61,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
-    // Serialize response dengan tambahan metadata
     const serializedResponse = serializeBigInt({
       ...result,
       metadata: {
@@ -78,20 +74,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(serializedResponse);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    let errorMessage = "Unknown error";
+    let stackTrace: string | undefined = undefined;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      stackTrace = error.stack;
+    }
+
     console.error("Error assigning analyst:", {
-      error: error.message,
-      stack: error.stack,
+      error: errorMessage,
+      stack: stackTrace,
       received_body: req.body
     });
 
     return res.status(500).json({
       error: "Failed to assign analyst",
-      message: error.message,
+      message: errorMessage,
       received_body: req.body,
       details: process.env.NODE_ENV === 'development' ? {
-        stack: error.stack,
-        raw_error: serializeBigInt(error)
+        stack: stackTrace,
+        raw_error: serializeBigInt(error as Record<string, unknown>)
       } : undefined
     });
   }
