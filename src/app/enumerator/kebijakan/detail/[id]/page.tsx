@@ -222,9 +222,13 @@ export default function PolicyPage() {
 
             toast.success("Jawaban berhasil dikirim ke koordinator");
             router.push(`/enumerator/kebijakan`);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error:', error);
-            toast.error(error.message || "Gagal mengirim ke koordinator");
+            if (error instanceof Error) {
+                toast.error(error.message || "Gagal mengirim ke koordinator");
+            } else {
+                toast.error("Gagal mengirim ke koordinator");
+            }
         } finally {
             setIsSaving(false);
             setOpen(false);

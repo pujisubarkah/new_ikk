@@ -6,13 +6,13 @@ import Sidebar from '@/components/sidebar-verif';
 import { Paperclip, RefreshCcw, MessageSquare, XCircle } from 'lucide-react';
 
 export default function Home() {
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<globalThis.File | null>(null);
   const [summary, setSummary] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [documentTopic, setDocumentTopic] = useState("");
+  // const [documentTopic, setDocumentTopic] = useState("");
 
-  const validTopics = ["kebijakan tata ruang", "perencanaan wilayah", "pembangunan kota"]; // Daftar topik yang valid
+  // const validTopics = ["kebijakan tata ruang", "perencanaan wilayah", "pembangunan kota"]; // Daftar topik yang valid
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -79,6 +79,9 @@ export default function Home() {
     }
     return "unknown"; // If no topic matched
   };
+
+  // Example usage of extractTopicFromText
+  const documentTopic = extractTopicFromText(summary);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
