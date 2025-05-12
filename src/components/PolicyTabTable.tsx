@@ -486,7 +486,7 @@ export default function PolicyTabTable() {
               // Empty State Row
               <tr>
                 <td colSpan={maxColumns} className="px-4 py-6 text-center text-gray-500 border-t">
-                  Tidak ada data kebijakan untuk status "{activeTab}".
+                  Tidak ada data kebijakan untuk status &quot;{activeTab}&quot;.
                 </td>
               </tr>
             )}
