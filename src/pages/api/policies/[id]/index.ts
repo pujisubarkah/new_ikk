@@ -1,4 +1,3 @@
-// src/pages/api/policies/[id].ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from "@/lib/prisma";
 import { serializeBigInt } from '@/lib/serializeBigInt';
@@ -33,6 +32,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             agency_name: true,
           },
         },
+        ikk_ki_score: {
+          select: {
+            ikk_total_score: true,
+          },
+        },
       },
     });
 
@@ -47,6 +51,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       status_kebijakan: policy.policy_process,
       instansi: policy.instansi?.agency_name ?? null,
       progress_pengisian: policy.progress,
+      nilai_akhir: policy.ikk_ki_score?.[0]?.ikk_total_score ?? null,
+
     };
 
     return res.status(200).json(serializeBigInt({ data: formatted }));

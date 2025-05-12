@@ -1,8 +1,18 @@
 'use client';
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/sidebar-enum";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaPaperPlane } from "react-icons/fa";
 import { useRouter, useParams } from 'next/navigation';
+import {
+    Dialog,
+    DialogTrigger,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 type Policy = {
@@ -10,8 +20,9 @@ type Policy = {
     nama_kebijakan: string;
     status_kebijakan: string;
     tanggal_proses: string;
-    instansi_id: string; // Pastikan ini tersedia di data policy
+    instansi_id: string;
     progress_pengisian: number;
+    nilai_akhir: number;
 };
 
 type Question = {
@@ -44,7 +55,6 @@ const stepDimensionMap: Record<number, string> = {
 export default function PolicyPage() {
     const params = useParams();
     const policyId = params?.id as string;
-
     const [activeStep, setActiveStep] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, { description: string; score: number }>>({});
     const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
@@ -53,6 +63,8 @@ export default function PolicyPage() {
     const [apiQuestions, setApiQuestions] = useState<Question[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -82,15 +94,15 @@ export default function PolicyPage() {
         fetchData();
     }, [policyId]);
 
-const handleAnswerChange = (questionId: string, answerDescription: string, answerScore: number) => {
-    setSelectedAnswers((prev) => ({
-        ...prev,
-        [questionId]: {
-            description: answerDescription,
-            score: answerScore
-        }
-    }));
-};
+    const handleAnswerChange = (questionId: string, answerDescription: string, answerScore: number) => {
+        setSelectedAnswers((prev) => ({
+            ...prev,
+            [questionId]: {
+                description: answerDescription,
+                score: answerScore
+            }
+        }));
+    };
 
     const handleLinkUpload = (questionId: string, link: string) => {
         setUploadedFiles((prev) => ({
@@ -102,11 +114,14 @@ const handleAnswerChange = (questionId: string, answerDescription: string, answe
     const handleSaveAllAnswers = async () => {
         const answersToSubmit: Record<string, any> = {};
         const infoToSubmit: Record<string, string> = {};
+        let unansweredCount = 0;
 
         apiQuestions.forEach((item) => {
             const answer = selectedAnswers[item.id];
             if (answer?.score) {
                 answersToSubmit[item.indicator_column_code] = answer.score;
+            } else {
+                unansweredCount++;
             }
 
             if (uploadedFiles[item.id]) {
@@ -115,6 +130,14 @@ const handleAnswerChange = (questionId: string, answerDescription: string, answe
             }
         });
 
+        if (unansweredCount > 0) {
+            toast.info(`Masih ada ${unansweredCount} pertanyaan yang belum terisi`);
+            return;
+        }
+
+        setIsSaving(true);
+        const userId = localStorage.getItem("id");
+
         try {
             const response = await fetch("/api/save-ikk-ki-score", {
                 method: "POST",
@@ -122,17 +145,25 @@ const handleAnswerChange = (questionId: string, answerDescription: string, answe
                 body: JSON.stringify({
                     policy_id: policyId,
                     agency_id: policyData?.instansi_id || "",
+                    created_by: userId,
+                    status: "submitted",
                     ...answersToSubmit,
                     ...infoToSubmit
                 }),
             });
-
-            if (!response.ok) throw new Error("Gagal menyimpan jawaban");
-            toast.success("Jawaban berhasil disimpan");
+            if (!response.ok) throw new Error("Gagal menyimpan atau mengirim jawaban");
+            toast.success("Jawaban berhasil disimpan dan dikirim ke koordinator");
         } catch (error) {
             console.error(error);
-            toast.error("Gagal menyimpan jawaban");
+            toast.error("Gagal menyimpan atau mengirim jawaban");
+        } finally {
+            setIsSaving(false);
+            setOpen(false);
         }
+    };
+
+    const handleConfirm = () => {
+        handleSaveAllAnswers();
     };
 
     if (loading) {
@@ -179,7 +210,40 @@ const handleAnswerChange = (questionId: string, answerDescription: string, answe
             <div className="w-full px-6 py-8">
                 <div className="space-y-8">
                     <PolicyCard policy={policyData} />
+
+                    {/* Tombol Simpan Jawaban & Kirim ke Koordinator */}
+                    <div className="flex justify-end">
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <button
+                                    disabled={isSaving}
+                                    className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg shadow transition-all ${
+                                        isSaving ? "opacity-70 cursor-not-allowed" : ""
+                                    }`}
+                                >
+                                    <FaPaperPlane className="text-white" />
+                                    {isSaving ? "Menyimpan..." : "Simpan & Kirim ke Koordinator"}
+                                </button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Yakin ingin mengirim?</DialogTitle>
+                                    <DialogDescription>
+                                        Pastikan semua jawaban sudah lengkap sebelum mengirim ke koordinator.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                    <Button variant="secondary" onClick={() => setOpen(false)}>Batal</Button>
+                                    <Button onClick={handleConfirm} disabled={isSaving}>
+                                        Ya, Kirim Sekarang
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+
                     <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
+
                     <div className="space-y-6">
                         <QuestionList
                             activeStep={activeStep}
@@ -188,7 +252,6 @@ const handleAnswerChange = (questionId: string, answerDescription: string, answe
                             onLinkUpload={handleLinkUpload}
                             uploadedFiles={uploadedFiles}
                             apiQuestions={apiQuestions}
-                            onSaveAnswer={handleSaveAllAnswers}
                         />
                         <AdditionalInfoSection
                             value={additionalInfo}
@@ -227,7 +290,7 @@ function PolicyCard({ policy }: { policy: Policy }) {
                 <small className="text-gray-500 text-sm">{policy.instansi_id}</small>
                 <h2 className="text-xl font-bold text-gray-800 mt-1">{policy.nama_kebijakan}</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <small className="text-gray-500 text-sm">Status Kebijakan</small>
                     <span className={`inline-block px-3 py-1 rounded-full text-white text-xs font-medium mt-1 ${statusColors[policy.status_kebijakan as keyof typeof statusColors] || 'bg-gray-500'}`}>
@@ -254,6 +317,12 @@ function PolicyCard({ policy }: { policy: Policy }) {
                             {Number(policy.progress_pengisian).toFixed(2)}%
                         </span>
                     </div>
+                </div>
+                <div>
+                    <small className="text-gray-500 text-sm">Nilai Akhir Kebijakan</small>
+                    <strong className="text-gray-800 mt-1 block">
+                        {policy.nilai_akhir ?? '-'}
+                    </strong>
                 </div>
             </div>
         </div>
@@ -296,7 +365,6 @@ function QuestionList({
     onAnswerChange,
     onLinkUpload,
     apiQuestions,
-    onSaveAnswer,
 }: {
     activeStep: number;
     selectedAnswers: Record<string, { description: string; score: number }>;
@@ -304,11 +372,9 @@ function QuestionList({
     onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
     onLinkUpload: (questionId: string, link: string) => void;
     apiQuestions: Question[];
-    onSaveAnswer: () => void;
 }) {
     const dimensionName = stepDimensionMap[activeStep];
     const filteredQuestions = apiQuestions.filter(q => q.dimension_name === dimensionName);
-
     return (
         <div className="bg-white p-6 rounded-xl shadow space-y-6">
             <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
@@ -327,7 +393,6 @@ function QuestionList({
                             </svg>
                         </button>
                     </div>
-
                     <div className="space-y-3">
                         {item.instrument_answer
                             .sort((a, b) => a.level_id - b.level_id)
@@ -347,7 +412,6 @@ function QuestionList({
                                 </label>
                             ))}
                     </div>
-
                     <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Unggah dokumen pendukung <span className="text-xs text-gray-500 ml-1">(Google Drive link)</span>
@@ -355,7 +419,7 @@ function QuestionList({
                         <div className="flex gap-2">
                             <input
                                 type="text"
-                                placeholder="https://drive.google.com/... "
+                                placeholder="https://drive.google.com/...    "
                                 value={uploadedFiles[item.id] || ""}
                                 onChange={(e) => onLinkUpload(item.id, e.target.value)}
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
@@ -364,15 +428,6 @@ function QuestionList({
                         <p className="text-xs text-gray-500 mt-1">
                             Pastikan link dapat diakses oleh semua
                         </p>
-                    </div>
-
-                    <div className="flex justify-end">
-                        <button
-                            onClick={onSaveAnswer}
-                            className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-md shadow"
-                        >
-                            Simpan Semua Jawaban
-                        </button>
                     </div>
                 </div>
             ))}
