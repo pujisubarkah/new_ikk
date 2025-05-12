@@ -23,7 +23,7 @@ interface Policy {
 
 interface Analyst {
   id: number;
-  nama: string;
+  name: string;
 }
 
 export default function PolicyTabTable() {
@@ -120,15 +120,20 @@ export default function PolicyTabTable() {
   };
 
   const fetchAnalysts = async () => {
+    const koorinstansiId = localStorage.getItem("id");
     try {
-      const res = await axios.get("/api/analysts");
+      if (!koorinstansiId) {
+        toast.error("ID admin tidak ditemukan");
+        return;
+      }
+
+      const res = await axios.get(`/api/koorinstansi/${koorinstansiId}/analis`);
       setAnalysts(res.data || []);
     } catch (err) {
-      console.error("Gagal fetch data analysts", err);
+      console.error("Failed to fetch analysts", err);
       toast.error("Gagal memuat daftar analis");
     }
   };
-
   useEffect(() => {
     fetchPolicies();
   }, [activeTab]);
@@ -150,35 +155,39 @@ export default function PolicyTabTable() {
   };
 
   const handleSubmitAnalyst = async () => {
-    if (!selectedPolicy || !selectedAnalystId) {
-      toast.error("Harap pilih analis terlebih dahulu");
-      return;
-    }
+  if (!selectedPolicy || !selectedAnalystId) {
+    toast.error("Harap pilih analis terlebih dahulu");
+    return;
+  }
 
-    try {
-      const res = await axios.post("/api/policies/assign-analyst", {
-        policyId: selectedPolicy.id,
-        analystId: selectedAnalystId,
-      });
+  try {
+    const policyId = String(selectedPolicy.id);  // Pastikan policyId adalah string
+    const analystId = String(selectedAnalystId);  // Pastikan analystId adalah string
 
-      if (res.status === 200) {
-        toast.success("Analis berhasil ditetapkan");
-        setOpenAnalystModal(false);
-        setSelectedPolicy(null);
-        setSelectedAnalystId(null);
-        fetchPolicies();
-      } else {
-        throw new Error(res.data.message || "Gagal menetapkan analis");
-      }
-    } catch (err) {
-      console.error("Gagal menetapkan analis", err);
-      if (axios.isAxiosError(err) && err.response?.data?.message) {
-        toast.error(err.response.data.message);
-      } else {
-        toast.error("Gagal menetapkan analis");
-      }
+    const res = await axios.post("/api/policies/pilih-enumerator", {
+      policyId,
+      analystId,
+    });
+
+    if (res.status === 200) {
+      toast.success("Analis berhasil ditetapkan");
+      setOpenAnalystModal(false);
+      setSelectedPolicy(null);
+      setSelectedAnalystId(null);
+      fetchPolicies();
+    } else {
+      throw new Error(res.data.message || "Gagal menetapkan analis");
     }
-  };
+  } catch (err) {
+    console.error("Gagal menetapkan analis", err);
+    if (axios.isAxiosError(err) && err.response?.data?.message) {
+      toast.error(err.response.data.message);
+    } else {
+      toast.error("Gagal menetapkan analis");
+    }
+  }
+};
+
 
   return (
     <>
@@ -387,42 +396,42 @@ export default function PolicyTabTable() {
         </div>
       )}
 
-      {/* Analyst Assignment Modal */}
+           {/* Analyst Assignment Modal */}
       {openAnalystModal && selectedPolicy && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Pilih Analis untuk Kebijakan</h2>
-            <p className="mb-2"><strong>Kebijakan:</strong> {selectedPolicy.nama}</p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium mb-4">Pilih Analis</h3>
+            <p className="mb-4 text-sm text-gray-600">
+              <span className="font-medium">Kebijakan:</span> {selectedPolicy.nama}
+            </p>
             
-            <label className="block mb-2 font-medium text-sm">Pilih Analis:</label>
-            <select
-              value={selectedAnalystId ?? ""}
-              onChange={(e) => setSelectedAnalystId(parseInt(e.target.value))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4"
-            >
-              <option value="">-- Pilih Analis --</option>
-              {analysts.map((analyst) => (
-                <option key={analyst.id} value={analyst.id}>
-                  {analyst.nama}
-                </option>
-              ))}
-            </select>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Analis Instansi</label>
+              <select
+                value={selectedAnalystId || ""}
+                onChange={(e) => setSelectedAnalystId(Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+              >
+                <option value="">Pilih Analis</option>
+                {analysts.map((analyst) => (
+                  <option key={analyst.id} value={analyst.id}>
+                    {analyst.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-3">
               <button
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                onClick={() => {
-                  setOpenAnalystModal(false);
-                  setSelectedPolicy(null);
-                  setSelectedAnalystId(null);
-                }}
+                onClick={() => setOpenAnalystModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
               >
                 Batal
               </button>
               <button
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                 onClick={handleSubmitAnalyst}
                 disabled={!selectedAnalystId}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400"
               >
                 Tetapkan
               </button>
