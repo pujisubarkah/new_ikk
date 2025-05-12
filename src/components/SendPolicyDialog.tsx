@@ -18,11 +18,13 @@ interface SendPolicyDialogProps {
   onSuccess?: () => void;
   disabled?: boolean;
   selectedPolicyIds?: string[];
+  children?: React.ReactNode; // Ensure children is included
+   onSend?: () => void; // Add the onSend prop as optional
 }
 
 // Forward ref ke button
 const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPolicyDialogProps> = (
-  { onSuccess, disabled, selectedPolicyIds },
+  { onSuccess, disabled, selectedPolicyIds, children }, // Include children in the destructured props
   ref
 ) => {
   const [openSendConfirmation, setOpenSendConfirmation] = useState(false);
@@ -83,14 +85,17 @@ const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPo
   return (
     <Dialog open={openSendConfirmation} onOpenChange={setOpenSendConfirmation}>
       <DialogTrigger asChild>
-        <Button
-          ref={ref as React.Ref<HTMLButtonElement>}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-200"
-          disabled={disabled}
-        >
-          <FaPaperPlane className="text-white" />
-          Kirim Kebijakan
-        </Button>
+        {/* Render children as the trigger */}
+        {children || (
+          <Button
+            ref={ref as React.Ref<HTMLButtonElement>}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-200"
+            disabled={disabled}
+          >
+            <FaPaperPlane className="text-white" />
+            Kirim Kebijakan
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
         <DialogHeader>
