@@ -27,11 +27,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 1. Validate request body with Zod
     const validationResult = createAnalisSchema.safeParse(req.body);
 
     if (!validationResult.success) {
-      console.log('Validation Failed:', validationResult.error.flatten());
       return res.status(400).json({
         error: 'Validasi gagal',
         details: validationResult.error.flatten()
@@ -50,21 +48,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       status
     } = validationResult.data;
 
-    // 2. Set password to default if not provided
-    const finalPassword = password || '12345678'; // Password default jika tidak ada
-
-    console.log('Password Set:', finalPassword);
-
-    // 3. Hash password
+    // ✅ Hanya satu kali deklarasi `password`
+    const finalPassword = password || '12345678'; // Gunakan default jika tidak disediakan
     const hashedPassword = await bcrypt.hash(finalPassword, SALT_ROUNDS);
 
-    // 4. Get coordinator info
     const koorUser = await prisma.user.findUnique({
       where: { id: BigInt(koorInstansiId) },
       select: { id: true, agency_id_panrb: true }
     });
-
-    console.log('Coordinator Info:', koorUser);
 
     if (!koorUser || !koorUser.agency_id_panrb) {
       return res.status(400).json({ 
@@ -72,12 +63,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 5. Check existing user
     const existingUser = await prisma.user.findFirst({
       where: { OR: [{ email }, { username }] }
     });
-
-    console.log('Existing User:', existingUser);
 
     if (existingUser) {
       return res.status(409).json({
@@ -89,7 +77,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 6. Create user and relation in transaction
     const [newUser, relation] = await prisma.$transaction([ 
       prisma.user.create({
         data: {
@@ -110,17 +97,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     ]);
 
-    console.log('New User:', newUser);
-    console.log('Relation:', relation);
-
-    // 7. Update relation with new user ID
     await prisma.koor_instansi_analis.update({
       where: { id: relation.id },
       data: { analis_instansi_id: newUser.id }
     });
 
-    // 8. Return response without password
-    const { password: userPassword, ...userData } = newUser;
+    const { password: _, ...userData } = newUser;
 
     return res.status(201).json({
       success: true,

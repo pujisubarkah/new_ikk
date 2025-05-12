@@ -76,16 +76,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         lainnya: sektor_kebijakan === 'Lainnya' ? sektor_kebijakan_lain : null,
         file_url: link_drive,
         effective_date: new Date(tanggal_berlaku),
+
         policy_process: 'DIAJUKAN',
         policy_status: 'BELUM_TERVERIFIKASI',
         progress: '0%',
         created_by: BigInt(userId),
         created_at: new Date(),
+
         is_valid: false,
         assigned_by_admin_id: BigInt(userId),
         agency_id: user.agency_id,
+
+        // Ambil langsung dari user.agency_id_panrb
         agency_id_panrb: user.agency_id_panrb,
+
         active_year: 2025,
+
+        // Biarkan null
         validated_by: null,
         enumerator_id: null,
         processed_by_enumerator_id: null,
