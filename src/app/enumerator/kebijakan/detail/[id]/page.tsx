@@ -66,6 +66,7 @@ export default function PolicyPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [open, setOpen] = useState(false);
 
+    // Fetch data policy dan pertanyaan
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -94,6 +95,7 @@ export default function PolicyPage() {
         fetchData();
     }, [policyId]);
 
+    // Ubah jawaban
     const handleAnswerChange = (questionId: string, answerDescription: string, answerScore: number) => {
         setSelectedAnswers((prev) => ({
             ...prev,
@@ -104,13 +106,54 @@ export default function PolicyPage() {
         }));
     };
 
-    const handleLinkUpload = (questionId: string, link: string) => {
-        setUploadedFiles((prev) => ({
-            ...prev,
-            [questionId]: link,
-        }));
+    // Mapping kolom file berdasarkan dimensi dan urutan pertanyaan
+    const getFileNameFromQuestion = (dimension: string, questionIndex: number): string | null => {
+        const prefixMap: Record<string, string> = {
+            "Perencanaan Kebijakan": "a",
+            "Implementasi Kebijakan": "b",
+            "Evaluasi dan Keberlanjutan Kebijakan": "c",
+            "Transparansi dan Partisipasi Publik": "d",
+        };
+
+        const prefix = prefixMap[dimension];
+        if (!prefix) return null;
+
+        const order = questionIndex % 3 + 1;
+        return `file_url_${prefix}${order}`;
     };
 
+    // Unggah file pendukung
+    const handleLinkUpload = async (questionId: string, link: string, questionIndex: number) => {
+        const question = apiQuestions.find(q => q.id === questionId);
+        if (!question) return;
+
+        const fileName = getFileNameFromQuestion(question.dimension_name, questionIndex);
+        if (!fileName) return;
+
+        try {
+            await fetch("/api/upload-supporting-file", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    policy_id: policyId,
+                    created_by: localStorage.getItem("id"),
+                    [fileName]: link
+                })
+            });
+
+            setUploadedFiles(prev => ({
+                ...prev,
+                [questionId]: link
+            }));
+
+            toast.success("File berhasil disimpan");
+        } catch (error) {
+            console.error("Gagal menyimpan file:", error);
+            toast.error("Gagal menyimpan file");
+        }
+    };
+
+    // Simpan semua jawaban
     const handleSaveAllAnswers = async () => {
         const answersToSubmit: Record<string, any> = {};
         const infoToSubmit: Record<string, string> = {};
@@ -151,6 +194,7 @@ export default function PolicyPage() {
                     ...infoToSubmit
                 }),
             });
+
             if (!response.ok) throw new Error("Gagal menyimpan atau mengirim jawaban");
             toast.success("Jawaban berhasil disimpan dan dikirim ke koordinator");
         } catch (error) {
@@ -211,7 +255,7 @@ export default function PolicyPage() {
                 <div className="space-y-8">
                     <PolicyCard policy={policyData} />
 
-                    {/* Tombol Simpan Jawaban & Kirim ke Koordinator */}
+                    {/* Tombol Simpan & Kirim */}
                     <div className="flex justify-end">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
@@ -277,6 +321,7 @@ function PolicyCard({ policy }: { policy: Policy }) {
         'PROSES': 'bg-yellow-500',
         'SELESAI': 'bg-green-500'
     };
+
     return (
         <div className="p-6 rounded-xl shadow-md bg-white">
             <button
@@ -293,7 +338,9 @@ function PolicyCard({ policy }: { policy: Policy }) {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <small className="text-gray-500 text-sm">Status Kebijakan</small>
-                    <span className={`inline-block px-3 py-1 rounded-full text-white text-xs font-medium mt-1 ${statusColors[policy.status_kebijakan as keyof typeof statusColors] || 'bg-gray-500'}`}>
+                    <span className={`inline-block px-3 py-1 rounded-full text-white text-xs font-medium mt-1 ${
+                        statusColors[policy.status_kebijakan as keyof typeof statusColors] || 'bg-gray-500'
+                    }`}>
                         {policy.status_kebijakan}
                     </span>
                 </div>
@@ -370,16 +417,17 @@ function QuestionList({
     selectedAnswers: Record<string, { description: string; score: number }>;
     uploadedFiles: Record<string, string>;
     onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
-    onLinkUpload: (questionId: string, link: string) => void;
+    onLinkUpload: (questionId: string, link: string, questionIndex: number) => void;
     apiQuestions: Question[];
 }) {
     const dimensionName = stepDimensionMap[activeStep];
     const filteredQuestions = apiQuestions.filter(q => q.dimension_name === dimensionName);
+
     return (
         <div className="bg-white p-6 rounded-xl shadow space-y-6">
             <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
-            {filteredQuestions.map((item) => (
-                <div key={item.id} className="space-y-4 pb-4 border-b last:border-b-0 last:pb-0">
+            {filteredQuestions.map((item, index) => (
+                <div key={item.id} className="space-y-4 pb-4 border-b last:border-b-0">
                     <div className="flex items-center gap-2">
                         <p className="font-semibold text-gray-800">{item.indicator_question}</p>
                         <button
@@ -394,40 +442,32 @@ function QuestionList({
                         </button>
                     </div>
                     <div className="space-y-3">
-                        {item.instrument_answer
-                            .sort((a, b) => a.level_id - b.level_id)
-                            .map((opt) => (
-                                <label key={opt.level_id} className="flex items-start gap-3 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name={`question-${item.id}`}
-                                        value={opt.level_description}
-                                        checked={selectedAnswers[item.id]?.description === opt.level_description}
-                                        onChange={() =>
-                                            onAnswerChange(item.id, opt.level_description, Number(opt.level_score))
-                                        }
-                                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
-                                    />
-                                    <span className="text-gray-700">{opt.level_description}</span>
-                                </label>
-                            ))}
+                        {item.instrument_answer.sort((a, b) => a.level_id - b.level_id).map((opt) => (
+                            <label key={opt.level_id} className="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name={`question-${item.id}`}
+                                    checked={selectedAnswers[item.id]?.description === opt.level_description}
+                                    onChange={() =>
+                                        onAnswerChange(item.id, opt.level_description, Number(opt.level_score))
+                                    }
+                                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                />
+                                <span className="text-gray-700">{opt.level_description}</span>
+                            </label>
+                        ))}
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Unggah dokumen pendukung <span className="text-xs text-gray-500 ml-1">(Google Drive link)</span>
+                            Unggah dokumen pendukung <span className="text-xs text-gray-500">(Google Drive link)</span>
                         </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                placeholder="https://drive.google.com/...    "
-                                value={uploadedFiles[item.id] || ""}
-                                onChange={(e) => onLinkUpload(item.id, e.target.value)}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Pastikan link dapat diakses oleh semua
-                        </p>
+                        <input
+                            type="text"
+                            placeholder="https://drive.google.com/... "
+                            value={uploadedFiles[item.id] || ""}
+                            onChange={(e) => onLinkUpload(item.id, e.target.value, index)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
                     </div>
                 </div>
             ))}
