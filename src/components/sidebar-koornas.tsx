@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       items: [
           { name: 'Dashboard', icon: FileText, href: '/koordinator-utama/dashboard' },  
           { name: 'Data Kebijakan', icon: FileText, href: '/koordinator-utama/daftar-kebijakan' },
-        { name: 'Verifikator', icon: User, href: '/koordinator-utama/verifikator' },
+        
       ],
     },
     {
