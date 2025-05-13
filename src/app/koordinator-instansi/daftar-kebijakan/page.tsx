@@ -2,7 +2,7 @@
 "use client";
 import Sidebar from "@/components/sidebar-koorins";
 import PolicySummaryCard from "@/components/PolicySummaryCard";
-import PolicyTabTable from "@/components/PolicyTabTable";
+import PolicyTabTable from "@/components/daftar/PolicyTabTable";
 import AddPolicyFormDialog from "@/components/AddPolicyFormDialog";
 
 export default function KebijakanTable() {

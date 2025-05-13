@@ -1,0 +1,153 @@
+'use client';
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { FaEye, FaPaperPlane } from 'react-icons/fa';
+import axios from 'axios';
+import { toast } from 'sonner';
+
+interface Policy {
+    id: number;
+    nama: string;
+    tanggal?: string;
+    file?: string;
+    enumerator?: string;
+    progress?: string;
+    tanggalAssign?: string;
+    nilai?: string;
+    instansi?: string;
+    status?: string;
+}
+
+interface PolicyRowProps {
+    item: Policy;
+    showAction?: boolean;
+    showScore?: boolean;
+    index: number;
+    showAnalysist?: boolean;
+    tab: "diajukan" | "disetujui" | "diproses" | "selesai";
+    showProgress?: boolean;
+    showAssignDate?: boolean;
+    showViewButton?: boolean;
+}
+
+export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
+    const router = useRouter();
+
+    const handleSend = async (policyId: number) => {
+        const confirmSend = confirm("Yakin ingin mengirim hasil ke Koordinator Nasional?");
+        if (!confirmSend) return;
+
+        const koorinstansiId = localStorage.getItem("id");
+
+        try {
+            await toast.promise(
+                axios.post(`/api/policies/kirim-koordinator`, null, {
+                    headers: {
+                        "x-koorinstansi-id": koorinstansiId,
+                    },
+                }),
+                {
+                    loading: "Sedang mengirim ke Koordinator Nasional...",
+                    success: () => {
+                        // Optional: add any state update logic here if needed
+                        return "Marvelous! Berhasil dikirim ke Koordinator Nasional!";
+                    },
+                    error: "Ups! Gagal mengirim. Coba lagi ya Kak!",
+                }
+            );
+        } catch (err) {
+            console.error("Error sending to coordinator:", err);
+        }
+    };
+
+    return (
+        <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-150">
+            {/* Kolom Umum */}
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{index}</td>
+            <td className="px-4 py-3 text-sm text-gray-900 font-medium border-r">{item.nama}</td>
+
+            {/* Render Kolom Dinamis Berdasarkan Tab */}
+            {tab === "diajukan" && (
+                <>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.tanggal}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 border-r">
+                        {item.file ? (
+                            <a href={item.file} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                                Lihat File
+                            </a>
+                        ) : "-"}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.status || "-"}</td>
+                </>
+            )}
+
+            {tab === "disetujui" && (
+                <>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.enumerator || "Belum ditetapkan"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.tanggal}</td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap text-sm font-medium">
+                        <button
+                            onClick={() => {}}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md shadow-sm"
+                            title={`Pilih analis untuk ${item.nama}`}
+                        >
+                            Pilih Analis
+                        </button>
+                    </td>
+                </>
+            )}
+
+            {tab === "diproses" && (
+                <>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.enumerator || "Belum Ditetapkan"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 border-r">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                            <div
+                                className="bg-blue-600 h-2.5 rounded-full"
+                                style={{ width: item.progress || "0%" }}
+                            ></div>
+                        </div>
+                        <span className="text-xs text-gray-500 mt-1 block text-center">{item.progress}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.tanggalAssign}</td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap text-sm font-medium flex justify-center items-center gap-2">
+                        <button
+                            onClick={() => router.push(`/koordinator-instansi/daftar-kebijakan/prosesdetail/${item.id}`)}
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 p-1"
+                            title={`Lihat detail proses ${item.nama}`}
+                        >
+                            <FaEye size={16} />
+                            <span className="text-sm">Lihat</span>
+                        </button>
+
+                        <button
+                            onClick={() => handleSend(item.id)}
+                            className="flex items-center gap-1 text-green-600 hover:text-green-800 p-1"
+                            title="Kirim ke Koordinator Nasional"
+                        >
+                            <FaPaperPlane size={16} />
+                            <span className="text-sm">Kirim</span>
+                        </button>
+                    </td>
+                </>
+            )}
+
+            {tab === "selesai" && (
+                <>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nama}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.enumerator || "Tidak tersedia"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nilai || "-"}</td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap text-sm font-medium">
+                        <button
+                            onClick={() => router.push(`/koordinator-instansi/daftar-kebijakan/selesaidetail/${item.id}`)}
+                            className="text-green-600 hover:text-green-800 p-1"
+                            title={`Lihat hasil ${item.nama}`}
+                        >
+                            <FaEye size={18} />
+                        </button>
+                    </td>
+                </>
+            )}
+        </tr>
+    );
+}

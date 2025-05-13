@@ -7,16 +7,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const { id } = req.body;
-
-    // Ambil enumeratorId dari headers atau body
-    const enumeratorId = req.headers["x-enumerator-id"] || req.body.enumeratorId;
+    const koorinstansiId = req.headers["x-koorinstansi-id"];
 
     if (!id) {
         return res.status(400).json({ error: "ID kebijakan tidak ditemukan" });
     }
 
-    if (!enumeratorId) {
-        return res.status(400).json({ error: "Enumerator ID tidak ditemukan" });
+    if (!koorinstansiId) {
+        return res.status(400).json({ error: "Koordinator Instansi ID tidak ditemukan" });
     }
 
     try {
@@ -29,22 +27,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(404).json({ error: "Kebijakan tidak ditemukan" });
         }
 
-        // 2. Langsung update status policy
+        // 2. Update status dan catat siapa yang assign
         await prisma.policy.update({
             where: { id: BigInt(id) },
             data: {
-                policy_status: "MENUNGGU_VALIDASI_KI",
-                policy_process: "PROSES",
-                processed_by_enumerator_id: BigInt(enumeratorId),
+                policy_status: "MENUNGGU_VALIDASI_KU",
+                policy_process: "SELESAI",
+                assigned_by_admin_id: BigInt(koorinstansiId as string),
             },
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Kebijakan berhasil dikirim ke koordinator",
         });
     } catch (error) {
         console.error("Gagal mengirim ke koordinator:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        return res.status(500).json({ error: "Internal Server Error" });
     }
 }

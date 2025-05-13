@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             where: {
                 created_by: createdBy,
                 policy_process: "SELESAI",
+               
             },
             select: {
                 id: true,

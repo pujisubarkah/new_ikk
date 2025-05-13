@@ -15,6 +15,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+// Komponen terpisah
+import PolicyCard from "@/components/policy/PolicyCard";
+import PolicyStepsNav from "@/components/policy/PolicyStepsNav";
+import QuestionList from "@/components/policy/QuestionList";
+import AdditionalInfoSection from "@/components/policy/AdditionalInfoSection";
+
 type Policy = {
     id: string;
     nama_kebijakan: string;
@@ -56,18 +62,24 @@ export default function PolicyPage() {
     const params = useParams();
     const router = useRouter();
     const policyId = params?.id as string;
+
     const [activeStep, setActiveStep] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, { description: string; score: number }>>({});
     const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
     const [policyData, setPolicyData] = useState<Policy | null>(null);
-    const [additionalInfo, setAdditionalInfo] = useState("");
     const [apiQuestions, setApiQuestions] = useState<Question[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [open, setOpen] = useState(false);
 
-    // Fetch data policy dan pertanyaan
+    // State informasi tambahan per dimensi
+    const [additionalInfoA, setAdditionalInfoA] = useState("");
+    const [additionalInfoB, setAdditionalInfoB] = useState("");
+    const [additionalInfoC, setAdditionalInfoC] = useState("");
+    const [additionalInfoD, setAdditionalInfoD] = useState("");
+
+    // Load data awal (policy & pertanyaan)
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -83,10 +95,10 @@ export default function PolicyPage() {
                 const questionsRes = await fetch("/api/pertanyaan");
                 if (!questionsRes.ok) throw new Error("Gagal memuat pertanyaan");
                 const questionsData = await questionsRes.json();
-
                 if (Array.isArray(questionsData.data)) {
                     setApiQuestions(questionsData.data);
                 }
+
             } catch (err) {
                 console.error("Error fetching data:", err);
                 setError(err instanceof Error ? err.message : "Terjadi kesalahan saat memuat data");
@@ -94,8 +106,111 @@ export default function PolicyPage() {
                 setLoading(false);
             }
         };
+
         fetchData();
     }, [policyId]);
+
+    // Load jawaban dan file pendukung lama dari /api/answers
+    useEffect(() => {
+        if (!policyId || !apiQuestions.length) return;
+
+        const loadSavedAnswers = async () => {
+            try {
+                const answersRes = await fetch(`/api/answers?policyId=${policyId}`);
+                if (!answersRes.ok) return;
+
+                const answersData = await answersRes.json();
+
+                const savedAnswers: Record<string, { description: string; score: number }> = {};
+                const savedFiles: Record<string, string> = {};
+
+                apiQuestions.forEach((q) => {
+                    const columnCode = q.indicator_column_code;
+                    const score = answersData.data?.[columnCode];
+
+                    if (score !== undefined && q.instrument_answer) {
+                        const matchedAnswer = q.instrument_answer.find(
+                            (a) => a.level_score === String(score)
+                        );
+                        if (matchedAnswer) {
+                            savedAnswers[q.id] = {
+                                description: matchedAnswer.level_description,
+                                score: Number(matchedAnswer.level_score),
+                            };
+                        }
+                    }
+
+                    const dimension = q.dimension_name.charAt(0).toLowerCase();
+                    const infoKey = `informasi_${dimension}`;
+                    const fileInfo = answersData.data?.[infoKey];
+                    if (fileInfo) {
+                        savedFiles[q.id] = fileInfo;
+                    }
+                });
+
+                setSelectedAnswers(savedAnswers);
+                setUploadedFiles(savedFiles);
+
+                // Load informasi tambahan
+                setAdditionalInfoA(answersData.data?.informasi_a || "");
+                setAdditionalInfoB(answersData.data?.informasi_b || "");
+                setAdditionalInfoC(answersData.data?.informasi_c || "");
+                setAdditionalInfoD(answersData.data?.informasi_d || "");
+
+            } catch (error) {
+                console.error("Gagal memuat jawaban lama:", error);
+            }
+        };
+
+        loadSavedAnswers();
+    }, [policyId, apiQuestions]);
+
+    // Auto-save jawaban dan file pendukung
+    useEffect(() => {
+        if (!policyId || Object.keys(selectedAnswers).length === 0) return;
+
+        const timeout = setTimeout(async () => {
+            const userId = localStorage.getItem("id");
+
+            const answersToSubmit: Record<string, number> = {};
+            const infoToSubmit: Record<string, string> = {};
+
+            apiQuestions.forEach((item) => {
+                const answer = selectedAnswers[item.id];
+                if (answer?.score !== undefined) {
+                    answersToSubmit[item.indicator_column_code] = answer.score;
+                }
+                if (uploadedFiles[item.id]) {
+                    infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
+                        uploadedFiles[item.id];
+                }
+            });
+
+            // Tambahkan informasi tambahan
+            infoToSubmit.informasi_a = additionalInfoA;
+            infoToSubmit.informasi_b = additionalInfoB;
+            infoToSubmit.informasi_c = additionalInfoC;
+            infoToSubmit.informasi_d = additionalInfoD;
+
+            try {
+                await fetch("/api/answers", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        policy_id: policyId,
+                        created_by: userId,
+                        active_year: 2025,
+                        ...answersToSubmit,
+                        ...infoToSubmit,
+                    }),
+                });
+            } catch (error) {
+                console.error("Auto-save gagal:", error);
+            }
+        }, 1000); // debounce 1 detik
+
+        return () => clearTimeout(timeout);
+    }, [selectedAnswers, uploadedFiles, policyId]);
 
     // Ubah jawaban
     const handleAnswerChange = (questionId: string, answerDescription: string, answerScore: number) => {
@@ -126,10 +241,8 @@ export default function PolicyPage() {
     const handleLinkUpload = async (questionId: string, link: string, questionIndex: number) => {
         const question = apiQuestions.find(q => q.id === questionId);
         if (!question) return;
-
         const fileName = getFileNameFromQuestion(question.dimension_name, questionIndex);
         if (!fileName) return;
-
         try {
             await fetch("/api/upload-supporting-file", {
                 method: "POST",
@@ -153,44 +266,42 @@ export default function PolicyPage() {
 
     // Simpan semua jawaban dan kirim ke koordinator
     const handleConfirm = async () => {
-        const unansweredQuestions = apiQuestions.filter((item) => {
-            return !selectedAnswers[item.id]; // Cek apakah sama sekali belum dipilih
-        });
-
+        const unansweredQuestions = apiQuestions.filter((item) => !selectedAnswers[item.id]);
         if (unansweredQuestions.length > 0) {
-            const pesan = `Masih ada ${unansweredQuestions.length} pertanyaan yang belum dijawab:\n\n${unansweredQuestions
-                .map(q => `- ${q.indicator_question}`)
-                .join('\n')}`;
+            const pesan = `Masih ada ${unansweredQuestions.length} pertanyaan yang belum dijawab:\n${unansweredQuestions.map(q => `- ${q.indicator_question}`).join('\n')}`;
             alert(pesan);
-
             const firstUnansweredId = unansweredQuestions[0].id;
             const elemen = document.getElementById(`question-${firstUnansweredId}`);
             if (elemen) {
                 elemen.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-
             return;
         }
 
         setIsSaving(true);
         const userId = localStorage.getItem("id");
 
+        const answersToSubmit: Record<string, number> = {};
+        const infoToSubmit: Record<string, string> = {};
+
+        apiQuestions.forEach((item) => {
+            const answer = selectedAnswers[item.id];
+            if (answer?.score !== undefined) {
+                answersToSubmit[item.indicator_column_code] = answer.score;
+            }
+            if (uploadedFiles[item.id]) {
+                infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
+                    uploadedFiles[item.id];
+            }
+        });
+
+        // Tambahkan informasi tambahan
+        infoToSubmit.informasi_a = additionalInfoA;
+        infoToSubmit.informasi_b = additionalInfoB;
+        infoToSubmit.informasi_c = additionalInfoC;
+        infoToSubmit.informasi_d = additionalInfoD;
+
         try {
-            const answersToSubmit: Record<string, number> = {};
-            const infoToSubmit: Record<string, string> = {};
-
-            apiQuestions.forEach((item) => {
-                const answer = selectedAnswers[item.id];
-                if (answer?.score !== undefined) {
-                    answersToSubmit[item.indicator_column_code] = answer.score;
-                }
-                if (uploadedFiles[item.id]) {
-                    infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
-                        uploadedFiles[item.id];
-                }
-            });
-
-            // Simpan jawaban
             const saveResponse = await fetch("/api/save-ikk-ki-score", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -205,7 +316,6 @@ export default function PolicyPage() {
 
             if (!saveResponse.ok) throw new Error("Gagal menyimpan jawaban");
 
-            // Kirim ke koordinator
             const sendResponse = await fetch("/api/policies/send_to_ki", {
                 method: "POST",
                 headers: {
@@ -235,6 +345,7 @@ export default function PolicyPage() {
         }
     };
 
+    // Render UI
     if (loading) {
         return (
             <Sidebar>
@@ -274,12 +385,60 @@ export default function PolicyPage() {
         );
     }
 
+    const activeDimensionName = stepDimensionMap[activeStep];
+    const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase(); // 'a', 'b', dll.
+
+    let currentAdditionalInfo = "";
+    let setAdditionalInfoForCurrentDim = (val: string) => {};
+
+    switch (activeDimensionKey) {
+        case "a":
+            currentAdditionalInfo = additionalInfoA;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoA;
+            break;
+        case "b":
+            currentAdditionalInfo = additionalInfoB;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoB;
+            break;
+        case "c":
+            currentAdditionalInfo = additionalInfoC;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoC;
+            break;
+        case "d":
+            currentAdditionalInfo = additionalInfoD;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoD;
+            break;
+        default:
+            currentAdditionalInfo = "";
+    }
+
+    const handleSaveAdditionalInfo = async () => {
+        try {
+            const response = await fetch("/api/answers", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    policy_id: policyId,
+                    [`informasi_${activeDimensionKey}`]: currentAdditionalInfo
+                })
+            });
+
+            if (!response.ok) throw new Error("Gagal menyimpan informasi tambahan");
+            toast.success("Informasi tambahan berhasil disimpan");
+        } catch (error) {
+            console.error("Error saving additional info:", error);
+            toast.error("Gagal menyimpan informasi tambahan");
+        }
+    };
+
     return (
         <Sidebar>
             <div className="w-full px-6 py-8">
                 <div className="space-y-8">
                     <PolicyCard policy={policyData} />
-                    {/* Tombol Simpan & Kirim */}
+                    {/* Tombol Kirim */}
                     <div className="flex justify-end">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
@@ -309,226 +468,26 @@ export default function PolicyPage() {
                             </DialogContent>
                         </Dialog>
                     </div>
+                    {/* Navigasi Step */}
                     <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
-                    <div className="space-y-6">
-                        <QuestionList
-                            activeStep={activeStep}
-                            selectedAnswers={selectedAnswers}
-                            onAnswerChange={handleAnswerChange}
-                            onLinkUpload={handleLinkUpload}
-                            uploadedFiles={uploadedFiles}
-                            apiQuestions={apiQuestions}
-                        />
-                        <AdditionalInfoSection
-                            value={additionalInfo}
-                            onChange={(e) => setAdditionalInfo(e.target.value)}
-                            onSave={() => {
-                                toast.success("Informasi tambahan berhasil disimpan");
-                                console.log("Saved additional info:", additionalInfo);
-                            }}
-                        />
-                    </div>
+                    {/* Daftar Pertanyaan */}
+                    <QuestionList
+                        activeStep={activeStep}
+                        selectedAnswers={selectedAnswers}
+                        onAnswerChange={handleAnswerChange}
+                        onLinkUpload={handleLinkUpload}
+                        uploadedFiles={uploadedFiles}
+                        apiQuestions={apiQuestions}
+                    />
+                    {/* Informasi Tambahan Dinamis */}
+                    <AdditionalInfoSection
+                        value={currentAdditionalInfo}
+                        onChange={(e) => setAdditionalInfoForCurrentDim(e.target.value)}
+                        onSave={handleSaveAdditionalInfo}
+                        dimensionName={activeDimensionName}
+                    />
                 </div>
             </div>
         </Sidebar>
-    );
-}
-
-// --- Komponen Pendukung ---
-
-function PolicyCard({ policy }: { policy: Policy }) {
-    const router = useRouter();
-    const statusColors = {
-        'MASUK': 'bg-blue-500',
-        'PROSES': 'bg-yellow-500',
-        'SELESAI': 'bg-green-500'
-    };
-
-    return (
-        <div className="p-6 rounded-xl shadow-md bg-white">
-            <button
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6"
-                onClick={() => router.back()}
-            >
-                <FaArrowLeft />
-                <span>Kembali</span>
-            </button>
-            <div className="mb-4">
-                <small className="text-gray-500 text-sm">{policy.instansi}</small>
-                <h2 className="text-xl font-bold text-gray-800 mt-1">{policy.nama_kebijakan}</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <small className="text-gray-500 text-sm">Status Kebijakan</small>
-                    <span className={`inline-block px-3 py-1 rounded-full text-white text-xs font-medium mt-1 ${
-                        statusColors[policy.status_kebijakan as keyof typeof statusColors] || 'bg-gray-500'
-                    }`}>
-                        {policy.status_kebijakan}
-                    </span>
-                </div>
-                <div>
-                    <small className="text-gray-500 text-sm">Tanggal Pengesahan</small>
-                    <strong className="text-gray-800 mt-1 block">
-                        {new Date(policy.tanggal_proses).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                        })}
-                    </strong>
-                </div>
-                <div>
-                    <small className="text-gray-500 text-sm">Progres Pengisian</small>
-                    <div className="flex items-center gap-2 mt-1">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5 flex-1">
-                            <div
-                                className="bg-blue-600 h-2.5 rounded-full"
-                                style={{ width: `${policy.progress_pengisian}%` }}
-                            ></div>
-                        </div>
-                        <span className="text-blue-600 text-sm font-medium">
-                            {Number(policy.progress_pengisian).toFixed(2)}%
-                        </span>
-                    </div>
-                </div>
-                <div>
-                    <small className="text-gray-500 text-sm">Nilai Akhir Kebijakan</small>
-                    <strong className="text-gray-800 mt-1 block">
-                        {policy.nilai_akhir ?? '-'}
-                    </strong>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function PolicyStepsNav({
-    activeStep,
-    onChangeStep,
-}: {
-    activeStep: number;
-    onChangeStep: (step: number) => void;
-}) {
-    return (
-        <div className="overflow-x-auto pb-2">
-            <ul className="flex gap-2 w-max min-w-full">
-                {steps.map((step, index) => (
-                    <li key={index}>
-                        <button
-                            onClick={() => onChangeStep(index)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-w-max ${
-                                index === activeStep
-                                    ? "bg-blue-600 text-white shadow-md"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                            }`}
-                        >
-                            {step}
-                        </button>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
-
-function QuestionList({
-    activeStep,
-    selectedAnswers,
-    uploadedFiles,
-    onAnswerChange,
-    onLinkUpload,
-    apiQuestions,
-}: {
-    activeStep: number;
-    selectedAnswers: Record<string, { description: string; score: number }>;
-    uploadedFiles: Record<string, string>;
-    onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
-    onLinkUpload: (questionId: string, link: string, questionIndex: number) => void;
-    apiQuestions: Question[];
-}) {
-    const dimensionName = stepDimensionMap[activeStep];
-    const filteredQuestions = apiQuestions.filter(q => q.dimension_name === dimensionName);
-
-    return (
-        <div className="bg-white p-6 rounded-xl shadow space-y-6">
-            <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
-            {filteredQuestions.map((item, index) => (
-                <div key={item.id} id={`question-${item.id}`} className="space-y-4 pb-4 border-b last:border-b-0">
-                    <div className="flex items-center gap-2">
-                        <p className="font-semibold text-gray-800">{item.indicator_question}</p>
-                        <button
-                            onClick={() => toast(item.indicator_description, { icon: "💡" })}
-                            className="text-blue-600 hover:text-blue-800"
-                            title="Lihat deskripsi indikator"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a7 7 0 00-7 7c0 2.5 1.5 4.5 3.5 5.5v2.5h7v-2.5c2-1 3.5-3 3.5-5.5a7 7 0 00-7-7z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 21h6" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div className="space-y-3">
-                        {item.instrument_answer
-                            .sort((a, b) => a.level_id - b.level_id)
-                            .map((opt) => (
-                                <label key={opt.level_id} className="flex items-start gap-3 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name={`question-${item.id}`}
-                                        checked={selectedAnswers[item.id]?.description === opt.level_description}
-                                        onChange={() =>
-                                            onAnswerChange(item.id, opt.level_description, Number(opt.level_score))
-                                        }
-                                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
-                                    />
-                                    <span className="text-gray-700">{opt.level_description}</span>
-                                </label>
-                            ))}
-                    </div>
-                    <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Unggah dokumen pendukung <span className="text-xs text-gray-500">(Google Drive link)</span>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="https://drive.google.com/... "
-                            value={uploadedFiles[item.id] || ""}
-                            onChange={(e) => onLinkUpload(item.id, e.target.value, index)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-function AdditionalInfoSection({
-    value,
-    onChange,
-    onSave,
-}: {
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-    onSave?: () => void;
-}) {
-    return (
-        <div className="bg-white p-6 rounded-xl shadow space-y-4">
-            <h3 className="text-lg font-bold text-gray-800">Informasi Tambahan</h3>
-            <textarea
-                value={value}
-                onChange={onChange}
-                rows={5}
-                placeholder="Tuliskan informasi tambahan terkait pengisian..."
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-            <div className="text-right">
-                <button
-                    onClick={onSave}
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-md shadow"
-                >
-                    Simpan
-                </button>
-            </div>
-        </div>
     );
 }
