@@ -380,32 +380,30 @@ export default function PolicyPage() {
         );
     }
 
-    const activeDimensionName = stepDimensionMap[activeStep];
-    const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase(); // 'a', 'b', dll.
-
-    let currentAdditionalInfo = "";
-let setAdditionalInfoForCurrentDim = (val: string) => {}; // Tetap terima val, tapi kosongkan jika tidak dipakai sekarang
+       const activeDimensionName = stepDimensionMap[activeStep];
+const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase(); // 'a', 'b', dll.
+let currentAdditionalInfo = "";
+let setAdditionalInfoForCurrentDim: React.Dispatch<React.SetStateAction<string>>;
 
 switch (activeDimensionKey) {
     case "a":
         currentAdditionalInfo = additionalInfoA;
-        setAdditionalInfoForCurrentDim = (val: string) => setAdditionalInfoA(val);
+        setAdditionalInfoForCurrentDim = setAdditionalInfoA;
         break;
     case "b":
         currentAdditionalInfo = additionalInfoB;
-        setAdditionalInfoForCurrentDim = (val: string) => setAdditionalInfoB(val);
+        setAdditionalInfoForCurrentDim = setAdditionalInfoB;
         break;
     case "c":
         currentAdditionalInfo = additionalInfoC;
-        setAdditionalInfoForCurrentDim = (val: string) => setAdditionalInfoC(val);
+        setAdditionalInfoForCurrentDim = setAdditionalInfoC;
         break;
     case "d":
         currentAdditionalInfo = additionalInfoD;
-        setAdditionalInfoForCurrentDim = (val: string) => setAdditionalInfoD(val);
+        setAdditionalInfoForCurrentDim = setAdditionalInfoD;
         break;
     default:
         currentAdditionalInfo = "";
-        setAdditionalInfoForCurrentDim = () => {}; // Kosongkan jika tidak ada match
 }
 
     const handleSaveAdditionalInfo = async () => {

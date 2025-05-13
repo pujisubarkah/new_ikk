@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import PolicyTableRow from './PolicyTableRow';
 import PolicyTablePagination from './PolicyTablePagination';
 

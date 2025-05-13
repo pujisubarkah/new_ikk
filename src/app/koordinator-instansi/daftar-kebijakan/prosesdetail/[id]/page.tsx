@@ -45,12 +45,7 @@ type Question = {
     }[];
 };
 
-const steps = [
-    "1. Perencanaan Kebijakan",
-    "2. Implementasi Kebijakan",
-    "3. Evaluasi Keberlanjutan",
-    "4. Transparansi dan Partisipasi",
-];
+
 
 const stepDimensionMap: Record<number, string> = {
     0: "Perencanaan Kebijakan",
@@ -318,30 +313,30 @@ export default function PolicyPage() {
     }
 
     const activeDimensionName = stepDimensionMap[activeStep];
-    const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase(); // 'a', 'b', dll.
-    let currentAdditionalInfo = "";
-    let setAdditionalInfoForCurrentDim = (val: string) => {};
+const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase(); // 'a', 'b', dll.
+let currentAdditionalInfo = "";
+let setAdditionalInfoForCurrentDim: React.Dispatch<React.SetStateAction<string>>;
 
-    switch (activeDimensionKey) {
-        case "a":
-            currentAdditionalInfo = additionalInfoA;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoA;
-            break;
-        case "b":
-            currentAdditionalInfo = additionalInfoB;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoB;
-            break;
-        case "c":
-            currentAdditionalInfo = additionalInfoC;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoC;
-            break;
-        case "d":
-            currentAdditionalInfo = additionalInfoD;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoD;
-            break;
-        default:
-            currentAdditionalInfo = "";
-    }
+switch (activeDimensionKey) {
+    case "a":
+        currentAdditionalInfo = additionalInfoA;
+        setAdditionalInfoForCurrentDim = setAdditionalInfoA;
+        break;
+    case "b":
+        currentAdditionalInfo = additionalInfoB;
+        setAdditionalInfoForCurrentDim = setAdditionalInfoB;
+        break;
+    case "c":
+        currentAdditionalInfo = additionalInfoC;
+        setAdditionalInfoForCurrentDim = setAdditionalInfoC;
+        break;
+    case "d":
+        currentAdditionalInfo = additionalInfoD;
+        setAdditionalInfoForCurrentDim = setAdditionalInfoD;
+        break;
+    default:
+        currentAdditionalInfo = "";
+}
 
     const handleSaveAdditionalInfo = async () => {
         try {

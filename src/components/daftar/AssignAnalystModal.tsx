@@ -30,7 +30,7 @@ export default function AssignAnalystModal({ isOpen, onClose, policy }: AssignAn
                 const koorId = localStorage.getItem('id');
                 const res = await axios.get(`/api/koorinstansi/${koorId}/analis`);
                 setAnalysts(res.data.data || []);
-            } catch (err) {
+            } catch {
                 toast.error('Gagal memuat daftar analis');
                 setAnalysts([]);
             } finally {
@@ -57,7 +57,7 @@ export default function AssignAnalystModal({ isOpen, onClose, policy }: AssignAn
                 toast.success('Analis berhasil ditetapkan');
                 onClose();
             }
-        } catch (err) {
+        } catch {
             toast.error('Gagal menetapkan analis');
         }
     };

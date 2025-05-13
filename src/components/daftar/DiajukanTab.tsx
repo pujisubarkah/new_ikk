@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import SendPolicyDialog from './SendPolicyDialog';
 import PolicyTableRow from './PolicyTableRow';
@@ -13,10 +12,10 @@ interface Policy {
     tanggal: string;
     file: string;
     status: string;
+    nilai_akhir: string; // Make required to match PolicyTableRow
 }
 
 export default function DiajukanTab() {
-    const router = useRouter();
     const [data, setData] = useState<Policy[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +25,6 @@ export default function DiajukanTab() {
     const currentData = data.slice(startIndex, startIndex + itemsPerPage);
     const totalPages = Math.ceil(data.length / itemsPerPage);
 
-    // Fetch data dari API
     useEffect(() => {
         const fetchPolicies = async () => {
             try {
@@ -36,14 +34,24 @@ export default function DiajukanTab() {
                 const res = await axios.get(`/api/policies/${adminId}/diajukan`);
                 const fetched = res.data?.data || [];
 
-                const mapped = fetched.map((item: any) => ({
+                interface FetchedPolicy {
+                    id: string;
+                    nama_kebijakan?: string;
+                    tanggal_berlaku?: string;
+                    file_url?: string;
+                    status?: string;
+                    nilai_akhir?: string;
+                }
+
+                const mapped = fetched.map((item: FetchedPolicy) => ({
                     id: parseInt(item.id),
                     nama: item.nama_kebijakan || '-',
                     tanggal: item.tanggal_berlaku
                         ? new Date(item.tanggal_berlaku).toLocaleDateString('id-ID')
                         : '-',
                     file: item.file_url || '-',
-                    status: item.status || '-'
+                    status: item.status || '-',
+                    nilai_akhir: item.nilai_akhir // Will be undefined if not present
                 }));
 
                 setData(mapped);
