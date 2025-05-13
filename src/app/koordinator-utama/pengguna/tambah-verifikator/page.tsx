@@ -90,7 +90,6 @@ export default function TambahVerifikator() {
     const { name, value } = e.target;
 
     if (name === "agency_id_panrb") {
-      const selected = instansis.find((inst) => inst.id === value);
       setFormData((prev) => ({
         ...prev,
         agency_id_panrb: value,
