@@ -81,7 +81,6 @@ const TambahPengguna: React.FC = () => {
   const mandatoryFields = [
     "nama",
     "nip",
-    "nik",
     "instansi",
     "email",
     "password",
@@ -140,14 +139,6 @@ const TambahPengguna: React.FC = () => {
         isValid = false;
       }
     });
-
-    
-
-    // Validasi NIK
-    if (formData.nik && !/^\d+$/.test(formData.nik)) {
-      newErrors.nik = "NIK harus berupa angka";
-      isValid = false;
-    }
 
     // Validasi telepon
     if (formData.telepon && !/^\d+$/.test(formData.telepon)) {
@@ -266,7 +257,7 @@ const TambahPengguna: React.FC = () => {
             {/* BAGIAN KIRI */}
             <div className="grid gap-4">
               <div>
-                <Label htmlFor="nip">NIP*</Label>
+                <Label htmlFor="nip">Nomor Induk Pegawai (NIP)*</Label>
                 <Input
                   id="nip"
                   name="nip"
@@ -294,16 +285,15 @@ const TambahPengguna: React.FC = () => {
               </div>
               
               <div>
-                <Label htmlFor="nik">NIK*</Label>
+                <Label htmlFor="nik">NIK (opsional)</Label>
                 <Input 
                   id="nik" 
                   name="nik" 
                   value={formData.nik} 
-                  onChange={handleChange} 
-                  required
+                  onChange={handleChange}
                   className={errors.nik ? "border-red-500" : ""}
                 />
-                {errors.nik && <p className="text-red-500 text-sm mt-1">{errors.nik}</p>}
+                <p className="text-sm text-gray-500 mt-1"> Tidak wajib diisi </p>
               </div>
               
               <div>
