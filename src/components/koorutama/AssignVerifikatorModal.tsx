@@ -56,8 +56,9 @@ useEffect(() => {
 
       setVerifikators(mappedData);
     } catch (error) {
-      toast.error("Gagal memuat daftar verifikator");
-      setVerifikators([]);
+  void error; // <-- Beri tahu ESLint bahwa error digunakan
+  toast.error("Gagal memuat daftar verifikator");
+  setVerifikators([]);
     } finally {
       setLoading(false);
     }
