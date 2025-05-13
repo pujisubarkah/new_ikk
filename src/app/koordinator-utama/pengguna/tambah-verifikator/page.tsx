@@ -1,227 +1,362 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import Sidebar from "@/components/sidebar-koornas"
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import Sidebar from "@/components/sidebar-koornas";
+import { toast } from "sonner"; // Hanya import toast, tidak perlu Toaster
 
 interface FormData {
-  nama: string
-  nip: string
-  nik: string
-  instansi: string
-  email: string
-  role: string
-  tahun_aktif: string
-  password: string
-  jabatan: string
-  telepon: string
-  status: string
-}
-
-interface Role {
-  id: string
-  name: string
+  name: string;
+  username: string;
+  email: string;
+  position: string;
+  phone: string;
+  work_unit: string;
+  agency_id_panrb: string;
+  password: string;
+  koorNasionalId: string;
+  status: "aktif" | "non_aktif";
 }
 
 interface Instansi {
+  id: string;
+  name: string;
   instansi: {
-    agency_id: string
-    agency_name: string
-  }
-  id: string
-  name: string
-  category: string
+    agency_id: string;
+    agency_name: string;
+  };
 }
 
-const TambahPengguna: React.FC = () => {
+interface ErrorResponse {
+  message?: string;
+}
+
+const isErrorResponse = (data: unknown): data is ErrorResponse => {
+  return typeof data === "object" && data !== null && "message" in data;
+};
+
+export default function TambahVerifikator() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState<FormData>({
-    nama: "",
-    nip: "",
-    nik: "",
-    instansi: "",
+    name: "",
+    username: "",
     email: "",
-    role: "3",
-    tahun_aktif: "2025",
+    position: "",
+    phone: "",
+    work_unit: "",
+    agency_id_panrb: "",
     password: "",
-    jabatan: "",
-    telepon: "",
-    status: "",
-  })
+    koorNasionalId: "",
+    status: "aktif",
+  });
 
-  const [roles, setRoles] = useState<Role[]>([])
-  const [instansis, setInstansis] = useState<Instansi[]>([])
+  const [instansis, setInstansis] = useState<Instansi[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
-  const router = useRouter()
-
+  // Ambil ID koordinator nasional dari localStorage
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const res = await fetch("/api/role")
-        const data = await res.json()
-        setRoles(data)
-      } catch (err) {
-        console.error("Failed to fetch roles", err)
-      }
+    const koorId = localStorage.getItem("id");
+    if (koorId) {
+      setFormData((prev) => ({
+        ...prev,
+        koorNasionalId: koorId,
+      }));
     }
+  }, []);
 
+  // Fetch instansi
+  useEffect(() => {
     const fetchInstansi = async () => {
       try {
-        const res = await fetch("/api/instansi")
-        const data = await res.json()
-        setInstansis(data)
+        const res = await fetch("/api/instansi");
+        const data = await res.json();
+        setInstansis(data);
       } catch (err) {
-        console.error("Failed to fetch instansi", err)
+        console.error("Gagal memuat instansi", err);
       }
+    };
+
+    fetchInstansi();
+  }, []);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+
+    if (name === "agency_id_panrb") {
+      const selected = instansis.find((inst) => inst.id === value);
+      setFormData((prev) => ({
+        ...prev,
+        agency_id_panrb: value,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
-
-    fetchRoles()
-    fetchInstansi()
-  }, [])
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Form Data:", formData)
-    // TODO: Kirim data ke backend
-    // Example: const res = await fetch("/api/user", { method: "POST", body: JSON.stringify(formData) })
-  }
+    e.preventDefault();
+    setSubmitting(true);
+    setFormErrors({});
+
+    const errors: Partial<Record<keyof FormData, string>> = {};
+
+    // Validasi manual
+    if (!formData.name || formData.name.trim().length < 3) {
+      errors.name = "Nama minimal 3 karakter";
+    }
+
+    if (!formData.username || formData.username.trim().length < 3) {
+      errors.username = "Username minimal 3 karakter";
+    }
+
+    if (!formData.email || !/^\S+@\S+\.\S+$/.test(formData.email)) {
+      errors.email = "Email tidak valid";
+    }
+
+    if (!formData.position || formData.position.trim().length < 2) {
+      errors.position = "Jabatan minimal 2 karakter";
+    }
+
+    if (!formData.phone || formData.phone.replace(/\D/g, "").length < 10) {
+      errors.phone = "Nomor telepon minimal 10 angka";
+    }
+
+    if (!formData.agency_id_panrb) {
+      errors.agency_id_panrb = "Pilih instansi";
+    }
+
+    if (!formData.password || formData.password.length < 8) {
+      errors.password = "Password minimal 8 karakter";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+
+      Object.values(errors).forEach((msg) => {
+        toast.error(msg); // Hanya gunakan toast.error
+      });
+
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/verifikator/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        const errorData: unknown = await res.json();
+        let errorMessage = "Gagal menambahkan verifikator";
+
+        if (isErrorResponse(errorData)) {
+          errorMessage = errorData.message || errorMessage;
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      toast.success("Verifikator berhasil ditambahkan!");
+      router.push("/koordinator-utama/pengguna");
+    } catch (err: unknown) {
+      let errorMessage = "Gagal menambahkan verifikator";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      toast.error("Error", {
+        description: errorMessage,
+      });
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleBack = () => {
-    router.push("/koordinator-utama/pengguna")
-  }
+    router.back();
+  };
 
   return (
+    <div className="flex min-h-screen">
       <Sidebar>
-    <div className="w-full px-8 py-10 bg-white shadow-md rounded-md">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Tambah Verifikator</h1>
-      </div>
-
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* ROLE */}
-        <div className="md:col-span-2">
-        <Label htmlFor="role" className="block mb-2 font-medium">Role</Label>
-        <Input
-          id="role"
-          name="role"
-          value={roles.find((role) => role.id === '3')?.name || ""}
-          readOnly
-          className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 text-gray-500 focus:outline-none"
-        />
-        </div>
-
-        {/* KIRI */}
-        <div className="grid gap-6">
-        <div>
-          <Label htmlFor="nip" className="block mb-2 font-medium">NIP</Label>
-          <Input id="nip" name="nip" value={formData.nip} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <Label htmlFor="nik" className="block mb-2 font-medium">NIK</Label>
-          <Input id="nik" name="nik" value={formData.nik} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <Label htmlFor="instansi" className="block mb-2 font-medium">Nama Instansi</Label>
-          <select
-            id="instansi"
-            name="instansi"
-            value={formData.instansi}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="" disabled>Pilih Instansi</option>
-                 {instansis
-                 .filter((item, index, self) => 
-                   index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
-                 )
-                 .sort((a, b) => {
-                   const idA = a.instansi?.agency_id || '';
-                   const idB = b.instansi?.agency_id || '';
-                   return idA.localeCompare(idB);
-                 })
-                 .map((item) => (
-                   <option key={item.id} value={item.instansi?.agency_id || ''}>
-                   {item.instansi?.agency_name || "NA"}
-                   </option>
-                 ))}
-          </select>
-        </div>
-        <div>
-          <Label htmlFor="email" className="block mb-2 font-medium">Email Aktif</Label>
-          <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <Label htmlFor="password" className="block mb-2 font-medium">Password</Label>
-          <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        </div>
-
-        {/* KANAN */}
-        <div className="grid gap-6">
-        <div>
-          <Label htmlFor="nama" className="block mb-2 font-medium">Nama</Label>
-          <Input id="nama" name="nama" value={formData.nama} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <Label htmlFor="jabatan" className="block mb-2 font-medium">Jabatan</Label>
-          <Input id="jabatan" name="jabatan" value={formData.jabatan} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <Label htmlFor="telepon" className="block mb-2 font-medium">Nomor Telepon Aktif</Label>
-          <div className="flex items-center space-x-2">
-            <span className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-500">+62</span>
-            <Input
-              id="telepon"
-              name="telepon"
-              value={formData.telepon}
-              onChange={handleChange}
-              required
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nomor Telepon"
-            />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="status" className="block mb-2 font-medium">Status</Label>
-          <select
-            id="status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="" disabled>Pilih Status</option>
-            <option value="Aktif">Aktif</option>
-            <option value="Non Aktif">Non Aktif</option>
-          </select>
-        </div>
-        </div>
-
-        {/* BUTTON */}
-        <div className="col-span-1 md:col-span-2 flex justify-between mt-6">
-        <Button type="button" onClick={handleBack} className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md">
-          Kembali
-        </Button>
-        <Button type="submit" className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md">
-          Simpan
-        </Button>
-        </div>
-      </form>
-    </div>
+        <></>
       </Sidebar>
-  )
-}
+      <main className="flex-1 p-6 bg-gray-50">
+        <h1 className="text-2xl font-bold mb-4 text-gray-800">Tambah Verifikator</h1>
 
-export default TambahPengguna
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow">
+          {/* KIRI */}
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="username">NIP</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+              />
+              {formErrors.username && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.username}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="email">Email Aktif</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+              {formErrors.email && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              {formErrors.password && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="agency_id_panrb">Instansi</Label>
+              <select
+                id="agency_id_panrb"
+                name="agency_id_panrb"
+                value={formData.agency_id_panrb}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="" disabled>Pilih Instansi</option>
+                {instansis
+                  .filter((item) => item.instansi && item.instansi.agency_name)
+                  .map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.instansi.agency_name}
+                    </option>
+                  ))}
+              </select>
+              {formErrors.agency_id_panrb && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.agency_id_panrb}</p>
+              )}
+            </div>
+          </div>
+
+          {/* KANAN */}
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="name">Nama Lengkap</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+              {formErrors.name && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="position">Jabatan</Label>
+              <Input
+                id="position"
+                name="position"
+                value={formData.position}
+                onChange={handleChange}
+                required
+              />
+              {formErrors.position && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.position}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="work_unit">Unit Kerja</Label>
+              <Input
+                id="work_unit"
+                name="work_unit"
+                value={formData.work_unit}
+                onChange={handleChange}
+                required
+                placeholder="Contoh: BPSDM Kemenkes"
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Nomor Telepon Aktif</Label>
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">+62</span>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="pl-14"
+                  placeholder="Nomor Telepon"
+                />
+              </div>
+              {formErrors.phone && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="aktif">Aktif</option>
+                <option value="non_aktif">Non Aktif</option>
+              </select>
+            </div>
+          </div>
+
+          {/* BUTTON */}
+          <div className="col-span-1 md:col-span-2 flex justify-between mt-4 pt-4 border-t">
+            <Button type="button" variant="secondary" onClick={handleBack}>
+              Kembali
+            </Button>
+            <Button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={submitting}
+            >
+              {submitting ? "Menyimpan..." : "Simpan Verifikator"}
+            </Button>
+          </div>
+        </form>
+      </main>
+    </div>
+  );
+}
