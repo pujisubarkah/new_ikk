@@ -10,10 +10,11 @@ interface Policy {
     nama: string;
     analis: string;
     tanggal: string;
+    nilai_akhir: string;
 }
 
 export default function DisetujuiTab() {
-    const router = useRouter();
+    // Removed unused router variable
     const [data, setData] = useState<Policy[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
@@ -31,14 +32,23 @@ export default function DisetujuiTab() {
 
                 const res = await axios.get(`/api/policies/${adminId}/disetujui`);
                 const fetched = res.data?.data || [];
+                interface FetchedPolicy {
+                    id: string;
+                    nama_kebijakan?: string;
+                    analis?: { nama: string };
+                    nama_analis?: string;
+                    tanggal_berlaku?: string;
+                    nilai_akhir?: string;
+                }
 
-                const mapped = fetched.map((item: any) => ({
+                const mapped = fetched.map((item: FetchedPolicy) => ({
                     id: parseInt(item.id),
                     nama: item.nama_kebijakan || '-',
                     analis: item.analis?.nama || item.nama_analis || 'Belum ditetapkan',
                     tanggal: item.tanggal_berlaku
                         ? new Date(item.tanggal_berlaku).toLocaleDateString('id-ID')
                         : '-',
+                    nilai_akhir: item.nilai_akhir || '-',
                 }));
 
                 setData(mapped);

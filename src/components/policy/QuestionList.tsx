@@ -48,19 +48,6 @@ export default function QuestionList({
     const dimensionName = stepDimensionMap[activeStep];
     const filteredQuestions = apiQuestions.filter(q => q.dimension_name === dimensionName);
 
-    // Mapping file
-    const getFileNameFromQuestion = (dimension: string, questionIndex: number): string | null => {
-        const prefixMap: Record<string, string> = {
-            "Perencanaan Kebijakan": "a",
-            "Implementasi Kebijakan": "b",
-            "Evaluasi dan Keberlanjutan Kebijakan": "c",
-            "Transparansi dan Partisipasi Publik": "d",
-        };
-        const prefix = prefixMap[dimension];
-        if (!prefix) return null;
-        const order = questionIndex % 3 + 1;
-        return `file_url_${prefix}${order}`;
-    };
 
     return (
         <div className="bg-white p-6 rounded-xl shadow space-y-6">

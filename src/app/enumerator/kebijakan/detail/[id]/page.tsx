@@ -44,12 +44,7 @@ type Question = {
     }[];
 };
 
-const steps = [
-    "1. Perencanaan Kebijakan",
-    "2. Implementasi Kebijakan",
-    "3. Evaluasi Keberlanjutan",
-    "4. Transparansi dan Partisipasi",
-];
+// Removed unused 'steps' variable
 
 const stepDimensionMap: Record<number, string> = {
     0: "Perencanaan Kebijakan",
@@ -389,28 +384,29 @@ export default function PolicyPage() {
     const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase(); // 'a', 'b', dll.
 
     let currentAdditionalInfo = "";
-    let setAdditionalInfoForCurrentDim = (val: string) => {};
+let setAdditionalInfoForCurrentDim = (val: string) => {}; // Tetap terima val, tapi kosongkan jika tidak dipakai sekarang
 
-    switch (activeDimensionKey) {
-        case "a":
-            currentAdditionalInfo = additionalInfoA;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoA;
-            break;
-        case "b":
-            currentAdditionalInfo = additionalInfoB;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoB;
-            break;
-        case "c":
-            currentAdditionalInfo = additionalInfoC;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoC;
-            break;
-        case "d":
-            currentAdditionalInfo = additionalInfoD;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoD;
-            break;
-        default:
-            currentAdditionalInfo = "";
-    }
+switch (activeDimensionKey) {
+    case "a":
+        currentAdditionalInfo = additionalInfoA;
+        setAdditionalInfoForCurrentDim = (val: string) => setAdditionalInfoA(val);
+        break;
+    case "b":
+        currentAdditionalInfo = additionalInfoB;
+        setAdditionalInfoForCurrentDim = (val: string) => setAdditionalInfoB(val);
+        break;
+    case "c":
+        currentAdditionalInfo = additionalInfoC;
+        setAdditionalInfoForCurrentDim = (val: string) => setAdditionalInfoC(val);
+        break;
+    case "d":
+        currentAdditionalInfo = additionalInfoD;
+        setAdditionalInfoForCurrentDim = (val: string) => setAdditionalInfoD(val);
+        break;
+    default:
+        currentAdditionalInfo = "";
+        setAdditionalInfoForCurrentDim = () => {}; // Kosongkan jika tidak ada match
+}
 
     const handleSaveAdditionalInfo = async () => {
         try {

@@ -22,7 +22,7 @@ interface FetchedPolicy {
 }
 
 export default function SelesaiTab() {
-    const router = useRouter();
+    // Removed unused router variable
     const [data, setData] = useState<Policy[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);

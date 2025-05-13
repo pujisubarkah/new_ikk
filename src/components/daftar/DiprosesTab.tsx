@@ -11,10 +11,11 @@ interface Policy {
     enumerator: string;
     progress: string;
     tanggalAssign: string;
+    nilai_akhir: string;
 }
 
 export default function DiprosesTab() {
-    const router = useRouter();
+    // Removed unused router variable
     const [data, setData] = useState<Policy[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
@@ -40,17 +41,26 @@ export default function DiprosesTab() {
                 if (!adminId) throw new Error('Admin ID tidak ditemukan');
 
                 const res = await axios.get(`/api/policies/${adminId}/diproses`);
-                const fetched = res.data?.data || [];
-
  const apiData = res.data?.data || [];
+interface ApiPolicy {
+  id: string;
+  nama_kebijakan: string;
+  enumerator: string;
+  progress?: string;
+  tanggal_proses: string;
+  nilai_akhir?: string;
+}
 
-const mappedData = apiData.map((item: any) => ({
+const mappedData = apiData.map((item: ApiPolicy) => ({
   id: parseInt(item.id),
   nama: item.nama_kebijakan,
   enumerator: item.enumerator,
   progress: item.progress ? `${item.progress}%` : '0%',
   tanggalAssign: formatDate(item.tanggal_proses),
+  nilai_akhir: item.nilai_akhir || '0', // Default to '0' if nilai_akhir is missing
 }));
+
+setData(mappedData);
 
                 setData(mappedData);
             } catch (err) {
