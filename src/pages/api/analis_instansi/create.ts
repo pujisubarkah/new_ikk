@@ -18,7 +18,7 @@ const createAnalisSchema = z.object({
   password: z.string()
     .min(8, 'Password minimal 8 karakter')
     .optional(),
-  status: z.enum(['Aktif', 'Non Aktif']).default('Aktif')
+  status: z.enum(['aktif', 'Non aktif']).default('aktif')
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
