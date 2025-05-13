@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/sidebar-enum";
-import { FaArrowLeft, FaPaperPlane } from "react-icons/fa";
+import { FaPaperPlane } from "react-icons/fa";
 import { useRouter, useParams } from 'next/navigation';
 import {
     Dialog,
@@ -478,6 +478,7 @@ export default function PolicyPage() {
                         onLinkUpload={handleLinkUpload}
                         uploadedFiles={uploadedFiles}
                         apiQuestions={apiQuestions}
+                        isSubmitted={false} // Add the isSubmitted property
                     />
                     {/* Informasi Tambahan Dinamis */}
                     <AdditionalInfoSection

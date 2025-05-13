@@ -9,6 +9,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { id } = req.body;
     const koorinstansiId = req.headers["x-koorinstansi-id"];
 
+    // Tambahkan log untuk debugging
+    console.log("=== Received Body ===", req.body);
+    console.log("=== Received Header x-koorinstansi-id ===", koorinstansiId);
+
     if (!id) {
         return res.status(400).json({ error: "ID kebijakan tidak ditemukan" });
     }

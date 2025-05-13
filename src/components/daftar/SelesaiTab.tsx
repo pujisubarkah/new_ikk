@@ -8,8 +8,17 @@ import PolicyTablePagination from './PolicyTablePagination';
 interface Policy {
     id: number;
     nama: string;
-    analis: string;
+    enumerator: string;
     nilai: string;
+    nilai_akhir: string; // Added to match the required property in PolicyTableRow
+}
+
+interface FetchedPolicy {
+    id: string | number;
+    nama_kebijakan: string;
+    enumerator: string;
+    proses: string;
+    nilai_akhir: number;
 }
 
 export default function SelesaiTab() {
@@ -30,13 +39,14 @@ export default function SelesaiTab() {
                 if (!adminId) throw new Error('Admin ID tidak ditemukan');
 
                 const res = await axios.get(`/api/policies/${adminId}/selesai`);
-                const fetched = res.data?.data || [];
+                const fetched: FetchedPolicy[] = res.data?.data || [];
 
-                const mapped = fetched.map((item: any) => ({
-                    id: parseInt(item.id),
+                const mapped: Policy[] = fetched.map((item) => ({
+                    id: Number(item.id),
                     nama: item.nama_kebijakan || '-',
-                    analis: item.analis?.nama || 'Tidak tersedia',
-                    nilai: item.nilai || '-',
+                    enumerator: item.enumerator || 'Tidak tersedia',
+                    nilai: item.nilai_akhir !== undefined ? item.nilai_akhir.toString() : '-',
+                    nilai_akhir: item.nilai_akhir !== undefined ? item.nilai_akhir.toString() : '-', // Added to match Policy interface
                 }));
 
                 setData(mapped);
@@ -58,15 +68,14 @@ export default function SelesaiTab() {
                         <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">No</th>
                         <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">Nama Kebijakan</th>
                         <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">Analis Instansi</th>
-                        <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">Nilai SELF ASSEMENT</th>
-                         <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">Nilai HASIL VERIFIKASI</th>
-                       
+                        <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">Nilai Self Assesment</th>
+                        <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">Nilai Hasil Verifikasi</th>
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {isLoading ? (
                         <tr>
-                            <td colSpan={5} className="text-center py-6">
+                            <td colSpan={4} className="text-center py-6">
                                 Memuat data...
                             </td>
                         </tr>
@@ -84,7 +93,7 @@ export default function SelesaiTab() {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={5} className="text-center py-6 text-gray-500">
+                            <td colSpan={4} className="text-center py-6 text-gray-500">
                                 Tidak ada data.
                             </td>
                         </tr>

@@ -13,7 +13,7 @@ interface Policy {
     enumerator?: string;
     progress?: string;
     tanggalAssign?: string;
-    nilai?: string;
+    nilai_akhir: string;
     instansi?: string;
     status?: string;
 }
@@ -33,32 +33,35 @@ interface PolicyRowProps {
 export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
     const router = useRouter();
 
-    const handleSend = async (policyId: number) => {
-        const confirmSend = confirm("Yakin ingin mengirim hasil ke Koordinator Nasional?");
-        if (!confirmSend) return;
+   const handleSend = async (policyId: number) => {
+    const confirmSend = confirm("Yakin ingin mengirim hasil ke Koordinator Nasional?");
+    if (!confirmSend) return;
 
-        const koorinstansiId = localStorage.getItem("id");
+    const koorinstansiId = localStorage.getItem("id");
 
-        try {
-            await toast.promise(
-                axios.post(`/api/policies/kirim-koordinator`, null, {
+    try {
+        await toast.promise(
+            axios.post(
+                `/api/policies/kirim-koordinator`,
+                { id: policyId }, // <-- KIRIM ID di BODY!
+                {
                     headers: {
                         "x-koorinstansi-id": koorinstansiId,
+                        "Content-Type": "application/json", // <-- pastikan ini juga!
                     },
-                }),
-                {
-                    loading: "Sedang mengirim ke Koordinator Nasional...",
-                    success: () => {
-                        // Optional: add any state update logic here if needed
-                        return "Marvelous! Berhasil dikirim ke Koordinator Nasional!";
-                    },
-                    error: "Ups! Gagal mengirim. Coba lagi ya Kak!",
                 }
-            );
-        } catch (err) {
-            console.error("Error sending to coordinator:", err);
-        }
-    };
+            ),
+            {
+                loading: "Sedang mengirim ke Koordinator Nasional...",
+                success: () => "Marvelous! Berhasil dikirim ke Koordinator Nasional!",
+                error: "Ups! Gagal mengirim. Coba lagi ya Kak!",
+            }
+        );
+    } catch (err) {
+        console.error("Error sending to coordinator:", err);
+    }
+};
+
 
     return (
         <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-150">
@@ -134,19 +137,11 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
 
             {tab === "selesai" && (
                 <>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nama}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.enumerator || "Tidak tersedia"}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nilai || "-"}</td>
-                    <td className="px-4 py-3 text-center whitespace-nowrap text-sm font-medium">
-                        <button
-                            onClick={() => router.push(`/koordinator-instansi/daftar-kebijakan/selesaidetail/${item.id}`)}
-                            className="text-green-600 hover:text-green-800 p-1"
-                            title={`Lihat hasil ${item.nama}`}
-                        >
-                            <FaEye size={18} />
-                        </button>
-                    </td>
-                </>
+                   
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.enumerator}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nilai_akhir || "-"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nilai_akhir || "-"}</td>
+                                   </>
             )}
         </tr>
     );
