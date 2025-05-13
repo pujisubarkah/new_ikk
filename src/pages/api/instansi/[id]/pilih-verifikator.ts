@@ -1,38 +1,49 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { serializeBigInt } from "@/lib/serializeBigInt";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query; // ID Instansi / Koordinator Nasional
-  const { analystId } = req.body;
+  const { id } = req.query; // agency_id_panrb
+  const { verifikatorId } = req.body;
 
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method tidak diperbolehkan" });
   }
 
-  if (!id || !analystId) {
-    return res.status(400).json({ message: "ID instansi dan analystId harus disertakan" });
+  if (!id || !verifikatorId) {
+    return res.status(400).json({ message: "ID instansi dan ID verifikator harus disertakan" });
   }
 
   try {
-    const koorNasionalId = BigInt(id as string);
-    const validatorId = BigInt(analystId);
+    const agencyIdPanrb = BigInt(id as string);
+    const validatedBy = BigInt(verifikatorId);
 
-    // Simpan ke database
-    const result = await prisma.koor_nasional_validator.create({
-      data: {
-        id: undefined, // Allow Prisma to auto-generate the ID
-        koor_nasional_id: koorNasionalId,
-        validator_id: validatorId,
-        created_at: new Date(),
-        updated_at: new Date(),
+    // Ambil semua policy yang memiliki agency_id_panrb == id
+    const policies = await prisma.policy.findMany({
+      where: {
+        agency_id_panrb: agencyIdPanrb,
       },
     });
 
-    return res.status(201).json({
+    if (policies.length === 0) {
+      return res.status(404).json({ message: "Tidak ada policy ditemukan untuk instansi ini" });
+    }
+
+    // Update semua policy dengan validated_by = verifikatorId
+    const updatedPolicies = await Promise.all(
+      policies.map((policy) =>
+        prisma.policy.update({
+          where: { id: policy.id },
+          data: {
+            validated_by: validatedBy,
+          },
+        })
+      )
+    );
+
+    return res.status(200).json({
       success: true,
-      message: "Verifikator berhasil ditetapkan",
-      data: serializeBigInt(result),
+      message: "Verifikator berhasil ditetapkan untuk semua policy",
+      data: updatedPolicies,
     });
   } catch (error) {
     console.error("Gagal menetapkan verifikator:", error);
