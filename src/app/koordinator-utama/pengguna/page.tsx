@@ -14,7 +14,7 @@ interface DataRow {
   no: number;
   nama: string;
   nip: string;
-  validator_id?: string;
+  validator?: string;
   work_unit?: string;
 }
 
@@ -22,12 +22,15 @@ interface VerifikatorAPIResponse {
   agency_id_panrb: string;
   instansi: string;
   total_kebijakan: number;
+  validator_name: string;
+
 }
 
 interface VerifikatorData {
   no: number;
   instansi: string;
   total: number;
+  validator: string;
   id: string;
 }
 
@@ -84,6 +87,7 @@ export default function Page() {
             no: idx + 1,
             instansi: item.instansi || "-",
             total: item.total_kebijakan || 0,
+            validator: item.validator_name || "-",
             id: item.agency_id_panrb,
           }));
           setVerifikatorData(formatted);
