@@ -40,7 +40,6 @@ const TambahPengguna: React.FC = () => {
     status: "Aktif",
   })
 
-  const [instansis, setInstansis] = useState<Instansi[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -61,9 +60,6 @@ const TambahPengguna: React.FC = () => {
 
         if (agencyId) {
           setFormData((prev) => ({ ...prev, instansi: agencyId }))
-
-          const instansiDetail = await axios.get(`/api/instansi/${agencyId}`)
-          setInstansis([instansiDetail.data])
         }
       } catch (err) {
         toast.error("Gagal memuat data instansi")
