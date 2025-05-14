@@ -12,6 +12,7 @@ interface Policy {
     tanggal: string;
     file: string;
     status: string;
+    proses: string; // Make required to match PolicyTableRow
     nilai_akhir: string; // Make required to match PolicyTableRow
 }
 
@@ -40,6 +41,7 @@ export default function DiajukanTab() {
                     tanggal_berlaku?: string;
                     file_url?: string;
                     status?: string;
+                    proses?: string;
                     nilai_akhir?: string;
                 }
 
@@ -51,6 +53,7 @@ export default function DiajukanTab() {
                         : '-',
                     file: item.file_url || '-',
                     status: item.status || '-',
+                    proses: item.proses,
                     nilai_akhir: item.nilai_akhir // Will be undefined if not present
                 }));
 
@@ -95,6 +98,7 @@ export default function DiajukanTab() {
                             <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">Tanggal Berlaku</th>
                             <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider border-r">File</th>
                             <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider">Status</th>
+
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
