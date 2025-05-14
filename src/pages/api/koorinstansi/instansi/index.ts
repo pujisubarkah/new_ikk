@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         by: ['agency_id_panrb'],
         where: {
           active_year: 2025,
-          policy_status: "BELUM_TERVERIFIKASI",
+          policy_status: "SEDANG_VERIFIKASI",
         },
         _count: {
           _all: true,
