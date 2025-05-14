@@ -17,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const agencyIdPanrb = BigInt(id as string);
     const validatedBy = BigInt(verifikatorId);
 
-    // Ambil semua policy yang memiliki agency_id_panrb == id
     const policies = await prisma.policy.findMany({
       where: {
         agency_id_panrb: agencyIdPanrb,
@@ -28,7 +27,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: "Tidak ada policy ditemukan untuk instansi ini" });
     }
 
-    // Update semua policy dengan validated_by = verifikatorId
     const updatedPolicies = await Promise.all(
       policies.map((policy) =>
         prisma.policy.update({
@@ -40,11 +38,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       )
     );
 
-    return res.status(200).json({
+    const responseData = {
       success: true,
-      message: "Verifikator berhasil ditetapkan untuk semua policy",
+      message: "Verifikator berhasil ditetapkan",
       data: updatedPolicies,
-    });
+    };
+
+    // Serialisasi manual untuk menghindari error BigInt
+    return res.status(200).json(JSON.parse(JSON.stringify(responseData, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    )));
+
   } catch (error) {
     console.error("Gagal menetapkan verifikator:", error);
     return res.status(500).json({ message: "Gagal menetapkan verifikator" });
