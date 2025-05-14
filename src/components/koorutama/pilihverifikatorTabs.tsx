@@ -14,6 +14,7 @@ interface VerifikatorData {
   no: number;
   instansi: string;
   total: number;
+  validator: string;
   id: string;
 }
 
@@ -68,6 +69,7 @@ export default function PilihVerifikatorTab({
               <th className="px-6 py-3 border-b">No</th>
               <th className="px-6 py-3 border-b">Nama Instansi</th>
               <th className="px-6 py-3 border-b text-center">Total Menunggu Validasi</th>
+                <th className="px-6 py-3 border-b text-center">verifikator</th>
               <th className="px-6 py-3 border-b text-center">Aksi</th>
             </tr>
           </thead>
@@ -78,6 +80,7 @@ export default function PilihVerifikatorTab({
                   <td className="px-6 py-4 border-b text-center">{item.no}</td>
                   <td className="px-6 py-4 border-b">{item.instansi}</td>
                   <td className="px-6 py-4 border-b text-center">{item.total}</td>
+                  <td className="px-6 py-4 border-b text-center">{item.validator}</td>
                   <td className="px-6 py-4 border-b text-center">
                     <button
                       onClick={() => handleOpenModal({ id: item.id, nama: item.instansi })}
