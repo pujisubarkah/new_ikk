@@ -9,6 +9,7 @@ interface Policy {
     id: number;
     nama: string;
     tanggal?: string;
+    proses?: string;
     file?: string;
     enumerator?: string;
     progress?: string;
@@ -80,7 +81,7 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
                             </a>
                         ) : "-"}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.status || "-"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.proses || "-"}</td>
                 </>
             )}
 
