@@ -13,7 +13,6 @@ interface FormData {
   name: string
   username: string
   work_unit: string
-  instansi: string
   email: string
   role_id: number
   password: string
@@ -33,7 +32,6 @@ const TambahPengguna: React.FC = () => {
     name: "",
     username: "",
     work_unit: "",
-    instansi: "",
     email: "",
     role_id: 5,
     password: "",
@@ -121,16 +119,6 @@ const TambahPengguna: React.FC = () => {
             <div>
               <Label htmlFor="nik">Unit Kerja</Label>
               <Input id="Work_unit" name="work_unit" value={formData.work_unit} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="instansi">Nama Instansi</Label>
-              <Input
-                id="instansi"
-                name="instansi"
-                value={instansis[0]?.name || "Memuat instansi..."}
-                disabled
-                className="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700"
-              />
             </div>
             <div>
               <Label htmlFor="email">Email Aktif</Label>
