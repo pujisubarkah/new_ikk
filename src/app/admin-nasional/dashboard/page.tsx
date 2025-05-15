@@ -58,11 +58,23 @@ interface User {
   };
 }
 
+// Tambahkan interface baru untuk data helpdesk
+interface HelpdeskTicket {
+  nama_lengkap: string;
+  email_aktif: string;
+  instansi: string;
+  masalah: string;
+  pesan: string;
+  created_at: string; // ISO date string
+}
+
 const DashboardPage: React.FC = () => {
   const [filter, setFilter] = useState<string>("Sales");
   const [activeTab, setActiveTab] = useState<string>("approval");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [helpdeskData, setHelpdeskData] = useState<HelpdeskTicket[]>([]); // ✅ Diganti dari any[]
+  const [loadingHelpdesk, setLoadingHelpdesk] = useState<boolean>(false);
 
   const barData = {
     labels: ["January", "February", "March", "April", "May", "June"],
@@ -123,7 +135,6 @@ const DashboardPage: React.FC = () => {
 
   const approveUser = async (userId: number) => {
     try {
-      // Mengirim request POST ke API untuk mengupdate status user dan mengirim email
       const response = await fetch('/api/approveUser', {
         method: 'POST',
         headers: {
@@ -131,27 +142,20 @@ const DashboardPage: React.FC = () => {
         },
         body: JSON.stringify({ userId }),
       });
-  
       if (response.ok) {
-        console.log('User approved and email sent');
-        toast.success('User berhasil disetujui dan email telah terkirim!');  // Toast sukses
-        // Opsional: Update UI (misalnya dengan mengubah status di UI atau memberi pesan sukses)
+        toast.success('User berhasil disetujui dan email telah terkirim!');
       } else {
-        console.error('Failed to approve user');
-        toast.error('Gagal menyetujui user, coba lagi.');  // Toast error jika gagal
+        toast.error('Gagal menyetujui user, coba lagi.');
       }
     } catch (error) {
       console.error('Error in approveUser:', error);
-      toast.error('Terjadi kesalahan, coba lagi.');  // Toast error jika terjadi kesalahan
+      toast.error('Terjadi kesalahan, coba lagi.');
     }
   };
 
   const filteredUsers = users.filter(
     (user) => user.role_user?.role_id === "4" && user.status !== "aktif"
   );
-
-  const [helpdeskData, setHelpdeskData] = useState<any[]>([]);
-  const [loadingHelpdesk, setLoadingHelpdesk] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchHelpdeskData = async () => {
@@ -171,6 +175,7 @@ const DashboardPage: React.FC = () => {
   return (
     <Sidebar>
       <div className="w-full px-4 md:px-8 py-6 md:py-10 bg-gray-50 min-h-screen">
+        {/* Tabs */}
         <div className="flex space-x-2 md:space-x-4 mb-6 md:mb-8 overflow-x-auto">
           <button
             className={`px-4 py-2 text-sm md:text-base md:px-6 md:py-2 rounded-t-lg font-semibold ${
@@ -205,12 +210,10 @@ const DashboardPage: React.FC = () => {
         </div>
 
         <div className="bg-white p-4 md:p-6 rounded-lg shadow">
+          {/* Tab: Approval */}
           {activeTab === "approval" && (
             <div>
-              <h2 className="text-xl md:text-2xl font-bold mb-4">
-                Persetujuan Registrasi Koordinator Instansi
-              </h2>
-
+              <h2 className="text-xl md:text-2xl font-bold mb-4">Persetujuan Registrasi Koordinator Instansi</h2>
               {loading ? (
                 <div className="flex justify-center items-center h-40">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -231,14 +234,9 @@ const DashboardPage: React.FC = () => {
                     <tbody>
                       {filteredUsers.length > 0 ? (
                         filteredUsers.map((user) => (
-                          <tr
-                            key={user.id}
-                            className="border-t hover:bg-gray-50"
-                          >
+                          <tr key={user.id} className="border-t hover:bg-gray-50">
                             <td className="p-3">{user.name}</td>
-                            <td className="p-3">
-                              {user.instansi?.agency_name || "Tidak Ada"}
-                            </td>
+                            <td className="p-3">{user.instansi?.agency_name || "Tidak Ada"}</td>
                             <td className="p-3">{user.email}</td>
                             <td className="p-3">
                               <span
@@ -264,14 +262,11 @@ const DashboardPage: React.FC = () => {
                                   Lihat Surat
                                 </a>
                               ) : (
-                                <span className="text-gray-500">
-                                  Tidak Ada
-                                </span>
+                                <span className="text-gray-500">Tidak Ada</span>
                               )}
                             </td>
                             <td className="p-3">
-                              {(user.status === "inactive" ||
-                                user.status === "nonaktif") && (
+                              {(user.status === "inactive" || user.status === "nonaktif") && (
                                 <button
                                   className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base"
                                   onClick={() => approveUser(Number(user.id))}
@@ -284,12 +279,8 @@ const DashboardPage: React.FC = () => {
                         ))
                       ) : (
                         <tr>
-                          <td
-                            colSpan={6}
-                            className="p-4 text-center text-gray-500"
-                          >
-                            Tidak ada data koordinator instansi yang perlu
-                            disetujui
+                          <td colSpan={6} className="p-4 text-center text-gray-500">
+                            Tidak ada data koordinator instansi yang perlu disetujui
                           </td>
                         </tr>
                       )}
@@ -300,25 +291,16 @@ const DashboardPage: React.FC = () => {
             </div>
           )}
 
+          {/* Tab: Dashboard Grafik */}
           {activeTab === "dashboard" && (
             <div>
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                    Dashboard Pemantauan
-                  </h1>
-                  <p className="text-sm md:text-base text-gray-600 mt-1">
-                    Overview of key metrics and performance
-                  </p>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard Pemantauan</h1>
+                  <p className="text-sm md:text-base text-gray-600 mt-1">Overview of key metrics and performance</p>
                 </div>
-
                 <div className="flex items-center space-x-2 md:space-x-4 w-full md:w-auto">
-                  <label
-                    htmlFor="filter"
-                    className="text-gray-700 font-medium whitespace-nowrap"
-                  >
-                    Filter by:
-                  </label>
+                  <label htmlFor="filter" className="text-gray-700 font-medium whitespace-nowrap">Filter by:</label>
                   <select
                     id="filter"
                     value={filter}
@@ -330,12 +312,9 @@ const DashboardPage: React.FC = () => {
                   </select>
                 </div>
               </div>
-
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-lg shadow p-4 md:p-6">
-                  <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
-                    Bar Chart
-                  </h2>
+                  <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">Bar Chart</h2>
                   <div className="h-64 md:h-80">
                     <Bar
                       data={horizontalBarData}
@@ -347,11 +326,8 @@ const DashboardPage: React.FC = () => {
                     />
                   </div>
                 </div>
-
                 <div className="bg-white rounded-lg shadow p-4 md:p-6">
-                  <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
-                    Radar Chart
-                  </h2>
+                  <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">Radar Chart</h2>
                   <div className="h-64 md:h-80">
                     <Radar
                       data={radarData}
@@ -366,54 +342,50 @@ const DashboardPage: React.FC = () => {
             </div>
           )}
 
+          {/* Tab: Helpdesk */}
           {activeTab === "helpdesk" && (
             <div>
-              <h2 className="text-xl md:text-2xl font-bold mb-4">
-                Dashboard Helpdesk
-              </h2>
-              
-                <div>
-                  {loadingHelpdesk ? (
-                    <div className="flex justify-center items-center h-40">
-                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full table-auto">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="text-left p-3">Nama Lengkap</th>
-                            <th className="text-left p-3">Email Aktif</th>
-                            <th className="text-left p-3">Instansi</th>
-                            <th className="text-left p-3">Masalah</th>
-                            <th className="text-left p-3 w-1/2">Pesan</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                            {helpdeskData.length > 0 ? (
-                            helpdeskData
-                              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                              .map((item, index) => (
-                              <tr key={index} className="border-t hover:bg-gray-50">
-                                <td className="p-3">{item.nama_lengkap}</td>
-                                <td className="p-3">{item.email_aktif}</td>
-                                <td className="p-3">{item.instansi}</td>
-                                <td className="p-3">{item.masalah}</td>
-                                <td className="p-3 w-1/2">{item.pesan}</td>
-                              </tr>
-                              ))
-                            ) : (
-                            <tr>
-                              <td colSpan={5} className="p-4 text-center text-gray-500">
-                              Tidak ada data helpdesk yang tersedia
-                              </td>
-                            </tr>
-                            )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+              <h2 className="text-xl md:text-2xl font-bold mb-4">Dashboard Helpdesk</h2>
+              {loadingHelpdesk ? (
+                <div className="flex justify-center items-center h-40">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="text-left p-3">Nama Lengkap</th>
+                        <th className="text-left p-3">Email Aktif</th>
+                        <th className="text-left p-3">Instansi</th>
+                        <th className="text-left p-3">Masalah</th>
+                        <th className="text-left p-3 w-1/2">Pesan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {helpdeskData.length > 0 ? (
+                        helpdeskData
+                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                          .map((item, index) => (
+                            <tr key={index} className="border-t hover:bg-gray-50">
+                              <td className="p-3">{item.nama_lengkap}</td>
+                              <td className="p-3">{item.email_aktif}</td>
+                              <td className="p-3">{item.instansi}</td>
+                              <td className="p-3">{item.masalah}</td>
+                              <td className="p-3 w-1/2">{item.pesan}</td>
+                            </tr>
+                          ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="p-4 text-center text-gray-500">
+                            Tidak ada data helpdesk yang tersedia
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>
