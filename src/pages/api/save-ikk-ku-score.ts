@@ -8,7 +8,7 @@ import prisma from '@/lib/prisma';
 const ScoreSchema = z.object({
   policy_id: z.union([z.string(), z.number()]),
   modified_by: z.union([z.string(), z.number()]).optional(),
-  active_year: z.union([z.string(), z.number()]).optional(),
+  active_year: z.union([z.string(), z.number()]).optional().transform(val => val !== undefined ? Number(val) : undefined),
 
   // Jawaban IKK
   a1: z.union([z.string(), z.number()]).optional(),
@@ -43,7 +43,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const {
       policy_id,
       modified_by,
-      active_year,
 
       a1,
       a2,
@@ -123,17 +122,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     return res.status(200).json({ message: 'Data berhasil disimpan' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Gagal:', error);
-    if (error.code === 'P2011') {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 'P2011') {
       return res.status(400).json({
         message: 'Validasi gagal atau ID tidak valid',
-        error: error.message,
+        error: (error as any).message,
       });
     }
     return res.status(500).json({
       message: 'Terjadi kesalahan saat menyimpan',
-      error: error.message,
+      error: typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error),
     });
   }
 }
