@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -21,9 +21,9 @@ interface FormData {
   unitKerja: string
   telepon: string
   status: string
-  username?: string // Added username
-  position?: string // Added position
-  work_unit?: string // Added work_unit
+  username?: string
+  position?: string
+  work_unit?: string
 }
 
 interface Agency {
@@ -36,12 +36,10 @@ interface Agency {
   category: string
 }
 
-
 function EditUserPage(): React.ReactNode {
   const router = useRouter()
-  const params = useParams()
   const id = typeof window !== 'undefined' ? localStorage.getItem('id') || '' : ''
-
+  // State utama
   const [formData, setFormData] = useState<FormData>({
     nama: '',
     nip: '',
@@ -59,15 +57,14 @@ function EditUserPage(): React.ReactNode {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Validasi form
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return re.test(email)
   }
 
   const validateForm = (): boolean => {
-    const requiredFields: (keyof FormData)[] = [
-      'nama', 'nip', 'nik', 'instansi', 'email', 'jabatan'
-    ]
+    const requiredFields: (keyof FormData)[] = ['nama', 'nip', 'nik', 'instansi', 'email', 'jabatan']
     const errors: string[] = []
 
     requiredFields.forEach((field) => {
@@ -84,17 +81,18 @@ function EditUserPage(): React.ReactNode {
       toast.error(errors.join(', '))
       return false
     }
+
     return true
   }
 
+  // Load data awal
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [rolesRes, agenciesRes, activeyearRes] = await Promise.all([
-          axios.get('/api/role'),
+        const [agenciesRes] = await Promise.all([
           axios.get('/api/instansi'),
-          axios.get("/api/active_year"),
         ])
+
         setAgencies(agenciesRes.data)
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -110,6 +108,7 @@ function EditUserPage(): React.ReactNode {
       try {
         const response = await axios.get(`/api/users/${id}`)
         const userData = response.data
+
         setFormData({
           nama: userData.name || '',
           nip: userData.username || '',
@@ -148,10 +147,9 @@ function EditUserPage(): React.ReactNode {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (!validateForm()) return
-    setLoading(true)
 
+    setLoading(true)
     const updateToast = toast.loading('Sedang memperbarui data...')
 
     try {
@@ -160,7 +158,7 @@ function EditUserPage(): React.ReactNode {
         ? cleanedPhone 
         : `+62${cleanedPhone}`
 
-      const payload: Partial<FormData & { agency_id_panrb: number; role_id: number }> = {
+      const payload: Partial<FormData & { agency_id_panrb: number }> = {
         nama: formData.nama,
         username: formData.nip,
         nik: formData.nik,
@@ -177,16 +175,13 @@ function EditUserPage(): React.ReactNode {
       }
 
       await axios.put(`/api/users/${id}`, payload)
-
       toast.success('Data pengguna berhasil diperbarui', {
         id: updateToast
       })
 
-      // Delay redirect to allow toast to be visible
       setTimeout(() => {
         router.push('/pengguna')
       }, 1500)
-      
     } catch (error: unknown) {
       toast.dismiss(updateToast)
       console.error('API Error:', error)
@@ -229,7 +224,6 @@ function EditUserPage(): React.ReactNode {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Edit Pengguna</h1>
         </div>
-        
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Kolom Kiri */}
           <div className="grid gap-4">
@@ -244,7 +238,6 @@ function EditUserPage(): React.ReactNode {
                 placeholder="Masukkan NIP"
               />
             </div>
-            
             <div>
               <Label htmlFor="nik">NIK</Label>
               <Input
@@ -256,35 +249,35 @@ function EditUserPage(): React.ReactNode {
                 placeholder="Masukkan NIK"
               />
             </div>
-            
             <div>
-             <Label htmlFor="instansi" className="text-gray-700 font-medium">Nama Instansi</Label>
-             <select
-               id="instansi"
-               name="instansi"
-               value={formData.instansi}
-               onChange={handleChange}
-               required
-               className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-             >
-                 <option value="" disabled>Pilih Instansi</option>
-                 {agencies
-                 .filter((item, index, self) => 
-                   index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
-                 )
-                 .sort((a, b) => {
-                   const idA = a.instansi?.agency_id || '';
-                   const idB = b.instansi?.agency_id || '';
-                   return idA.localeCompare(idB);
-                 })
-                 .map((item) => (
-                   <option key={item.id} value={item.instansi?.agency_id || ''}>
-                   {item.instansi?.agency_name || "NA"}
-                   </option>
-                 ))}
-             </select>
-           </div>
-            
+              <Label htmlFor="instansi" className="text-gray-700 font-medium">Nama Instansi</Label>
+              <select
+                id="instansi"
+                name="instansi"
+                value={formData.instansi}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+              >
+                <option value="" disabled>Pilih Instansi</option>
+                {agencies
+                  .filter(
+                    (item, index, self) =>
+                      index ===
+                      self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
+                  )
+                  .sort((a, b) => {
+                    const idA = a.instansi?.agency_id || ''
+                    const idB = b.instansi?.agency_id || ''
+                    return idA.localeCompare(idB)
+                  })
+                  .map((item) => (
+                    <option key={item.id} value={item.instansi?.agency_id || ''}>
+                      {item.instansi?.agency_name || 'NA'}
+                    </option>
+                  ))}
+              </select>
+            </div>
             <div>
               <Label htmlFor="email">Email Aktif</Label>
               <Input
@@ -297,24 +290,23 @@ function EditUserPage(): React.ReactNode {
                 placeholder="Masukkan email"
               />
             </div>
-            
             <div>
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-              <Input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Biarkan kosong jika tidak ingin mengubah"
-              />
-              <span
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
-                onClick={() => setShowPassword((prev) => !prev)}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Biarkan kosong jika tidak ingin mengubah"
+                />
+                <span
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </span>
               </div>
             </div>
           </div>
@@ -332,7 +324,6 @@ function EditUserPage(): React.ReactNode {
                 placeholder="Masukkan nama lengkap"
               />
             </div>
-            
             <div>
               <Label htmlFor="jabatan">Jabatan</Label>
               <Input
@@ -343,7 +334,6 @@ function EditUserPage(): React.ReactNode {
                 placeholder="Contoh: Kepala Dinas"
               />
             </div>
-            
             <div>
               <Label htmlFor="unitKerja">Unit Kerja</Label>
               <Input
@@ -370,7 +360,6 @@ function EditUserPage(): React.ReactNode {
                 />
               </div>
             </div>
-            
             <div>
               <Label htmlFor="status">Status</Label>
               <select
@@ -381,9 +370,7 @@ function EditUserPage(): React.ReactNode {
                 required
                 className="w-full border border-gray-300 rounded-md p-2"
               >
-                <option value="" disabled>
-                  Pilih Status
-                </option>
+                <option value="" disabled>Pilih Status</option>
                 <option value="Aktif">Aktif</option>
                 <option value="Non Aktif">Non Aktif</option>
               </select>
@@ -415,7 +402,6 @@ function EditUserPage(): React.ReactNode {
 }
 
 const ProtectedPage = withRoleGuard(EditUserPage, [1])
-
 export default function Page() {
   return <ProtectedPage />
 }
