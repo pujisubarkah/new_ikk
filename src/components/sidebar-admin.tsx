@@ -116,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                 <span className="font-medium">{userName}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48 bg-white text-[#16578D] shadow-md">
-                <DropdownMenuItem onClick={() => alert('Edit Profil Clicked')}>
+                <DropdownMenuItem onClick={() => (window.location.href = '/edit-profil')}>
                   Edit Profil
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
