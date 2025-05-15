@@ -18,7 +18,7 @@ import { toast } from "sonner";
 // Komponen terpisah
 import PolicyCard from "@/components/policy/PolicyCardVerifikator";
 import PolicyStepsNav from "@/components/policy/PolicyStepsNav";
-import QuestionList from "@/components/policy/questListVerifikator";
+import QuestionList from "@/components/policy/QuestListVerifikator";
 import AdditionalInfoSection from "@/components/policy/AdditionalInfoSection";
 
 type Policy = {
