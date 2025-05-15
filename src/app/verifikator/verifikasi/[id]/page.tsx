@@ -15,12 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-// Komponen terpisah
+// Komponen lokal
 import PolicyCard from "@/components/policy/PolicyCardVerifikator";
 import PolicyStepsNav from "@/components/policy/PolicyStepsNav";
-import QuestionList from "@/components/policy/QuestListVerifikator";
+import QuestionList from "@/components/policy/questListVerifikator";
 import AdditionalInfoSection from "@/components/policy/AdditionalInfoSection";
 
+// Tipe lokal di dalam file
 type Policy = {
     id: string;
     nama_kebijakan: string;
@@ -45,12 +46,23 @@ type Question = {
     }[];
 };
 
+type QuestionListProps = {
+    activeStep: number;
+    selectedAnswers: Record<string, { description: string; score: number }>;
+    onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
+    uploadedFiles: Record<string, string>;
+    apiQuestions: Question[];
+    isSubmitted: boolean;
+    onLinkUpload: (questionId: string, fileLink: string) => void;
+    verifierNotes?: Record<string, string>;
+    onNoteChange?: (questionId: string, note: string) => void;
+};
+
 const stepDimensionMap: Record<number, string> = {
     0: "Perencanaan Kebijakan",
     1: "Implementasi Kebijakan",
     2: "Evaluasi dan Keberlanjutan Kebijakan",
     3: "Transparansi dan Partisipasi Publik",
-    4: "Keterlibatan JF Analis Kebijakan",
 };
 
 export default function PolicyPage() {
@@ -58,6 +70,7 @@ export default function PolicyPage() {
     const router = useRouter();
     const policyId = params?.id as string;
 
+    // State utama
     const [activeStep, setActiveStep] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, { description: string; score: number }>>({});
     const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
@@ -67,23 +80,26 @@ export default function PolicyPage() {
     const [error, setError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [open, setOpen] = useState(false);
-    const [verifierNotes, setVerifierNotes] = useState<Record<string, string>>({});
 
-    // State informasi tambahan per dimensi
+    // Informasi tambahan
     const [additionalInfoA, setAdditionalInfoA] = useState("");
     const [additionalInfoB, setAdditionalInfoB] = useState("");
     const [additionalInfoC, setAdditionalInfoC] = useState("");
     const [additionalInfoD, setAdditionalInfoD] = useState("");
 
+    // Catatan verifikator
+    const [verifierNotes, setVerifierNotes] = useState<Record<string, string>>({});
+
     const isSubmitted = policyData?.status_pengiriman === 'terkirim';
 
-    // Load data awal (policy & pertanyaan)
+    // Load data awal
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
                 setError(null);
-                if (!policyId) throw new Error("Policy ID tidak ditemukan di URL");
+
+                if (!policyId) throw new Error("Policy ID tidak ditemukan");
 
                 const policyRes = await fetch(`/api/policies/${policyId}`);
                 if (!policyRes.ok) throw new Error("Gagal memuat data kebijakan");
@@ -93,10 +109,10 @@ export default function PolicyPage() {
                 const questionsRes = await fetch("/api/pertanyaan");
                 if (!questionsRes.ok) throw new Error("Gagal memuat pertanyaan");
                 const questionsData = await questionsRes.json();
-
                 if (Array.isArray(questionsData.data)) {
                     setApiQuestions(questionsData.data);
                 }
+
             } catch (err) {
                 console.error("Error fetching data:", err);
                 setError(err instanceof Error ? err.message : "Terjadi kesalahan saat memuat data");
@@ -104,12 +120,14 @@ export default function PolicyPage() {
                 setLoading(false);
             }
         };
+
         fetchData();
     }, [policyId]);
 
-    // Load jawaban dan file pendukung lama dari /api/answers
+    // Load jawaban lama
     useEffect(() => {
         if (!policyId || !apiQuestions.length) return;
+
         const loadSavedAnswers = async () => {
             try {
                 const answersRes = await fetch(`/api/answers?policyId=${policyId}`);
@@ -153,7 +171,6 @@ export default function PolicyPage() {
                 setUploadedFiles(savedFiles);
                 setVerifierNotes(savedNotes);
 
-                // Load informasi tambahan
                 setAdditionalInfoA(answersData.data?.informasi_a || "");
                 setAdditionalInfoB(answersData.data?.informasi_b || "");
                 setAdditionalInfoC(answersData.data?.informasi_c || "");
@@ -167,7 +184,7 @@ export default function PolicyPage() {
         loadSavedAnswers();
     }, [policyId, apiQuestions]);
 
-    // Auto-save jawaban
+    // Auto-save
     useEffect(() => {
         if (!policyId || Object.keys(selectedAnswers).length === 0) return;
 
@@ -193,7 +210,6 @@ export default function PolicyPage() {
                 }
             });
 
-            // Tambahkan informasi tambahan
             infoToSubmit.informasi_a = additionalInfoA;
             infoToSubmit.informasi_b = additionalInfoB;
             infoToSubmit.informasi_c = additionalInfoC;
@@ -220,6 +236,7 @@ export default function PolicyPage() {
         return () => clearTimeout(timeout);
     }, [selectedAnswers, uploadedFiles, verifierNotes, policyId]);
 
+    // Handler
     const handleAnswerChange = (questionId: string, answerDescription: string, answerScore: number) => {
         setSelectedAnswers((prev) => ({
             ...prev,
@@ -240,7 +257,6 @@ export default function PolicyPage() {
     const handleSave = async () => {
         setIsSaving(true);
         const userId = localStorage.getItem("id");
-
         const answersToSubmit: Record<string, number> = {};
         const infoToSubmit: Record<string, string> = {};
         const notesToSubmit: Record<string, string> = {};
@@ -261,7 +277,6 @@ export default function PolicyPage() {
             }
         });
 
-        // Tambahkan informasi tambahan
         infoToSubmit.informasi_a = additionalInfoA;
         infoToSubmit.informasi_b = additionalInfoB;
         infoToSubmit.informasi_c = additionalInfoC;
@@ -282,6 +297,7 @@ export default function PolicyPage() {
             });
 
             if (!saveResponse.ok) throw new Error("Gagal menyimpan jawaban");
+
             toast.success("Jawaban berhasil disimpan");
             router.push(`/koordinator-instansi/daftar-kebijakan`);
         } catch (error: unknown) {
@@ -297,6 +313,53 @@ export default function PolicyPage() {
         }
     };
 
+    // Informasi tambahan
+    const activeDimensionName = stepDimensionMap[activeStep];
+    const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase();
+
+    let currentAdditionalInfo = "";
+    let setAdditionalInfoForCurrentDim = (val: string) => {};
+
+    switch (activeDimensionKey) {
+        case "a":
+            currentAdditionalInfo = additionalInfoA;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoA;
+            break;
+        case "b":
+            currentAdditionalInfo = additionalInfoB;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoB;
+            break;
+        case "c":
+            currentAdditionalInfo = additionalInfoC;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoC;
+            break;
+        case "d":
+            currentAdditionalInfo = additionalInfoD;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoD;
+            break;
+        default:
+            currentAdditionalInfo = "";
+    }
+
+    const handleSaveAdditionalInfo = async () => {
+        try {
+            const response = await fetch("/api/answers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    policy_id: policyId,
+                    [`informasi_${activeDimensionKey}`]: currentAdditionalInfo
+                })
+            });
+            if (!response.ok) throw new Error("Gagal menyimpan informasi tambahan");
+            toast.success("Informasi tambahan berhasil disimpan");
+        } catch (error) {
+            console.error("Error saving additional info:", error);
+            toast.error("Gagal menyimpan informasi tambahan");
+        }
+    };
+
+    // Render UI
     if (loading) {
         return (
             <Sidebar>
@@ -336,57 +399,12 @@ export default function PolicyPage() {
         );
     }
 
-    const activeDimensionName = stepDimensionMap[activeStep];
-    const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase();
-    let currentAdditionalInfo = "";
-    let setAdditionalInfoForCurrentDim: React.Dispatch<React.SetStateAction<string>>;
-
-    switch (activeDimensionKey) {
-        case "a":
-            currentAdditionalInfo = additionalInfoA;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoA;
-            break;
-        case "b":
-            currentAdditionalInfo = additionalInfoB;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoB;
-            break;
-        case "c":
-            currentAdditionalInfo = additionalInfoC;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoC;
-            break;
-        case "d":
-            currentAdditionalInfo = additionalInfoD;
-            setAdditionalInfoForCurrentDim = setAdditionalInfoD;
-            break;
-        default:
-            currentAdditionalInfo = "";
-    }
-
-    const handleSaveAdditionalInfo = async () => {
-        try {
-            const response = await fetch("/api/answers", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    policy_id: policyId,
-                    [`informasi_${activeDimensionKey}`]: currentAdditionalInfo
-                })
-            });
-            if (!response.ok) throw new Error("Gagal menyimpan informasi tambahan");
-            toast.success("Informasi tambahan berhasil disimpan");
-        } catch (error) {
-            console.error("Error saving additional info:", error);
-            toast.error("Gagal menyimpan informasi tambahan");
-        }
-    };
-
     return (
         <Sidebar>
             <div className="w-full px-6 py-8">
                 <div className="space-y-8">
                     <PolicyCard policy={policyData} />
+                    {/* Tombol Simpan */}
                     <div className="flex justify-end">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
@@ -416,7 +434,9 @@ export default function PolicyPage() {
                             </DialogContent>
                         </Dialog>
                     </div>
+                    {/* Navigasi Step */}
                     <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
+                    {/* Daftar Pertanyaan */}
                     <QuestionList
                         activeStep={activeStep}
                         selectedAnswers={selectedAnswers}
@@ -433,6 +453,7 @@ export default function PolicyPage() {
                         verifierNotes={verifierNotes}
                         onNoteChange={handleNoteChange}
                     />
+                    {/* Informasi Tambahan Dinamis */}
                     <AdditionalInfoSection
                         value={currentAdditionalInfo}
                         onChange={(e) => setAdditionalInfoForCurrentDim(e.target.value)}
