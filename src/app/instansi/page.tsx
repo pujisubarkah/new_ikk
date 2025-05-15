@@ -19,6 +19,8 @@ function TabelInstansi() {
   const [searchQuery, setSearchQuery] = useState('')
   
   interface Instansi {
+    agency_name: string
+    agency_id: string
     instansi: {
       agency_name: string
       agency_id: number
@@ -31,22 +33,46 @@ function TabelInstansi() {
     active_year: number
   }
 
+  interface InstansiPanrb {
+    agency_id: string
+    agency_name: string
+    instansi_kategori: {
+      id: number
+      kat_instansi: string
+    }
+  }
+
   const [instansiData, setInstansiData] = useState<Instansi[]>([])
+  const [instansiDataPanrb, setInstansiDataPanrb] = useState<InstansiPanrb[]>([])
+  const [showPopup, setShowPopup] = useState(false)
+  const [selectedAgencyId, setSelectedAgencyId] = useState('')
+  const [activeYear, setActiveYear] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
 
-  useEffect(() => {
-    const fetchInstansiData = async () => {
-      try {
-        const response = await axios.get('/api/instansi')
-        setInstansiData(response.data)
-      } catch (error) {
-        console.error('Error fetching instansi data:', error)
-      }
+  const fetchInstansiData = async () => {
+    try {
+      const response = await axios.get('/api/instansi')
+      setInstansiData(response.data)
+      fetchInstansiDataPanrb() // Call this function to fetch instansi data
+    } catch (error) {
+      console.error('Error fetching instansi data:', error)
     }
+  }
 
+  useEffect(() => {
     fetchInstansiData()
   }, [])
+
+  const fetchInstansiDataPanrb = async () => {
+    try {
+      const response = await axios.get('/api/instansi/panrb')
+      setInstansiDataPanrb(response.data)
+    } catch (error) {
+      console.error('Error fetching instansi data:', error)
+      return []
+    }
+  }
 
   const filteredData = instansiData.filter(item =>
     item.instansi?.agency_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -73,11 +99,87 @@ function TabelInstansi() {
           <h1 className="text-2xl font-bold">Daftar Instansi</h1>
           <div className="flex space-x-4 items-center">
             <button
-              onClick={() => alert('Tambah Instansi')}
+              onClick={() => setShowPopup(true)}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
               Tambah Instansi
             </button>
+
+            {showPopup && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 className="text-xl font-bold mb-4">Tambah Instansi</h2>
+                <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                  await axios.post('/api/instansi', {
+                    agency_id_panrb: selectedAgencyId,
+                    active_year: activeYear,
+                  });
+                  alert('Instansi berhasil ditambahkan');
+                  setShowPopup(false);
+                  setSelectedAgencyId('');
+                  setActiveYear('');
+                  fetchInstansiData(); // Refresh data
+                  } catch (error) {
+                  console.error('Error adding instansi:', error);
+                  alert('Gagal menambahkan instansi');
+                  }
+                }}
+                >
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2">
+                  Nama Instansi
+                  </label>
+                  <select
+                  value={selectedAgencyId}
+                  onChange={(e) => setSelectedAgencyId(e.target.value)}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                  >
+                  <option value="">Pilih Instansi</option>
+                  {instansiDataPanrb.map((item) => (
+                    <option
+                    key={item.agency_id}
+                    value={item.agency_id}
+                    >
+                    {item.agency_name}
+                    </option>
+                  ))}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2">
+                  Tahun Penilaian
+                  </label>
+                  <input
+                  type="number"
+                  value={activeYear}
+                  onChange={(e) => setActiveYear(e.target.value)}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                  />
+                </div>
+                <div className="flex justify-end space-x-4">
+                  <button
+                  type="button"
+                  onClick={() => setShowPopup(false)}
+                  className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                  >
+                  Batal
+                  </button>
+                  <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  >
+                  Simpan
+                  </button>
+                </div>
+                </form>
+              </div>
+              </div>
+            )}
             <input
               type="text"
               placeholder="Cari Instansi..."
