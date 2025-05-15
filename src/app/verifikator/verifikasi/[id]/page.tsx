@@ -45,12 +45,7 @@ type Question = {
   }[];
 };
 
-const stepDimensionMap: Record<number, string> = {
-  0: 'Perencanaan Kebijakan',
-  1: 'Implementasi Kebijakan',
-  2: 'Evaluasi dan Keberlanjutan Kebijakan',
-  3: 'Transparansi dan Partisipasi Publik',
-};
+
 
 export default function PolicyPage() {
   const params = useParams();
