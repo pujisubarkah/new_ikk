@@ -1,5 +1,3 @@
-// /pages/api/save-ikk-ku-score.ts
-
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
@@ -31,6 +29,15 @@ const ScoreSchema = z.object({
   catatan_d: z.string().optional(),
   catatan_jf: z.string().optional(),
 });
+
+interface ErrorWithMessage {
+  message: string;
+  code?: string;
+}
+
+function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
+  return typeof error === 'object' && error !== null && 'message' in error;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -65,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } = parsed;
 
     const bigPolicyId = BigInt(policy_id.toString());
-    const currentYear = parsed.active_year ? Number(parsed.active_year) : 2025;
+    const currentYear = parsed.active_year ?? 2025;
 
     await prisma.ikk_ku_score.upsert({
       where: {
@@ -124,15 +131,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ message: 'Data berhasil disimpan' });
   } catch (error: unknown) {
     console.error('❌ Gagal:', error);
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 'P2011') {
-      return res.status(400).json({
-        message: 'Validasi gagal atau ID tidak valid',
-        error: (error as any).message,
+
+    if (isErrorWithMessage(error)) {
+      if (error.code === 'P2011') {
+        return res.status(400).json({
+          message: 'Validasi gagal atau ID tidak valid',
+          error: error.message,
+        });
+      }
+
+      return res.status(500).json({
+        message: 'Terjadi kesalahan saat menyimpan',
+        error: error.message,
       });
     }
+
     return res.status(500).json({
-      message: 'Terjadi kesalahan saat menyimpan',
-      error: typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error),
+      message: 'Terjadi kesalahan tak terduga',
+      error: 'Unknown error occurred',
     });
   }
 }
