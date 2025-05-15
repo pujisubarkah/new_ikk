@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
 // Komponen lokal
 import PolicyCard from "@/components/policy/PolicyCardVerifikator";
 import PolicyStepsNav from "@/components/policy/PolicyStepsNav";
@@ -44,18 +43,6 @@ type Question = {
         level_score: string;
         level_description: string;
     }[];
-};
-
-type QuestionListProps = {
-    activeStep: number;
-    selectedAnswers: Record<string, { description: string; score: number }>;
-    onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
-    uploadedFiles: Record<string, string>;
-    apiQuestions: Question[];
-    isSubmitted: boolean;
-    onLinkUpload: (questionId: string, fileLink: string) => void;
-    verifierNotes?: Record<string, string>;
-    onNoteChange?: (questionId: string, note: string) => void;
 };
 
 const stepDimensionMap: Record<number, string> = {
@@ -98,7 +85,6 @@ export default function PolicyPage() {
             try {
                 setLoading(true);
                 setError(null);
-
                 if (!policyId) throw new Error("Policy ID tidak ditemukan");
 
                 const policyRes = await fetch(`/api/policies/${policyId}`);
@@ -109,10 +95,10 @@ export default function PolicyPage() {
                 const questionsRes = await fetch("/api/pertanyaan");
                 if (!questionsRes.ok) throw new Error("Gagal memuat pertanyaan");
                 const questionsData = await questionsRes.json();
+
                 if (Array.isArray(questionsData.data)) {
                     setApiQuestions(questionsData.data);
                 }
-
             } catch (err) {
                 console.error("Error fetching data:", err);
                 setError(err instanceof Error ? err.message : "Terjadi kesalahan saat memuat data");
@@ -120,7 +106,6 @@ export default function PolicyPage() {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, [policyId]);
 
@@ -132,8 +117,8 @@ export default function PolicyPage() {
             try {
                 const answersRes = await fetch(`/api/answers?policyId=${policyId}`);
                 if (!answersRes.ok) return;
-                const answersData = await answersRes.json();
 
+                const answersData = await answersRes.json();
                 const savedAnswers: Record<string, { description: string; score: number }> = {};
                 const savedFiles: Record<string, string> = {};
                 const savedNotes: Record<string, string> = {};
@@ -170,12 +155,10 @@ export default function PolicyPage() {
                 setSelectedAnswers(savedAnswers);
                 setUploadedFiles(savedFiles);
                 setVerifierNotes(savedNotes);
-
                 setAdditionalInfoA(answersData.data?.informasi_a || "");
                 setAdditionalInfoB(answersData.data?.informasi_b || "");
                 setAdditionalInfoC(answersData.data?.informasi_c || "");
                 setAdditionalInfoD(answersData.data?.informasi_d || "");
-
             } catch (error) {
                 console.error("Gagal memuat jawaban lama:", error);
             }
@@ -316,9 +299,8 @@ export default function PolicyPage() {
     // Informasi tambahan
     const activeDimensionName = stepDimensionMap[activeStep];
     const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase();
-
     let currentAdditionalInfo = "";
-    let setAdditionalInfoForCurrentDim = (val: string) => {};
+    let setAdditionalInfoForCurrentDim = (_val: string) => {}; // 🛠️ Parameter renamed to _val
 
     switch (activeDimensionKey) {
         case "a":
@@ -351,6 +333,7 @@ export default function PolicyPage() {
                     [`informasi_${activeDimensionKey}`]: currentAdditionalInfo
                 })
             });
+
             if (!response.ok) throw new Error("Gagal menyimpan informasi tambahan");
             toast.success("Informasi tambahan berhasil disimpan");
         } catch (error) {
