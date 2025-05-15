@@ -26,10 +26,10 @@ interface QuestionListProps {
     uploadedFiles: Record<string, string>;
     onAnswerChange: (questionId: string, description: string, score: number) => void;
     apiQuestions: Question[];
-    isSubmitted: boolean; // mode readonly
+    isSubmitted: boolean;
     onLinkUpload: (questionId: string, fileLink: string) => void;
-    verifierNotes: Record<number, string>; // Catatan per dimensi
-    onNoteChange: (step: number, note: string) => void;
+    verifierNotes?: Record<string, string>;
+    onNoteChange?: (questionId: string, note: string) => void;
 }
 
 const stepDimensionMap: Record<number, string> = {
@@ -112,28 +112,28 @@ export default function QuestionList({
                             <p className="text-gray-500 text-sm">Belum ada file pendukung</p>
                         )}
                     </div>
+
+                    {/* Catatan Verifikator per Pertanyaan */}
+                    <div className="pt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Catatan Verifikator
+                        </label>
+                        {isSubmitted ? (
+                            <p className="text-gray-700 text-sm whitespace-pre-wrap">
+                                {verifierNotes?.[item.id] || 'Tidak ada catatan'}
+                            </p>
+                        ) : (
+                            <textarea
+                                value={verifierNotes?.[item.id] || ''}
+                                onChange={(e) => onNoteChange?.(item.id, e.target.value)}
+                                className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Tuliskan catatan..."
+                                rows={3}
+                            />
+                        )}
+                    </div>
                 </div>
             ))}
-
-            {/* Catatan Verifikator per Dimensi */}
-            <div className="pt-6 border-t">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Catatan Verifikator untuk Dimensi: {dimensionName}
-                </label>
-                {isSubmitted ? (
-                    <p className="text-gray-700 text-sm whitespace-pre-wrap">
-                        {verifierNotes[activeStep] || 'Tidak ada catatan'}
-                    </p>
-                ) : (
-                    <textarea
-                        value={verifierNotes[activeStep] || ''}
-                        onChange={(e) => onNoteChange(activeStep, e.target.value)}
-                        className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={`Tuliskan catatan untuk dimensi "${dimensionName}"...`}
-                        rows={4}
-                    />
-                )}
-            </div>
         </div>
     );
 }
