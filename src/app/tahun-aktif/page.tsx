@@ -23,6 +23,8 @@ function TabelInstansi() {
   }
 
   const [activeYearData, setActiveyears] = useState<ActiveYear[]>([])
+  const [showPopup, setShowPopup] = useState(false)
+  const [newYear, setNewYear] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
 
@@ -63,11 +65,62 @@ function TabelInstansi() {
           <h1 className="text-2xl font-bold">Tahun Penilaian</h1>
           <div className="flex space-x-4 items-center">
             <button
-              onClick={() => alert('Tambah Tahun')}
+              onClick={() => setShowPopup(true)}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
               Tambah Tahun
             </button>
+
+            {showPopup && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 className="text-xl font-bold mb-4">Tambah Tahun</h2>
+                <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                  await axios.post('/api/active_year', { active_year: newYear });
+                  setShowPopup(false);
+                  setNewYear('');
+                  const response = await axios.get('/api/active_year');
+                  setActiveyears(response.data);
+                  } catch (error) {
+                  console.error('Error adding year:', error);
+                  }
+                }}
+                >
+                <div className="mb-4">
+                  <label htmlFor="activeYear" className="block text-sm font-medium mb-2">
+                  Tahun Penilaian
+                  </label>
+                  <input
+                  type="number"
+                  id="activeYear"
+                  value={newYear}
+                  onChange={(e) => setNewYear(e.target.value)}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                  />
+                </div>
+                <div className="flex justify-end space-x-4">
+                  <button
+                  type="button"
+                  onClick={() => setShowPopup(false)}
+                  className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                  >
+                  Batal
+                  </button>
+                  <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  >
+                  Simpan
+                  </button>
+                </div>
+                </form>
+              </div>
+              </div>
+            )}
             <input
               type="text"
               placeholder="Cari Instansi..."
