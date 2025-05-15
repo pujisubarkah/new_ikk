@@ -27,6 +27,7 @@ const Page = () => {
 
   const [instansi, setInstansi] = useState<Instansi | null>(null);
   const [kebijakanData, setKebijakanData] = useState<KebijakanDetail[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Decode ID safely
   const [decodedId, setDecodedId] = useState<string>("");
@@ -77,6 +78,8 @@ const Page = () => {
       } catch (error) {
         console.error("Failed to fetch data", error);
         toast.error("Gagal memuat data kebijakan atau instansi");
+      } finally {
+        setLoading(false);
       }
     };
 
