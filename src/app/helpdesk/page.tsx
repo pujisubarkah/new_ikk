@@ -88,10 +88,10 @@ function MainContent({ form, handleChange, handleSubmit }: MainContentProps) {
               required
             >
               <option value="">Pilih Kategori Masalah</option>
-              <option value="teknis">Masalah Teknis</option>
-              <option value="login">Login & Akses</option>
-              <option value="pengisian">Pengisian IKK</option>
-              <option value="lainnya">Lainnya</option>
+              <option value="TEKNIS">Masalah Teknis</option>
+              <option value="LOGIN/AKSES">Login / Akses IKK</option>
+              <option value="INSTRUMEN">Pengisian Instrumen IKK</option>
+              <option value="LAINNYA">Lainnya</option>
             </select>
           </div>
 

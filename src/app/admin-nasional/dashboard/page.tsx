@@ -150,6 +150,24 @@ const DashboardPage: React.FC = () => {
     (user) => user.role_user?.role_id === "4" && user.status !== "aktif"
   );
 
+  const [helpdeskData, setHelpdeskData] = useState<any[]>([]);
+  const [loadingHelpdesk, setLoadingHelpdesk] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchHelpdeskData = async () => {
+      setLoadingHelpdesk(true);
+      try {
+        const response = await axios.get("/api/helpdesk");
+        setHelpdeskData(response.data);
+      } catch (error) {
+        console.error("Error fetching helpdesk data:", error);
+      } finally {
+        setLoadingHelpdesk(false);
+      }
+    };
+    fetchHelpdeskData();
+  }, []);
+
   return (
     <Sidebar>
       <div className="w-full px-4 md:px-8 py-6 md:py-10 bg-gray-50 min-h-screen">
@@ -173,6 +191,16 @@ const DashboardPage: React.FC = () => {
             onClick={() => setActiveTab("dashboard")}
           >
             Dashboard Grafik
+          </button>
+          <button
+            className={`px-4 py-2 text-sm md:text-base md:px-6 md:py-2 rounded-t-lg font-semibold ${
+              activeTab === "helpdesk"
+                ? "bg-white text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-600 bg-gray-200"
+            }`}
+            onClick={() => setActiveTab("helpdesk")}
+          >
+            Dashboard Helpdesk
           </button>
         </div>
 
@@ -277,7 +305,7 @@ const DashboardPage: React.FC = () => {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                   <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                    Dashboard
+                    Dashboard Pemantauan
                   </h1>
                   <p className="text-sm md:text-base text-gray-600 mt-1">
                     Overview of key metrics and performance
@@ -335,6 +363,57 @@ const DashboardPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === "helpdesk" && (
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold mb-4">
+                Dashboard Helpdesk
+              </h2>
+              
+                <div>
+                  {loadingHelpdesk ? (
+                    <div className="flex justify-center items-center h-40">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full table-auto">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="text-left p-3">Nama Lengkap</th>
+                            <th className="text-left p-3">Email Aktif</th>
+                            <th className="text-left p-3">Instansi</th>
+                            <th className="text-left p-3">Masalah</th>
+                            <th className="text-left p-3 w-1/2">Pesan</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                            {helpdeskData.length > 0 ? (
+                            helpdeskData
+                              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                              .map((item, index) => (
+                              <tr key={index} className="border-t hover:bg-gray-50">
+                                <td className="p-3">{item.nama_lengkap}</td>
+                                <td className="p-3">{item.email_aktif}</td>
+                                <td className="p-3">{item.instansi}</td>
+                                <td className="p-3">{item.masalah}</td>
+                                <td className="p-3 w-1/2">{item.pesan}</td>
+                              </tr>
+                              ))
+                            ) : (
+                            <tr>
+                              <td colSpan={5} className="p-4 text-center text-gray-500">
+                              Tidak ada data helpdesk yang tersedia
+                              </td>
+                            </tr>
+                            )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
             </div>
           )}
         </div>
