@@ -18,7 +18,7 @@ import { toast } from "sonner";
 // Komponen terpisah
 import PolicyCard from "@/components/policy/PolicyCardVerifikator";
 import PolicyStepsNav from "@/components/policy/PolicyStepsNav";
-import QuestionList from "@/components/policy/QuestlList";
+import QuestionList from "@/components/policy/questListVerifikator";
 import AdditionalInfoSection from "@/components/policy/AdditionalInfoSection";
 
 type Policy = {
@@ -29,7 +29,7 @@ type Policy = {
     instansi: string;
     progress_pengisian: number;
     nilai_akhir: number;
-    status_pengiriman?: string; // tambahan field
+    status_pengiriman?: string;
 };
 
 type Question = {
@@ -45,13 +45,12 @@ type Question = {
     }[];
 };
 
-
-
 const stepDimensionMap: Record<number, string> = {
     0: "Perencanaan Kebijakan",
     1: "Implementasi Kebijakan",
     2: "Evaluasi dan Keberlanjutan Kebijakan",
     3: "Transparansi dan Partisipasi Publik",
+    4: "Keterlibatan JF Analis Kebijakan",
 };
 
 export default function PolicyPage() {
@@ -68,6 +67,7 @@ export default function PolicyPage() {
     const [error, setError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [open, setOpen] = useState(false);
+    const [verifierNotes, setVerifierNotes] = useState<Record<string, string>>({});
 
     // State informasi tambahan per dimensi
     const [additionalInfoA, setAdditionalInfoA] = useState("");
@@ -118,6 +118,7 @@ export default function PolicyPage() {
 
                 const savedAnswers: Record<string, { description: string; score: number }> = {};
                 const savedFiles: Record<string, string> = {};
+                const savedNotes: Record<string, string> = {};
 
                 apiQuestions.forEach((q) => {
                     const columnCode = q.indicator_column_code;
@@ -140,10 +141,17 @@ export default function PolicyPage() {
                     if (fileInfo) {
                         savedFiles[q.id] = fileInfo;
                     }
+
+                    const noteKey = `catatan_${columnCode}`;
+                    const noteInfo = answersData.data?.[noteKey];
+                    if (noteInfo) {
+                        savedNotes[q.id] = noteInfo;
+                    }
                 });
 
                 setSelectedAnswers(savedAnswers);
                 setUploadedFiles(savedFiles);
+                setVerifierNotes(savedNotes);
 
                 // Load informasi tambahan
                 setAdditionalInfoA(answersData.data?.informasi_a || "");
@@ -167,6 +175,7 @@ export default function PolicyPage() {
             const userId = localStorage.getItem("id");
             const answersToSubmit: Record<string, number> = {};
             const infoToSubmit: Record<string, string> = {};
+            const notesToSubmit: Record<string, string> = {};
 
             apiQuestions.forEach((item) => {
                 const answer = selectedAnswers[item.id];
@@ -177,6 +186,10 @@ export default function PolicyPage() {
                 if (uploadedFiles[item.id]) {
                     infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
                         uploadedFiles[item.id];
+                }
+
+                if (verifierNotes[item.id]) {
+                    notesToSubmit[`catatan_${item.indicator_column_code}`] = verifierNotes[item.id];
                 }
             });
 
@@ -196,6 +209,7 @@ export default function PolicyPage() {
                         active_year: 2025,
                         ...answersToSubmit,
                         ...infoToSubmit,
+                        ...notesToSubmit,
                     }),
                 });
             } catch (error) {
@@ -204,9 +218,8 @@ export default function PolicyPage() {
         }, 1000); // debounce 1 detik
 
         return () => clearTimeout(timeout);
-    }, [selectedAnswers, uploadedFiles, policyId]);
+    }, [selectedAnswers, uploadedFiles, verifierNotes, policyId]);
 
-    // Ubah jawaban
     const handleAnswerChange = (questionId: string, answerDescription: string, answerScore: number) => {
         setSelectedAnswers((prev) => ({
             ...prev,
@@ -217,13 +230,20 @@ export default function PolicyPage() {
         }));
     };
 
-    // Simpan semua jawaban tanpa kirim ke siapa pun
+    const handleNoteChange = (questionId: string, note: string) => {
+        setVerifierNotes((prev) => ({
+            ...prev,
+            [questionId]: note
+        }));
+    };
+
     const handleSave = async () => {
         setIsSaving(true);
         const userId = localStorage.getItem("id");
 
         const answersToSubmit: Record<string, number> = {};
         const infoToSubmit: Record<string, string> = {};
+        const notesToSubmit: Record<string, string> = {};
 
         apiQuestions.forEach((item) => {
             const answer = selectedAnswers[item.id];
@@ -234,6 +254,10 @@ export default function PolicyPage() {
             if (uploadedFiles[item.id]) {
                 infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
                     uploadedFiles[item.id];
+            }
+
+            if (verifierNotes[item.id]) {
+                notesToSubmit[`catatan_${item.indicator_column_code}`] = verifierNotes[item.id];
             }
         });
 
@@ -252,7 +276,8 @@ export default function PolicyPage() {
                     modified_by: userId,
                     active_year: 2025,
                     ...answersToSubmit,
-                    ...infoToSubmit
+                    ...infoToSubmit,
+                    ...notesToSubmit
                 }),
             });
 
@@ -272,7 +297,6 @@ export default function PolicyPage() {
         }
     };
 
-    // Render UI
     if (loading) {
         return (
             <Sidebar>
@@ -313,30 +337,30 @@ export default function PolicyPage() {
     }
 
     const activeDimensionName = stepDimensionMap[activeStep];
-const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase(); // 'a', 'b', dll.
-let currentAdditionalInfo = "";
-let setAdditionalInfoForCurrentDim: React.Dispatch<React.SetStateAction<string>>;
+    const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase();
+    let currentAdditionalInfo = "";
+    let setAdditionalInfoForCurrentDim: React.Dispatch<React.SetStateAction<string>>;
 
-switch (activeDimensionKey) {
-    case "a":
-        currentAdditionalInfo = additionalInfoA;
-        setAdditionalInfoForCurrentDim = setAdditionalInfoA;
-        break;
-    case "b":
-        currentAdditionalInfo = additionalInfoB;
-        setAdditionalInfoForCurrentDim = setAdditionalInfoB;
-        break;
-    case "c":
-        currentAdditionalInfo = additionalInfoC;
-        setAdditionalInfoForCurrentDim = setAdditionalInfoC;
-        break;
-    case "d":
-        currentAdditionalInfo = additionalInfoD;
-        setAdditionalInfoForCurrentDim = setAdditionalInfoD;
-        break;
-    default:
-        currentAdditionalInfo = "";
-}
+    switch (activeDimensionKey) {
+        case "a":
+            currentAdditionalInfo = additionalInfoA;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoA;
+            break;
+        case "b":
+            currentAdditionalInfo = additionalInfoB;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoB;
+            break;
+        case "c":
+            currentAdditionalInfo = additionalInfoC;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoC;
+            break;
+        case "d":
+            currentAdditionalInfo = additionalInfoD;
+            setAdditionalInfoForCurrentDim = setAdditionalInfoD;
+            break;
+        default:
+            currentAdditionalInfo = "";
+    }
 
     const handleSaveAdditionalInfo = async () => {
         try {
@@ -363,7 +387,6 @@ switch (activeDimensionKey) {
             <div className="w-full px-6 py-8">
                 <div className="space-y-8">
                     <PolicyCard policy={policyData} />
-                    {/* Tombol Simpan */}
                     <div className="flex justify-end">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
@@ -393,9 +416,7 @@ switch (activeDimensionKey) {
                             </DialogContent>
                         </Dialog>
                     </div>
-                    {/* Navigasi Step */}
                     <PolicyStepsNav activeStep={activeStep} onChangeStep={setActiveStep} />
-                    {/* Daftar Pertanyaan */}
                     <QuestionList
                         activeStep={activeStep}
                         selectedAnswers={selectedAnswers}
@@ -409,8 +430,9 @@ switch (activeDimensionKey) {
                                 [questionId]: fileLink,
                             }));
                         }}
+                        verifierNotes={verifierNotes}
+                        onNoteChange={handleNoteChange}
                     />
-                    {/* Informasi Tambahan Dinamis */}
                     <AdditionalInfoSection
                         value={currentAdditionalInfo}
                         onChange={(e) => setAdditionalInfoForCurrentDim(e.target.value)}
