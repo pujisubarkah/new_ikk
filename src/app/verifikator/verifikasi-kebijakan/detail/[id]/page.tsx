@@ -20,6 +20,14 @@ interface KebijakanDetail {
   id: string;
 }
 
+interface PolicyApiResponse {
+  id: string;
+  nama_kebijakan: string;
+  sektor: string;
+  file_url: string;
+  policy_status: string;
+}
+
 const Page = () => {
   const params = useParams();
   const router = useRouter();
@@ -46,44 +54,43 @@ const Page = () => {
       if (!id) return;
 
       try {
+        // Fetch instansi data
         const instansiRes = await fetch(`/api/instansi/${id}/instansi`);
         const instansiData = await instansiRes.json();
         setInstansi(instansiData);
 
-        const policyRes = await fetch(`/api/instansi/${id}/kebijakan-diajukan`);
-        const policyData = await policyRes.json();
+        // Fetch policy data
+              const policyRes = await fetch(`/api/policies/${id}/menunggu-validasi-ku?_=${Date.now()}`);
+      
+      if (!policyRes.ok) throw new Error("Gagal mengambil data kebijakan");
 
-        const mappedData: KebijakanDetail[] = policyData.map(
-          (
-            policy: {
-              id: string;
-              nama_kebijakan: string;
-              sektor: string;
-              file_url: string;
-              status: string;
-            },
-            index: number
-          ) => ({
-            no: index + 1,
-            nama_kebijakan: policy.nama_kebijakan,
-            sektor: policy.sektor || "-",
-            file_url: policy.file_url || "-",
-            status: policy.status,
-            id: policy.id,
-          })
-        );
+      const policyData = await policyRes.json(); // <-- JSON response
+      console.log("Raw Policy Data:", policyData);
 
-        setKebijakanData(mappedData);
-      } catch (error) {
-        console.error("Failed to fetch data", error);
-        toast.error("Gagal memuat data kebijakan atau instansi");
+      if (!policyData.data || !Array.isArray(policyData.data)) {
+        console.error("Format data salah", policyData);
+        setKebijakanData([]);
+        return;
       }
-    };
 
-    fetchData();
-  }, [id]);
+   const mappedData = policyData.data.map((policy: PolicyApiResponse, index: number) => ({
+  no: index + 1,
+  nama_kebijakan: policy.nama_kebijakan,
+  sektor: policy.sektor || "-",
+  file_url: policy.file_url || "-",
+  status: policy.policy_status,
+  id: policy.id,
+}));
 
-  
+      setKebijakanData(mappedData);
+    } catch (error) {
+      console.error("Error fetching policy data", error);
+      toast.error("Gagal memuat data kebijakan");
+    }
+  };
+
+  fetchData();
+}, [id]);
 
   return (
     <div className="flex min-h-screen">
@@ -138,18 +145,20 @@ const Page = () => {
                     </td>
                     <td className="px-6 py-4 border-b">{item.status}</td>
                     <td className="px-6 py-4 border-b text-center">
-                    <button
-  onClick={() => router.push(`/verifikator/verifikasi/${item.id}`)}
-  className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs mx-auto"
->
-  <FaCheckCircle /> Verified
-</button>
+                      <button
+                        onClick={() =>
+                          router.push(`/verifikator/verifikasi/${item.id}`)
+                        }
+                        className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs mx-auto"
+                      >
+                        <FaCheckCircle /> Verified
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="text-center py-4 text-gray-500">
+                  <td colSpan={6} className="text-center py-4 text-gray-500">
                     Tidak ada kebijakan yang perlu diverifikasi.
                   </td>
                 </tr>
