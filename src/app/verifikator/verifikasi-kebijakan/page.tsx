@@ -12,6 +12,12 @@ interface Agency {
   names: Record<string, number>;
 }
 
+interface MasukPolicy {
+  agency_id_panrb: string;
+  instansi: string;
+  total_kebijakan: number;
+}
+
 interface PolicyData {
   agencies: Agency[];
   totalKebijakanMasuk: number;
@@ -26,6 +32,7 @@ const tabs = [
 const KebijakanTable = () => {
   const [activeTab, setActiveTab] = useState<'masuk' | 'proses' | 'selesai'>('masuk')
   const [data, setData] = useState<PolicyData[]>([])
+  const [masukData, setMasukData] = useState<MasukPolicy[]>([]) // New state for masuk data
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     totalKebijakanMasuk: 0,
@@ -46,28 +53,34 @@ const KebijakanTable = () => {
   const fetchPolicies = async (koordinatorInstansiId: string, tab: string) => {
     setLoading(true)
     try {
-      const response = await axios.get(`/api/koordinator-instansi/agency`, {
-        params: { koordinator_instansi_id: koordinatorInstansiId },
-      })
-      const result = response.data
-
-      if (result.data) {
-        const tabData = result.data.map((item: PolicyData) => {
-          const agencyData = item.agencies.filter((agency: Agency) => {
-            switch (tab) {
-              case 'masuk':
-                return agency.names['PROSES'] > 0  // Filter for Masuk
-              case 'proses':
-                return agency.names['DISETUJUI'] > 0 // Filter for Proses
-              case 'selesai':
-                return agency.names['DITOLAK'] > 0 // Filter for Selesai
-              default:
-                return true
-            }
-          })
-          return { ...item, agencies: agencyData }
+      if (tab === 'masuk') {
+        // Handle masuk tab separately
+        const verifikatorId = koordinatorInstansiId
+        const response = await axios.get(`/api/verifikator/${verifikatorId}/masuk`)
+        setMasukData(response.data)
+      } else {
+        // For other tabs, use the original endpoint
+        const response = await axios.get(`/api/koordinator-instansi/agency`, {
+          params: { koordinator_instansi_id: koordinatorInstansiId },
         })
-        setData(tabData)
+        const result = response.data
+
+        if (result.data) {
+          const tabData = result.data.map((item: PolicyData) => {
+            const agencyData = item.agencies.filter((agency: Agency) => {
+              switch (tab) {
+                case 'proses':
+                  return agency.names['DISETUJUI'] > 0
+                case 'selesai':
+                  return agency.names['DITOLAK'] > 0
+                default:
+                  return true
+              }
+            })
+            return { ...item, agencies: agencyData }
+          })
+          setData(tabData)
+        }
       }
     } catch (error) {
       console.error('Error fetching policies:', error)
@@ -96,7 +109,7 @@ const KebijakanTable = () => {
   }
 
   return (
-      <Sidebar>
+    <Sidebar>
       <main className="flex-1 p-8 md:p-20">
         {/* Summary cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -107,7 +120,7 @@ const KebijakanTable = () => {
         </div>
 
         {/* Tabs */}
-        <h2 className="text-2xl font-bold text-gray-700 mb-4">Daftar Populasi</h2>
+        <h2 className="text-2xl font-bold text-gray-700 mb-4">Daftar Kebijakan</h2>
         <div className="flex space-x-2 mb-6">
           {tabs.map((tab) => (
             <button
@@ -124,77 +137,74 @@ const KebijakanTable = () => {
           ))}
         </div>
 
-       {/* Table */}
-<div className="overflow-x-auto bg-white shadow-md rounded-xl">
-  {loading ? (
-    <p className="text-center py-8 text-gray-500">Loading data...</p>
-  ) : (
-    <table className="table-auto w-full text-sm border border-gray-200">
-      <thead className="bg-gray-100 text-gray-700">
-        <tr>
-          <th className="px-4 py-2 border">No</th>
-          <th className="px-4 py-2 border">Nama Instansi</th>
-          <th className="px-4 py-2 border">Total Kebijakan</th>
-          <th className="px-4 py-2 border">Tanggal Diajukan</th>
-          {activeTab !== 'selesai' && <th className="px-4 py-2 border">Aksi</th>}
-        </tr>
-      </thead>
-      <tbody>
-        {activeTab === 'masuk' && data.flatMap((item, index) =>
-          item.agencies.map((agency, agencyIndex) => {
-            if (agency.names['PROSES'] > 0) {
-              return (
-                <tr key={`${index}-${agencyIndex}`} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border text-center">{agencyIndex + 1}</td>
-                  <td className="px-4 py-2 border">{agency.name}</td>
-                  <td className="px-4 py-2 border text-center">{agency.total}</td>
-                  <td className="px-4 py-2 border text-center">2025-04-23</td>
-                  {activeTab !== ('selesai' as typeof activeTab) && (
-                    <td className="px-4 py-2 border text-center">
-                      <button
-                        onClick={() => router.push(`/detail/kebijakan/${agency.id}`)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Lihat Detail"
-                      >
-                        <FileText className="w-5 h-5" />
-                      </button>
-                    </td>
-                  )}
+        {/* Table */}
+        <div className="overflow-x-auto bg-white shadow-md rounded-xl">
+          {loading ? (
+            <p className="text-center py-8 text-gray-500">Loading data...</p>
+          ) : (
+            <table className="table-auto w-full text-sm border border-gray-200">
+              <thead className="bg-gray-100 text-gray-700">
+                <tr>
+                  <th className="px-4 py-2 border">No</th>
+                  <th className="px-4 py-2 border">Nama Instansi</th>
+                  <th className="px-4 py-2 border">Total Kebijakan</th>
+                  {activeTab !== 'selesai' && <th className="px-4 py-2 border">Aksi</th>}
                 </tr>
-              )
-            }
-            return null
-          })
-        )}
-
-        {activeTab === 'proses' && data.flatMap((item, index) =>
-          item.agencies.map((agency, agencyIndex) => {
-            if (agency.names['DISETUJUI'] > 0) {
-              return (
-                <tr key={`${index}-${agencyIndex}`} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border text-center">{agencyIndex + 1}</td>
-                  <td className="px-4 py-2 border">{agency.name}</td>
-                  <td className="px-4 py-2 border text-center">{agency.names['PROSES']}</td>
-                  <td className="px-4 py-2 border text-center">2025-04-24</td>
-                  <td className="px-4 py-2 border text-center">
-                    <button
-                      onClick={() => router.push(`/detail/kebijakan/${agency.id}`)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Lihat Detail"
-                    >
-                      <FileText className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              )
-            }
-            return null
-          })
-        )}
-      </tbody>
-    </table>
-  )}
-</div>
+              </thead>
+              <tbody>
+                {activeTab === 'masuk' ? (
+                  masukData.map((policy, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border text-center">{index + 1}</td>
+                      <td className="px-4 py-2 border">{policy.instansi}</td>
+                      <td className="px-4 py-2 border text-center">{policy.total_kebijakan}</td>
+                      <td className="px-4 py-2 border text-center">
+                        <button
+                          onClick={() => router.push(`/verifikator/verifikasi-kebijakan/detail/${policy.agency_id_panrb}`)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Lihat Detail"
+                        >
+                          <FileText className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  data.flatMap((item, index) =>
+                    item.agencies.map((agency, agencyIndex) => {
+                      if (
+                        (activeTab === 'proses' && agency.names['DISETUJUI'] > 0) ||
+                        (activeTab === 'selesai' && agency.names['DITOLAK'] > 0)
+                      ) {
+                        return (
+                          <tr key={`${index}-${agencyIndex}`} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 border text-center">{agencyIndex + 1}</td>
+                            <td className="px-4 py-2 border">{agency.name}</td>
+                            <td className="px-4 py-2 border text-center">
+                              {activeTab === 'proses' ? agency.names['DISETUJUI'] : agency.names['DITOLAK']}
+                            </td>
+                            {activeTab !== 'selesai' && (
+                              <td className="px-4 py-2 border text-center">
+                                <button
+                                  onClick={() => router.push(`/detail/kebijakan/${agency.id}`)}
+                                  className="text-blue-600 hover:text-blue-800"
+                                  title="Lihat Detail"
+                                >
+                                  <FileText className="w-5 h-5" />
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        )
+                      }
+                      return null
+                    })
+                  )
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
       </main>
     </Sidebar>
   )
