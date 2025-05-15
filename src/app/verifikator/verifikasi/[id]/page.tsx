@@ -318,7 +318,7 @@ export default function PolicyPage() {
     );
   }
 
-  const activeDimensionName = stepDimensionMap[activeStep];
+  
   
 
   return (
