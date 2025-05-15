@@ -106,11 +106,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                 <span className="font-medium">{userName}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48 bg-white text-[#16578D] shadow-md">
-                <DropdownMenuItem onClick={() => alert('Ubah Sandi Clicked')}>
-                  Ubah Sandi
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => alert('Ubah No Telepon Clicked')}>
-                  Ubah No Telepon
+                <DropdownMenuItem onClick={() => alert('Edit Profil Clicked')}>
+                  Edit Profil
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
                   Logout
