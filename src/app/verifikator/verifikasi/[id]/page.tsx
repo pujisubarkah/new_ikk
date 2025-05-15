@@ -16,9 +16,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 // Komponen terpisah
-import PolicyCard from "@/components/policy/PolicyCard";
+import PolicyCard from "@/components/policy/PolicyCardVerifikator";
 import PolicyStepsNav from "@/components/policy/PolicyStepsNav";
-import QuestionList from "@/components/policy/QuestionList";
+import QuestionList from "@/components/policy/QuestlList";
 import AdditionalInfoSection from "@/components/policy/AdditionalInfoSection";
 
 type Policy = {
@@ -29,6 +29,7 @@ type Policy = {
     instansi: string;
     progress_pengisian: number;
     nilai_akhir: number;
+    status_pengiriman?: string; // tambahan field
 };
 
 type Question = {
@@ -44,7 +45,7 @@ type Question = {
     }[];
 };
 
-// Removed unused 'steps' variable
+
 
 const stepDimensionMap: Record<number, string> = {
     0: "Perencanaan Kebijakan",
@@ -74,6 +75,8 @@ export default function PolicyPage() {
     const [additionalInfoC, setAdditionalInfoC] = useState("");
     const [additionalInfoD, setAdditionalInfoD] = useState("");
 
+    const isSubmitted = policyData?.status_pengiriman === 'terkirim';
+
     // Load data awal (policy & pertanyaan)
     useEffect(() => {
         const fetchData = async () => {
@@ -90,10 +93,10 @@ export default function PolicyPage() {
                 const questionsRes = await fetch("/api/pertanyaan");
                 if (!questionsRes.ok) throw new Error("Gagal memuat pertanyaan");
                 const questionsData = await questionsRes.json();
+
                 if (Array.isArray(questionsData.data)) {
                     setApiQuestions(questionsData.data);
                 }
-
             } catch (err) {
                 console.error("Error fetching data:", err);
                 setError(err instanceof Error ? err.message : "Terjadi kesalahan saat memuat data");
@@ -101,19 +104,16 @@ export default function PolicyPage() {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, [policyId]);
 
     // Load jawaban dan file pendukung lama dari /api/answers
     useEffect(() => {
         if (!policyId || !apiQuestions.length) return;
-
         const loadSavedAnswers = async () => {
             try {
                 const answersRes = await fetch(`/api/answers?policyId=${policyId}`);
                 if (!answersRes.ok) return;
-
                 const answersData = await answersRes.json();
 
                 const savedAnswers: Record<string, { description: string; score: number }> = {};
@@ -122,7 +122,6 @@ export default function PolicyPage() {
                 apiQuestions.forEach((q) => {
                     const columnCode = q.indicator_column_code;
                     const score = answersData.data?.[columnCode];
-
                     if (score !== undefined && q.instrument_answer) {
                         const matchedAnswer = q.instrument_answer.find(
                             (a) => a.level_score === String(score)
@@ -160,13 +159,12 @@ export default function PolicyPage() {
         loadSavedAnswers();
     }, [policyId, apiQuestions]);
 
-    // Auto-save jawaban dan file pendukung
+    // Auto-save jawaban
     useEffect(() => {
         if (!policyId || Object.keys(selectedAnswers).length === 0) return;
 
         const timeout = setTimeout(async () => {
             const userId = localStorage.getItem("id");
-
             const answersToSubmit: Record<string, number> = {};
             const infoToSubmit: Record<string, string> = {};
 
@@ -175,6 +173,7 @@ export default function PolicyPage() {
                 if (answer?.score !== undefined) {
                     answersToSubmit[item.indicator_column_code] = answer.score;
                 }
+
                 if (uploadedFiles[item.id]) {
                     infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
                         uploadedFiles[item.id];
@@ -193,7 +192,7 @@ export default function PolicyPage() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         policy_id: policyId,
-                        created_by: userId,
+                        modified_by: userId,
                         active_year: 2025,
                         ...answersToSubmit,
                         ...infoToSubmit,
@@ -218,61 +217,8 @@ export default function PolicyPage() {
         }));
     };
 
-    // Mapping kolom file berdasarkan dimensi dan urutan pertanyaan
-    const getFileNameFromQuestion = (dimension: string, questionIndex: number): string | null => {
-        const prefixMap: Record<string, string> = {
-            "Perencanaan Kebijakan": "a",
-            "Implementasi Kebijakan": "b",
-            "Evaluasi dan Keberlanjutan Kebijakan": "c",
-            "Transparansi dan Partisipasi Publik": "d",
-        };
-        const prefix = prefixMap[dimension];
-        if (!prefix) return null;
-        const order = questionIndex % 3 + 1;
-        return `file_url_${prefix}${order}`;
-    };
-
-    // Unggah file pendukung
-    const handleLinkUpload = async (questionId: string, link: string, questionIndex: number) => {
-        const question = apiQuestions.find(q => q.id === questionId);
-        if (!question) return;
-        const fileName = getFileNameFromQuestion(question.dimension_name, questionIndex);
-        if (!fileName) return;
-        try {
-            await fetch("/api/upload-supporting-file", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    policy_id: policyId,
-                    created_by: localStorage.getItem("id"),
-                    [fileName]: link
-                })
-            });
-            setUploadedFiles(prev => ({
-                ...prev,
-                [questionId]: link
-            }));
-            toast.success("File berhasil disimpan");
-        } catch (error) {
-            console.error("Gagal menyimpan file:", error);
-            toast.error("Gagal menyimpan file");
-        }
-    };
-
-    // Simpan semua jawaban dan kirim ke koordinator
-    const handleConfirm = async () => {
-        const unansweredQuestions = apiQuestions.filter((item) => !selectedAnswers[item.id]);
-        if (unansweredQuestions.length > 0) {
-            const pesan = `Masih ada ${unansweredQuestions.length} pertanyaan yang belum dijawab:\n${unansweredQuestions.map(q => `- ${q.indicator_question}`).join('\n')}`;
-            alert(pesan);
-            const firstUnansweredId = unansweredQuestions[0].id;
-            const elemen = document.getElementById(`question-${firstUnansweredId}`);
-            if (elemen) {
-                elemen.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            return;
-        }
-
+    // Simpan semua jawaban tanpa kirim ke siapa pun
+    const handleSave = async () => {
         setIsSaving(true);
         const userId = localStorage.getItem("id");
 
@@ -284,6 +230,7 @@ export default function PolicyPage() {
             if (answer?.score !== undefined) {
                 answersToSubmit[item.indicator_column_code] = answer.score;
             }
+
             if (uploadedFiles[item.id]) {
                 infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
                     uploadedFiles[item.id];
@@ -302,7 +249,7 @@ export default function PolicyPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     policy_id: policyId,
-                    created_by: userId,
+                    modified_by: userId,
                     active_year: 2025,
                     ...answersToSubmit,
                     ...infoToSubmit
@@ -310,29 +257,14 @@ export default function PolicyPage() {
             });
 
             if (!saveResponse.ok) throw new Error("Gagal menyimpan jawaban");
-
-            const sendResponse = await fetch("/api/policies/send_to_ki", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-enumerator-id": userId || ""
-                },
-                body: JSON.stringify({ id: policyId })
-            });
-
-            if (!sendResponse.ok) {
-                const errorData = await sendResponse.json();
-                throw new Error(errorData.error || "Gagal mengirim ke koordinator");
-            }
-
-            toast.success("Jawaban berhasil dikirim ke koordinator");
-            router.push(`/enumerator/kebijakan`);
+            toast.success("Jawaban berhasil disimpan");
+            router.push(`/koordinator-instansi/daftar-kebijakan`);
         } catch (error: unknown) {
             console.error('Error:', error);
             if (error instanceof Error) {
-                toast.error(error.message || "Gagal mengirim ke koordinator");
+                toast.error(error.message || "Gagal menyimpan jawaban");
             } else {
-                toast.error("Gagal mengirim ke koordinator");
+                toast.error("Gagal menyimpan jawaban");
             }
         } finally {
             setIsSaving(false);
@@ -380,7 +312,7 @@ export default function PolicyPage() {
         );
     }
 
-       const activeDimensionName = stepDimensionMap[activeStep];
+    const activeDimensionName = stepDimensionMap[activeStep];
 const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase(); // 'a', 'b', dll.
 let currentAdditionalInfo = "";
 let setAdditionalInfoForCurrentDim: React.Dispatch<React.SetStateAction<string>>;
@@ -418,7 +350,6 @@ switch (activeDimensionKey) {
                     [`informasi_${activeDimensionKey}`]: currentAdditionalInfo
                 })
             });
-
             if (!response.ok) throw new Error("Gagal menyimpan informasi tambahan");
             toast.success("Informasi tambahan berhasil disimpan");
         } catch (error) {
@@ -432,7 +363,7 @@ switch (activeDimensionKey) {
             <div className="w-full px-6 py-8">
                 <div className="space-y-8">
                     <PolicyCard policy={policyData} />
-                    {/* Tombol Kirim */}
+                    {/* Tombol Simpan */}
                     <div className="flex justify-end">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
@@ -443,20 +374,20 @@ switch (activeDimensionKey) {
                                     }`}
                                 >
                                     <FaPaperPlane className="text-white" />
-                                    {isSaving ? "Menyimpan..." : "Simpan & Kirim ke Koordinator"}
+                                    {isSaving ? "Menyimpan..." : "Simpan Jawaban"}
                                 </button>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Yakin ingin mengirim?</DialogTitle>
+                                    <DialogTitle>Simpan Jawaban</DialogTitle>
                                     <DialogDescription>
-                                        Pastikan semua jawaban sudah lengkap sebelum mengirim ke koordinator.
+                                        Apakah Anda yakin ingin menyimpan jawaban?
                                     </DialogDescription>
                                 </DialogHeader>
                                 <DialogFooter>
                                     <Button variant="secondary" onClick={() => setOpen(false)}>Batal</Button>
-                                    <Button onClick={handleConfirm} disabled={isSaving}>
-                                        Ya, Kirim Sekarang
+                                    <Button onClick={handleSave} disabled={isSaving}>
+                                        Ya, Simpan
                                     </Button>
                                 </DialogFooter>
                             </DialogContent>
@@ -469,10 +400,15 @@ switch (activeDimensionKey) {
                         activeStep={activeStep}
                         selectedAnswers={selectedAnswers}
                         onAnswerChange={handleAnswerChange}
-                        onLinkUpload={handleLinkUpload}
                         uploadedFiles={uploadedFiles}
                         apiQuestions={apiQuestions}
-                        isSubmitted={false} // Add the isSubmitted property
+                        isSubmitted={isSubmitted}
+                        onLinkUpload={(questionId, fileLink) => {
+                            setUploadedFiles((prev) => ({
+                                ...prev,
+                                [questionId]: fileLink,
+                            }));
+                        }}
                     />
                     {/* Informasi Tambahan Dinamis */}
                     <AdditionalInfoSection
