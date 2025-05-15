@@ -6,6 +6,8 @@ import SidebarKoor from '@/components/sidebar-koornas'
 import SidebarInst from '@/components/sidebar-verif'
 import SidebarEnum from '@/components/sidebar-enum'
 import Sidebar from '@/components/sidebar-koorins'
+import axios from 'axios'
+import { toast } from "sonner"
 
 interface CustomFormData {
   name: string;
@@ -156,16 +158,10 @@ export default function HelpdeskPage() {
     }
 
     try {
-      const response = await fetch('/api/helpdesk', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+      const response = await axios.post('/api/helpdesk', payload)
 
-      if (response.ok) {
-        console.log('Form submitted successfully')
+      if (response.status === 201) {
+        toast.success('Pesan Anda telah dikirim, dapatkan pemberitahuan melalui email')
         setForm({
           name: '',
           email: '',
@@ -174,9 +170,10 @@ export default function HelpdeskPage() {
           message: '',
         })
       } else {
-        console.error('Failed to submit form')
+        toast.error('Pesan Anda gagal dikirim, silakan coba lagi')
       }
     } catch (error) {
+      toast.error('Pesan Anda gagal dikirim, silakan coba lagi')
       console.error('An error occurred:', error)
     }
   }

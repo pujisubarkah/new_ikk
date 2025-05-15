@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma'; // pastikan path sesuai
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -11,11 +9,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(200).json(helpdesks);
         } else if (req.method === 'POST') {
             // Handle POST request
-            const { title, description } = req.body;
-
-            if (!title || !description) {
-                return res.status(400).json({ error: 'Title and description are required' });
-            }
 
             const { nama_lengkap, email_aktif, instansi, masalah, pesan } = req.body;
 
@@ -33,7 +26,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 },
             });
 
-            return res.status(201).json(newHelpdesk);
+            // Convert BigInt values to strings
+            const serializedHelpdesk = JSON.parse(
+                JSON.stringify(newHelpdesk, (key, value) =>
+                    typeof value === 'bigint' ? value.toString() : value
+                )
+            );
+
+            return res.status(201).json(serializedHelpdesk);
         } else {
             // Method not allowed
             res.setHeader('Allow', ['GET', 'POST']);
