@@ -3,26 +3,65 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useState } from 'react'
+import axios from 'axios'
+import { toast } from 'sonner'
+
+interface FormData {
+  name: string;
+  email: string;
+  unit: string;
+  category: string;
+  message: string;
+}
 
 export default function HelpdeskPage() {
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    unit: '',
-    category: '',
-    message: ''
-  })
+  const [form, setForm] = useState<FormData>({
+      name: '',
+      email: '',
+      unit: '',
+      category: '',
+      message: ''
+    })
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }))
+    }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log(form)
-  }
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault()
+  
+      const payload = {
+        nama_lengkap: form.name,
+        email_aktif: form.email,
+        instansi: form.unit,
+        masalah: form.category,
+        pesan: form.message,
+      }
+  
+      try {
+        const response = await axios.post('/api/helpdesk', payload)
+  
+        if (response.status === 201) {
+          toast.success('Pesan Anda telah dikirim, dapatkan pemberitahuan melalui email')
+          setForm({
+            name: '',
+            email: '',
+            unit: '',
+            category: '',
+            message: '',
+          })
+        } else {
+          toast.error('Pesan Anda gagal dikirim, silakan coba lagi')
+        }
+      } catch (error) {
+        toast.error('Pesan Anda gagal dikirim, silakan coba lagi')
+        console.error('An error occurred:', error)
+      }
+    }
 
   return (
     <>
@@ -88,10 +127,10 @@ export default function HelpdeskPage() {
                 required
               >
                 <option value="">Pilih Kategori Masalah</option>
-                <option value="teknis">Masalah Teknis</option>
-                <option value="login">Login & Akses</option>
-                <option value="pengisian">Pengisian IKK</option>
-                <option value="lainnya">Lainnya</option>
+              <option value="TEKNIS">Masalah Teknis</option>
+              <option value="LOGIN/AKSES">Login / Akses IKK</option>
+              <option value="INSTRUMEN">Pengisian Instrumen IKK</option>
+              <option value="LAINNYA">Lainnya</option>
               </select>
             </div>
 
