@@ -319,7 +319,7 @@ export default function PolicyPage() {
   }
 
   const activeDimensionName = stepDimensionMap[activeStep];
-  const activeDimensionKey = activeDimensionName.charAt(0).toLowerCase();
+  
 
   return (
     <Sidebar>
