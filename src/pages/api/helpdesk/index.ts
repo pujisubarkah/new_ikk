@@ -6,7 +6,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (req.method === 'GET') {
             // Handle GET request
             const helpdesks = await prisma.helpdesk.findMany();
-            return res.status(200).json(helpdesks);
+
+            // Convert BigInt values to strings
+            const serializedHelpdeskGet = JSON.parse(
+                JSON.stringify(helpdesks, (key, value) =>
+                    typeof value === 'bigint' ? value.toString() : value
+                )
+            );
+
+            return res.status(200).json(serializedHelpdeskGet);
         } else if (req.method === 'POST') {
             // Handle POST request
 
