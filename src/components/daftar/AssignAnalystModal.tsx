@@ -35,7 +35,7 @@ export default function AssignAnalystModal({ isOpen, onClose, policy }: AssignAn
         if (isMounted) {
           setAnalysts(res.data || []);
         }
-      } catch (error) {
+      } catch {
         toast.error('Gagal memuat daftar analis');
         if (isMounted) setAnalysts([]);
       } finally {
