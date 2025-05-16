@@ -13,7 +13,7 @@ export default function PolicySummary() {
   useEffect(() => {
     const fetchSummary = async () => {
       const adminId = localStorage.getItem("id");
-      if (!adminId) return setLoading(false);  // kalau ga ada id, stop loading juga
+      if (!adminId) return setLoading(false);
 
       try {
         const res = await fetch(`/api/policies/${adminId}/summary`);
@@ -32,13 +32,15 @@ export default function PolicySummary() {
   if (loading) return <p>Memuat data kebijakan...</p>;
   if (!summary) return <p>Tidak ada data summary ditemukan.</p>;
 
-  // Mapping key API ke label user-friendly dan warna
   const summaryMap = [
-    { key: "DIAJUKAN", label: "Diajukan", color: "yellow" },
-    { key: "DISETUJUI", label: "Disetujui", color: "green" },
-    { key: "DITOLAK", label: "Ditolak", color: "red" },
-    // Tambah lagi kalau mau
-  ];
+    { key: "DIAJUKAN", label: "Diajukan", color: "yellow" as const },
+    { key: "DISETUJUI", label: "Disetujui", color: "green" as const },
+    { key: "DITOLAK", label: "Ditolak", color: "red" as const },
+  ] satisfies {
+    key: string;
+    label: string;
+    color: "yellow" | "green" | "red";
+  }[];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
