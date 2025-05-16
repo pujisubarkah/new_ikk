@@ -85,8 +85,7 @@ export default function SelesaiTab() {
                                 item={item}
                                 index={startIndex + index + 1}
                                 tab="selesai"
-                                showAnalysist
-                                showScore
+                                showAnalyst
                                 showViewButton
                             />
                         ))
