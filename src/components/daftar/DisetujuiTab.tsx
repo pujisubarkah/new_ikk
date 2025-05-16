@@ -82,7 +82,7 @@ export default function DisetujuiTab() {
                         </tr>
                     ) : currentData.length > 0 ? (
                         currentData.map((item, index) => (
-                            <PolicyTableRow key={item.id} item={item} index={startIndex + index + 1} showAnalysist showAction tab="disetujui" />
+                            <PolicyTableRow key={item.id} item={item} index={startIndex + index + 1} showAnalyst showAction tab="disetujui" />
                         ))
                     ) : (
                         <tr>
