@@ -45,36 +45,42 @@ const TambahPengguna: React.FC = () => {
   const [instansis, setInstansis] = useState<Instansi[]>([])
   const router = useRouter()
 
-  useEffect(() => {
-    const fetchAgencyIdAndInstansi = async () => {
-      try {
-        const koorInstansiId = localStorage.getItem("id") // Mengambil koorInstansiId dari localStorage
+ useEffect(() => {
+  const fetchAgencyIdAndInstansi = async () => {
+    try {
+      const koorInstansiId = localStorage.getItem("id")
 
-        if (!koorInstansiId) {
-          toast.warning("ID koordinator instansi tidak ditemukan")
-          return
-        }
-
-        // Menambahkan koorInstansiId ke dalam formData secara otomatis
-        setFormData((prev) => ({ ...prev, koorInstansiId })) // Update koorInstansiId ke dalam form data
-
-        const response = await axios.get(`/api/koorinstansi/info?koor_instansi_id=${koorInstansiId}`)
-        const agencyId = response.data.agency_id?.agency_id_panrb
-
-        if (agencyId) {
-          setFormData((prev) => ({ ...prev, instansi: agencyId }))
-
-          const instansiDetail = await axios.get(`/api/instansi/${agencyId}`)
-          setInstansis([instansiDetail.data])
-        }
-      } catch (err) {
-        toast.error("Gagal memuat data instansi")
-        console.error("Gagal memuat data instansi", err)
+      if (!koorInstansiId) {
+        toast.warning("ID koordinator instansi tidak ditemukan")
+        return
       }
-    }
 
-    fetchAgencyIdAndInstansi()
-  }, [])
+      const response = await axios.get(`/api/koorinstansi/info?koor_instansi_id=${koorInstansiId}`)
+      const agencyId = response.data.agency_id?.agency_id_panrb
+
+    if (agencyId) {
+      setFormData((prev) => ({ ...prev, instansi: agencyId }))
+
+      const instansiDetail = await axios.get(`/api/instansi/${agencyId}/instansi`)
+
+      // Mapping manual biar sesuai interface
+      setInstansis([
+        {
+          id: agencyId,
+          name: instansiDetail.data.agency_name, // Ubah key di sini
+          category: "", // kosongin aja dulu kalau nggak penting
+        },
+      ])
+    }
+  } catch (err) {
+    toast.error("Gagal memuat data instansi")
+    console.error("Gagal memuat data instansi", err)
+  }
+}
+
+  fetchAgencyIdAndInstansi()
+}, [])
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
