@@ -10,9 +10,11 @@ import { FaEdit, FaTrash, FaArrowRight } from 'react-icons/fa'
 import Sidebar from '@/components/sidebar-admin'
 import { withRoleGuard } from '@/lib/withRoleGuard'
 import { usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 function InstansiKebijakan() {
   const [page, setPage] = useState(1)
+  const router = useRouter()
 
   interface Policy {
     instansi: string;
@@ -43,6 +45,14 @@ function InstansiKebijakan() {
       console.log('No agency_id found in URL path')
     }
   }, [id])
+
+  const handleLihat = (policy_id: string) => {
+    if (id) {
+      router.push(`/admin-nasional/kebijakan/instansi/${id}/${policy_id}`)
+    } else {
+      console.error('ID is not defined')
+    }
+  }
 
   useEffect(() => {
     const start = (page - 1) * 25
@@ -110,7 +120,9 @@ function InstansiKebijakan() {
                         <Button className="flex justify-center items-center bg-red-600 text-white hover:bg-red-700 rounded-md py-2 px-4 transition duration-200">
                         <FaTrash />
                         </Button>
-                        <Button className="flex justify-center items-center bg-green-600 text-white hover:bg-green-700 rounded-md py-2 px-4 transition duration-200">
+                        <Button 
+                        className="flex justify-center items-center bg-green-600 text-white hover:bg-green-700 rounded-md py-2 px-4 transition duration-200"
+                        onClick={() => handleLihat(item.id)}>
                         <FaArrowRight />
                         </Button>
                     </TableCell>
