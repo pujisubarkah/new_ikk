@@ -23,6 +23,10 @@ interface Policy {
 interface PolicyRowProps {
   item: Policy;
   index: number;
+    
+    showProgress?: boolean;
+    showAssignDate?: boolean;
+    showViewButton?: boolean;
   tab: 'diajukan' | 'disetujui' | 'diproses' | 'selesai';
 }
 
