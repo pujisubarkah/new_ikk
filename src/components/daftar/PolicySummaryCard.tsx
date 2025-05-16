@@ -9,13 +9,19 @@ interface PolicyCount {
 
 export default function PolicySummaryCard({ label, count, color }: PolicyCount) {
   const renderIcon = () => {
-    if (label === "Diajukan") return <FaHourglassHalf className="text-yellow-600" />;
-    if (label === "Disetujui") return <FaCheckCircle className="text-green-600" />;
-    if (label === "Ditolak") return <FaTimesCircle className="text-red-600" />;
-    return null;
+    switch (label) {
+      case "Diajukan":
+        return <FaHourglassHalf className="text-yellow-600" />;
+      case "Disetujui":
+        return <FaCheckCircle className="text-green-600" />;
+      case "Ditolak":
+        return <FaTimesCircle className="text-red-600" />;
+      default:
+        return null;
+    }
   };
 
-  // Warna background, border, text berdasarkan props
+  // Mapping warna berdasarkan prop `color`
   const bgColor =
     color === "green"
       ? "bg-green-50"
@@ -51,7 +57,7 @@ export default function PolicySummaryCard({ label, count, color }: PolicyCount) 
       <div className={`${textColor} font-semibold text-base sm:text-lg text-center`}>
         {label}
       </div>
-      <div className={`flex items-center gap-2 sm:gap-3 px-3 py-1 rounded-full ${iconBg}`}>
+      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${iconBg}`}>
         <span className="text-xl sm:text-2xl">{renderIcon()}</span>
         <span className="font-bold text-lg sm:text-xl">{count}</span>
       </div>
