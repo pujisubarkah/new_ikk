@@ -1,7 +1,7 @@
 // pages/kebijakan/index.tsx
 "use client";
 import Sidebar from "@/components/sidebar-koorins";
-import PolicySummaryCard from "@/components/PolicySummaryCard";
+import PolicySummary from "@/components/daftar/PolicySummary"; 
 import PolicyTabTable from "@/components/daftar/PolicyTabTable";
 import AddPolicyFormDialog from "@/components/daftar/AddPolicyFormDialog";
 
@@ -11,9 +11,7 @@ export default function KebijakanTable() {
       <div className="flex flex-col p-6 space-y-6 bg-gray-50">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <PolicySummaryCard label="Diajukan" count={0} color="blue" />
-          <PolicySummaryCard label="Disetujui" count={0} color="green" />
-          <PolicySummaryCard label="Ditolak" count={0} color="red" />
+         <PolicySummary />
         </div>
 
         {/* Header & Tombol Aksi */}
