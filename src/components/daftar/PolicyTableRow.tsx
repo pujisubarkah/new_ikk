@@ -23,7 +23,8 @@ interface Policy {
 interface PolicyRowProps {
   item: Policy;
   index: number;
-    
+  showAnalyst?: boolean;
+ showAction?: boolean;
     showProgress?: boolean;
     showAssignDate?: boolean;
     showViewButton?: boolean;
