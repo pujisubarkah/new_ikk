@@ -3,7 +3,7 @@
 import Sidebar from "@/components/sidebar-koorins";
 import PolicySummaryCard from "@/components/PolicySummaryCard";
 import PolicyTabTable from "@/components/daftar/PolicyTabTable";
-import AddPolicyFormDialog from "@/components/AddPolicyFormDialog";
+import AddPolicyFormDialog from "@/components/daftar/AddPolicyFormDialog";
 
 export default function KebijakanTable() {
   return (
