@@ -146,32 +146,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 
 
-    case 'DELETE':
-      try {
-        const user = await prisma.user.findUnique({
-          where: { id: BigInt(id) },
-        });
+   case 'DELETE':
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(id) },
+    })
 
-        if (!user) {
-          return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
-        }
+    if (!user) {
+      return res.status(404).json({ error: 'Pengguna tidak ditemukan' })
+    }
 
-        const deletedUser = await prisma.user.update({
-          where: { id: BigInt(id) },
-          data: {
-            deleted: '1',
-            deleted_at: new Date(),
-          },
-        });
+    const updatedUser = await prisma.user.update({
+      where: { id: BigInt(id) },
+      data: {
+        deleted: '1',
+        deleted_at: new Date(),
+        status: 'nonaktif', // <-- Sekarang status juga berubah
+      },
+    })
 
-        // Menggunakan safeJson untuk memastikan BigInt aman
-        res.status(200).json(safeJson(deletedUser));
+    res.status(200).json(safeJson(updatedUser))
 
-      } catch (error) {
-        console.error('Gagal menghapus user:', error);
-        res.status(500).json({ error: 'Terjadi kesalahan saat menghapus user' });
-      }
-      break;
+  } catch (error) {
+    console.error('Gagal menghapus user:', error)
+    res.status(500).json({ error: 'Terjadi kesalahan saat menghapus user' })
+  }
+  break
 
     default:
       res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
