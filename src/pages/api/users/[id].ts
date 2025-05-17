@@ -72,71 +72,79 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       break;
 
-      case 'PUT':
-        try {
-          console.log('Received update data:', {
-            id: id,
-            body: req.body,
-            timestamp: new Date().toISOString()
-          });
-      
-          // Validasi data yang diperlukan
-          if (!req.body.name || !req.body.email) {
-            console.warn('Validation failed - missing required fields');
-            return res.status(400).json({ 
-              error: 'Name and email are required',
-              received: req.body 
-            });
-          }
-      
-          const updatedUser = await prisma.user.update({
-            where: { id: BigInt(id) },
-            data: {
-              name: req.body.name,
-              email: req.body.email,
-              nik: req.body.nik,
-              phone: req.body.phone,
-              position: req.body.position,
-              work_unit: req.body.work_unit,
-              status: req.body.status,
-              active_year: req.body.active_year,
-              agency_id_panrb: req.body.agency_id_panrb,
-              ...(req.body.username && { username: req.body.username }),
-              
-            },
-          });
-      
-          // Update role_id in the role_user table
-          if (req.body.role_id) {
-            await prisma.role_user.updateMany({
-              where: { user_id: BigInt(id) },
-              data: { role_id: req.body.role_id },
-            });
-          }
+    case 'PUT':
+  try {
+    const { name, email } = req.body;
 
-          console.log('Successfully updated user:', {
-            userId: id,
-            updatedFields: Object.keys(req.body)
-          });
-      
-          res.status(200).json(safeJson(updatedUser));
-          
-        } catch (error) {
-          console.error('Update failed:', {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined,
-            inputData: req.body,
-            userId: id,
-            timestamp: new Date().toISOString()
-          });
-      
-          res.status(400).json({ 
-            error: 'Failed to update user',
-            details: process.env.NODE_ENV === 'development' && error instanceof Error ? error.message : undefined,
-            receivedData: req.body
-          });
-        }
-        break;
+    const missingFields: string[] = [];
+    if (!name) missingFields.push('name');
+    if (!email) missingFields.push('email');
+
+    if (missingFields.length > 0) {
+      console.warn(`Validation failed - missing fields: ${missingFields.join(', ')}`);
+      return res.status(400).json({
+        error: 'Missing required fields',
+        missingFields,
+        received: req.body
+      });
+    }
+
+    // Tambahan console log untuk debug active_year
+    console.log('Parsed active_year:', req.body.active_year, '->', parseInt(req.body.active_year, 10));
+
+    const updatedUser = await prisma.user.update({
+      where: { id: BigInt(id) },
+      data: {
+        name: req.body.name,
+        email: req.body.email,
+        nik: req.body.nik,
+        phone: req.body.phone,
+        position: req.body.position,
+        work_unit: req.body.work_unit,
+        status: req.body.status,
+        active_year: req.body.active_year ? parseInt(req.body.active_year, 10) : null,
+        agency_id_panrb: req.body.agency_id_panrb,
+        ...(req.body.username && { username: req.body.username }),
+      },
+    });
+
+    // Update role_id in the role_user table
+    if (req.body.role_id) {
+      await prisma.role_user.updateMany({
+        where: { user_id: BigInt(id) },
+        data: { role_id: req.body.role_id },
+      });
+    }
+
+    console.log('Successfully updated user:', {
+      userId: id,
+      updatedFields: Object.keys(req.body)
+    });
+
+    res.status(200).json(safeJson(updatedUser));
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    console.error('Update failed:', {
+      message: errorMessage,
+      stack: errorStack,
+      receivedData: req.body,
+      userId: id,
+      timestamp: new Date().toISOString()
+    });
+
+    res.status(400).json({ 
+      error: 'Failed to update user',
+      message: errorMessage,
+      stack: process.env.NODE_ENV === 'development' ? errorStack : undefined,
+      receivedData: req.body
+    });
+  }
+  break;
+
+
 
     case 'DELETE':
       try {
