@@ -4,7 +4,16 @@ import prisma from '@/lib/prisma';
 import { serializeBigInt } from '@/lib/serializeBigInt';
 import { z } from 'zod';
 
-// Validasi input pakai zod
+
+const zNumberFromString = () =>
+  z.union([
+    z.number(),
+    z.string().transform((val) => Number(val)).refine(val => !isNaN(val), {
+      message: 'Invalid number',
+    })
+  ]);
+
+// Updated validation schema to handle both string and number inputs
 const userSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
@@ -13,15 +22,15 @@ const userSchema = z.object({
   phone: z.string().optional(),
   username: z.string().optional(),
   nik: z.string().optional(),
-  role_id: z.number().optional(),
+  role_id: zNumberFromString().optional(),
   work_unit: z.string().optional(),
-  agency_id: z.string().optional(),
-  agency_id_panrb: z.string().optional(),
-  penunjukkan_id: z.string().optional(),
-  active_year: z.number().optional(),
-  created_by: z.string().optional(),
-  modified_by: z.string().optional(),
-  deleted_by: z.string().optional(),
+  agency_id: zNumberFromString().optional(),
+  agency_id_panrb: zNumberFromString().optional(),
+  penunjukkan_id: zNumberFromString().optional(),
+  active_year: zNumberFromString().optional(),
+  created_by: zNumberFromString().optional(),
+  modified_by: zNumberFromString().optional(),
+  deleted_by: zNumberFromString().optional(),
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -94,13 +103,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       console.log('Received body:', req.body);
 
+      // Parse and validate input
       const parsed = userSchema.safeParse(req.body);
       if (!parsed.success) {
         console.log('Validation errors:', parsed.error.format());
-        return res.status(400).json({ error: 'Invalid input', details: parsed.error.format() });
+        return res.status(400).json({ 
+          error: 'Invalid input', 
+          details: parsed.error.format() 
+        });
       }
 
+      // At this point, role_id and active_year are guaranteed to be numbers or undefined
       const body = parsed.data;
+
       console.log('Parsed body:', body);
 
       // Check if email already exists
@@ -114,65 +129,70 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const hashedPassword = await bcrypt.hash(body.password, 10);
       console.log('Password hashed successfully');
 
+      // Prepare data for Prisma
+      const userData = {
+        name: body.name,
+        email: body.email,
+        password: hashedPassword,
+        status: 'aktif',
+        ...(body.position && { position: body.position }),
+        ...(body.phone && { phone: body.phone }),
+        ...(body.username && { username: body.username }),
+        ...(body.nik && { nik: body.nik }),
+        ...(body.work_unit && { work_unit: body.work_unit }),
+        ...(body.agency_id && { agency_id: BigInt(body.agency_id) }),
+        ...(body.agency_id_panrb && { agency_id_panrb: BigInt(body.agency_id_panrb) }),
+        ...(body.penunjukkan_id && { penunjukkan_id: BigInt(body.penunjukkan_id) }),
+        ...(body.active_year && { active_year: BigInt(body.active_year) }), // Already number
+        ...(body.created_by && { created_by: BigInt(body.created_by) }),
+        ...(body.modified_by && { modified_by: BigInt(body.modified_by) }),
+        ...(body.deleted_by && { deleted_by: BigInt(body.deleted_by) }),
+      };
+
       // Create User
       const user = await prisma.user.create({
-        data: {
-          name: body.name,
-          email: body.email,
-          password: hashedPassword,
-          status: 'inactive',
-          ...(body.position && { position: body.position }),
-          ...(body.phone && { phone: body.phone }),
-          ...(body.username && { username: body.username }),
-          ...(body.nik && { nik: body.nik }),
-          ...(body.work_unit && { work_unit: body.work_unit }),
-          ...(body.agency_id && { agency_id: BigInt(body.agency_id) }),
-          ...(body.agency_id_panrb && { agency_id_panrb: BigInt(body.agency_id_panrb) }),
-          ...(body.penunjukkan_id && { penunjukkan_id: BigInt(body.penunjukkan_id) }),
-          ...(body.active_year && { active_year: BigInt(body.active_year) }),
-          ...(body.created_by && { created_by: BigInt(body.created_by) }),
-          ...(body.modified_by && { modified_by: BigInt(body.modified_by) }),
-          ...(body.deleted_by && { deleted_by: BigInt(body.deleted_by) }),
-        },
+        data: userData
       });
 
       console.log('User created:', user);
 
-      // Assign Role if provided
+      // Assign Role if exists
       if (body.role_id) {
-        const roleUser = await prisma.role_user.create({
+        await prisma.role_user.create({
           data: {
             user_id: user.id,
-            role_id: BigInt(body.role_id),
+            role_id: BigInt(body.role_id), // Already number
           },
         });
-        console.log('Role assigned:', roleUser);
+        console.log('Role assigned for user:', user.id);
+      }
 
-        // Special handling for Koordinator Instansi (role_id === 3)
-        if (Number(body.role_id) === 4) {
-          const koorInsert = await prisma.koor_instansi_validator.create({
-            data: {
-              koor_instansi_id: user.id,
-            },
-          });
-          console.log('Inserted into koor_instansi_validator:', koorInsert);
-        }
+      // Special handling for specific roles
+      if (body.role_id === 4) {
+        await prisma.koor_instansi_validator.create({
+          data: {
+            koor_instansi_id: user.id,
+          },
+        });
+        console.log('Added as validator:', user.id);
+      }
 
-        // Special handling for Analis Instansi (role_id === 5 or whatever your role ID is)
-        if (Number(body.role_id) === 4) {
-          const koorInsertAnalis = await prisma.koor_instansi_analis.create({
-            data: {
-              koor_instansi_id: user.id,
-            },
-          });
-          console.log('Inserted into koor_instansi_analis:', koorInsertAnalis);
-        }
+      if (body.role_id === 5) {
+        await prisma.koor_instansi_analis.create({
+          data: {
+            koor_instansi_id: user.id,
+          },
+        });
+        console.log('Added as analyst:', user.id);
       }
 
       res.status(201).json(serializeBigInt(user));
     } catch (error) {
       console.error('Create user error:', error);
-      res.status(400).json({ error: 'Failed to create user', detail: error });
+      res.status(500).json({ 
+        error: 'Failed to create user', 
+        detail: error instanceof Error ? error.message : String(error)
+      });
     }
   } else {
     res.setHeader('Allow', ['GET', 'POST']);
