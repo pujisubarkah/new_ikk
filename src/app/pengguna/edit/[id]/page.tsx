@@ -120,7 +120,7 @@ function EditUserPage(): React.ReactNode {
         setRoles(rolesRes.data)
         setAgencies(agenciesRes.data)
         setActiveyears(
-          activeyearRes.data.map((item: any) => ({
+          activeyearRes.data.map((item: ActiveYear) => ({
             ...item,
             active_year: Number(item.active_year),
           }))
