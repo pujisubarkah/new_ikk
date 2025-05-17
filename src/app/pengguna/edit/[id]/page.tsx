@@ -1,4 +1,5 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
@@ -11,7 +12,7 @@ import { withRoleGuard } from '@/lib/withRoleGuard'
 import { toast } from 'sonner'
 
 interface FormData {
-  nama: string
+  name: string
   nip: string
   nik: string
   instansi: string
@@ -22,10 +23,7 @@ interface FormData {
   unitKerja: string
   telepon: string
   status: string
-  active_year: string // Added active_year
-  username?: string // Added username
-  position?: string // Added position
-  work_unit?: string // Added work_unit
+  active_year: number
 }
 
 interface Role {
@@ -45,7 +43,7 @@ interface Agency {
 
 interface ActiveYear {
   id: string
-  active_year: string
+  active_year: number
 }
 
 function EditUserPage(): React.ReactNode {
@@ -54,7 +52,7 @@ function EditUserPage(): React.ReactNode {
   const id = params?.id as string
 
   const [formData, setFormData] = useState<FormData>({
-    nama: '',
+    name: '',
     nip: '',
     nik: '',
     instansi: '',
@@ -65,8 +63,9 @@ function EditUserPage(): React.ReactNode {
     unitKerja: '',
     telepon: '',
     status: '',
-    active_year: '', // Added active_year
+    active_year: 0,
   })
+
   const [roles, setRoles] = useState<Role[]>([])
   const [agencies, setAgencies] = useState<Agency[]>([])
   const [activeyears, setActiveyears] = useState<ActiveYear[]>([])
@@ -74,19 +73,24 @@ function EditUserPage(): React.ReactNode {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Validasi Email
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return re.test(email)
   }
 
+  // Validasi Form
   const validateForm = (): boolean => {
     const requiredFields: (keyof FormData)[] = [
-      'nama', 'nip', 'nik', 'instansi', 'email', 'jabatan'
+      'name', 'nip', 'nik', 'instansi', 'email', 'jabatan'
     ]
     const errors: string[] = []
 
     requiredFields.forEach((field) => {
-      if (!formData[field]) {
+      if (
+        (typeof formData[field] === 'string' && !formData[field]) ||
+        (typeof formData[field] === 'number' && formData[field] === 0)
+      ) {
         errors.push(`${field.charAt(0).toUpperCase() + field.slice(1)} wajib diisi`)
       }
     })
@@ -99,37 +103,43 @@ function EditUserPage(): React.ReactNode {
       toast.error(errors.join(', '))
       return false
     }
+
     return true
   }
 
+  // Fetch Data Awal
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         const [rolesRes, agenciesRes, activeyearRes] = await Promise.all([
           axios.get('/api/role'),
           axios.get('/api/instansi'),
-          axios.get("/api/active_year"),
+          axios.get('/api/active_year'),
         ])
+
         setRoles(rolesRes.data)
         setAgencies(agenciesRes.data)
-        setActiveyears(activeyearRes.data)
+        setActiveyears(
+          activeyearRes.data.map((item: any) => ({
+            ...item,
+            active_year: Number(item.active_year),
+          }))
+        )
       } catch (err: unknown) {
-        if (err instanceof Error) {
-          console.error('Gagal memuat data awal:', err.message)
-        } else {
-          console.error('Gagal memuat data awal:', err)
-        }
+        console.error('Gagal memuat data awal:', err)
         setError('Gagal memuat data roles atau instansi')
       }
     }
 
     const fetchUserData = async () => {
       if (!id) return
+
       try {
         const response = await axios.get(`/api/users/${id}`)
         const userData = response.data
+
         setFormData({
-          nama: userData.name || '',
+          name: userData.name || '',
           nip: userData.username || '',
           nik: userData.nik || '',
           instansi: userData.agency_id_panrb?.toString() || '',
@@ -140,14 +150,10 @@ function EditUserPage(): React.ReactNode {
           unitKerja: userData.work_unit || '',
           telepon: userData.telepon || '',
           status: userData.status || '',
-          active_year: userData.active_year || '',
+          active_year: Number(userData.active_year) || 0,
         })
       } catch (err: unknown) {
-        if (err instanceof Error) {
-          console.error('Gagal memuat detail pengguna:', err.message)
-        } else {
-          console.error('Gagal memuat detail pengguna:', err)
-        }
+        console.error('Gagal memuat detail pengguna:', err)
         setError('Gagal memuat detail pengguna')
       }
     }
@@ -156,32 +162,31 @@ function EditUserPage(): React.ReactNode {
     fetchUserData()
   }, [id])
 
+  // Handle Perubahan Input
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === 'active_year' ? Number(value) : value,
     }))
   }
 
+  // Submit Form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (!validateForm()) return
-    setLoading(true)
 
+    setLoading(true)
     const updateToast = toast.loading('Sedang memperbarui data...')
 
     try {
       const cleanedPhone = formData.telepon.replace(/^0+/, '')
-      const phoneWithPrefix = cleanedPhone.startsWith('+62') 
-        ? cleanedPhone 
-        : `+62${cleanedPhone}`
+      const phoneWithPrefix = cleanedPhone.startsWith('+62') ? cleanedPhone : `+62${cleanedPhone}`
 
-      const payload: Partial<FormData & { agency_id_panrb: number; role_id: number }> = {
-        nama: formData.nama,
+      const payload = {
+        name: formData.name,
         username: formData.nip,
         nik: formData.nik,
         agency_id_panrb: Number(formData.instansi),
@@ -191,28 +196,21 @@ function EditUserPage(): React.ReactNode {
         work_unit: formData.unitKerja,
         telepon: phoneWithPrefix,
         status: formData.status,
-        active_year: formData.active_year,
+        active_year: Number(formData.active_year),
       }
 
-      if (formData.password) {
-        payload.password = formData.password
-      }
+      console.log('Payload dikirim:', payload)
 
       await axios.put(`/api/users/${id}`, payload)
+      toast.success('Data pengguna berhasil diperbarui', { id: updateToast })
 
-      toast.success('Data pengguna berhasil diperbarui', {
-        id: updateToast
-      })
-
-      // Delay redirect to allow toast to be visible
       setTimeout(() => {
         router.push('/pengguna')
       }, 1500)
-      
     } catch (error: unknown) {
       toast.dismiss(updateToast)
       console.error('API Error:', error)
-      
+
       if (axios.isAxiosError(error) && error.response?.data?.message) {
         toast.error(error.response.data.message)
       } else if (axios.isAxiosError(error) && error.request) {
@@ -225,6 +223,7 @@ function EditUserPage(): React.ReactNode {
     }
   }
 
+  // Loading State
   if (loading) {
     return (
       <Sidebar>
@@ -235,6 +234,7 @@ function EditUserPage(): React.ReactNode {
     )
   }
 
+  // Error State
   if (error) {
     return (
       <Sidebar>
@@ -251,226 +251,251 @@ function EditUserPage(): React.ReactNode {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Edit Pengguna</h1>
         </div>
-        
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* ACTIVE YEAR */}
-                  <div className="md:col-span-2">
-                  <Label htmlFor="role" className="text-gray-700 font-medium">Tahun Penilaian</Label>
-                  <select
-                      id="active_year"
-                      name="active_year"
-                      value={formData.active_year}
-                      onChange={handleChange}
-                      required
-                      className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-                      >
-                      <option value="" disabled>Pilih Tahun Penilaian</option>
-                      {activeyears
-                        .sort((a, b) => a.active_year.localeCompare(b.active_year))
-                        .map((active_year) => (
-                        <option key={active_year.id} value={active_year.active_year}>
-                        {active_year.active_year}
-                        </option>
-                        ))}
-                      </select>
-                    </div>
-          {/* ROLE */}
-                    <div className="md:col-span-2">
-                    <Label htmlFor="role" className="text-gray-700 font-medium">Role</Label>
-                    <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    required
-                    className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-                    >
-                      <option value="" disabled>Pilih Role</option>
-                      {roles
-                      .sort((a, b) => a.id.localeCompare(b.id))
-                      .map((role) => (
-                      <option key={role.id} value={role.id}>
-                      {role.name}
-                      </option>
-                      ))}
-                    </select>
-                    </div>
 
-          {/* Kolom Kiri */}
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="nip">NIP</Label>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* TAHUN PENILAIAN */}
+          <div className="md:col-span-2">
+            <Label htmlFor="active_year" className="text-gray-700 font-medium">
+              Tahun Penilaian
+            </Label>
+            <select
+              id="active_year"
+              name="active_year"
+              value={formData.active_year}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+            >
+              <option value={0} disabled>
+                Pilih Tahun Penilaian
+              </option>
+              {activeyears
+                .sort((a, b) => a.active_year - b.active_year)
+                .map((item) => (
+                  <option key={item.id} value={item.active_year}>
+                    {item.active_year}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {/* ROLE */}
+          <div className="md:col-span-2">
+            <Label htmlFor="role" className="text-gray-700 font-medium">
+              Role
+            </Label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+            >
+              <option value="" disabled>
+                Pilih Role
+              </option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* INSTANSI */}
+          <div className="md:col-span-2">
+            <Label htmlFor="instansi" className="text-gray-700 font-medium">
+              Instansi
+            </Label>
+            <select
+              id="instansi"
+              name="instansi"
+              value={formData.instansi}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+            >
+              <option value="" disabled>
+                Pilih Instansi
+              </option>
+              {agencies.map((agency) => {
+                const agencyId = agency.instansi?.agency_id ?? agency.id
+                return (
+                  <option key={agency.id} value={agencyId}>
+                    {agency.instansi?.agency_name ?? agency.name}
+                  </option>
+                )
+              })}
+            </select>
+          </div>
+
+          {/* NAME */}
+          <div>
+            <Label htmlFor="name" className="text-gray-700 font-medium">
+              Nama
+            </Label>
+            <Input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Masukkan nama"
+              required
+            />
+          </div>
+
+          {/* NIP */}
+          <div>
+            <Label htmlFor="nip" className="text-gray-700 font-medium">
+              NIP
+            </Label>
+            <Input
+              type="text"
+              id="nip"
+              name="nip"
+              value={formData.nip}
+              onChange={handleChange}
+              placeholder="Masukkan NIP"
+              required
+            />
+          </div>
+
+          {/* NIK */}
+          <div>
+            <Label htmlFor="nik" className="text-gray-700 font-medium">
+              NIK
+            </Label>
+            <Input
+              type="text"
+              id="nik"
+              name="nik"
+              value={formData.nik}
+              onChange={handleChange}
+              placeholder="Masukkan NIK"
+              required
+            />
+          </div>
+
+          {/* EMAIL */}
+          <div>
+            <Label htmlFor="email" className="text-gray-700 font-medium">
+              Email
+            </Label>
+            <Input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Masukkan email"
+              required
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div>
+            <Label htmlFor="password" className="text-gray-700 font-medium">
+              Password (kosongkan jika tidak diubah)
+            </Label>
+            <div className="relative">
               <Input
-                id="nip"
-                name="nip"
-                value={formData.nip}
-                onChange={handleChange}
-                required
-                placeholder="Masukkan NIP"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="nik">NIK</Label>
-              <Input
-                id="nik"
-                name="nik"
-                value={formData.nik}
-                onChange={handleChange}
-                required
-                placeholder="Masukkan NIK"
-              />
-            </div>
-            
-            <div>
-             <Label htmlFor="instansi" className="text-gray-700 font-medium">Nama Instansi</Label>
-             <select
-               id="instansi"
-               name="instansi"
-               value={formData.instansi}
-               onChange={handleChange}
-               required
-               className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-             >
-                 <option value="" disabled>Pilih Instansi</option>
-                 {agencies
-                 .filter((item, index, self) => 
-                   index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
-                 )
-                 .sort((a, b) => {
-                   const idA = a.instansi?.agency_id || '';
-                   const idB = b.instansi?.agency_id || '';
-                   return idA.localeCompare(idB);
-                 })
-                 .map((item) => (
-                   <option key={item.id} value={item.instansi?.agency_id || ''}>
-                   {item.instansi?.agency_name || "NA"}
-                   </option>
-                 ))}
-             </select>
-           </div>
-            
-            <div>
-              <Label htmlFor="email">Email Aktif</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                placeholder="Masukkan email"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-              <Input
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
-                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Biarkan kosong jika tidak ingin mengubah"
+                placeholder="Masukkan password"
               />
-              <span
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+              <button
+                type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
-              </div>
+              </button>
             </div>
           </div>
 
-          {/* Kolom Kanan */}
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="nama">Nama</Label>
-              <Input
-                id="nama"
-                name="nama"
-                value={formData.nama}
-                onChange={handleChange}
-                required
-                placeholder="Masukkan nama lengkap"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="jabatan">Jabatan</Label>
-              <Input
-                id="jabatan"
-                name="jabatan"
-                value={formData.jabatan}
-                onChange={handleChange}
-                placeholder="Contoh: Kepala Dinas"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="unitKerja">Unit Kerja</Label>
-              <Input
-                id="unitKerja"
-                name="unitKerja"
-                value={formData.unitKerja}
-                onChange={handleChange}
-                placeholder="Contoh: Dinas"
-              />
-            </div>
-            <div>
-              <Label htmlFor="telepon">Telepon</Label>
-              <div className="relative">
-                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">
-                  +62
-                </span>
-                <Input
-                  id="telepon"
-                  name="telepon"
-                  value={formData.telepon}
-                  onChange={handleChange}
-                  className="pl-14"
-                  placeholder="8123456789"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-md p-2"
-              >
-                <option value="" disabled>
-                  Pilih Status
-                </option>
-                <option value="Aktif">Aktif</option>
-                <option value="Non Aktif">Non Aktif</option>
-              </select>
-            </div>
+          {/* JABATAN */}
+          <div>
+            <Label htmlFor="jabatan" className="text-gray-700 font-medium">
+              Jabatan
+            </Label>
+            <Input
+              type="text"
+              id="jabatan"
+              name="jabatan"
+              value={formData.jabatan}
+              onChange={handleChange}
+              placeholder="Masukkan jabatan"
+              required
+            />
           </div>
 
-          {/* Tombol Aksi */}
-          <div className="col-span-1 md:col-span-2 flex justify-between mt-4">
-            <Button 
-              type="button" 
-              variant="secondary" 
+          {/* UNIT KERJA */}
+          <div>
+            <Label htmlFor="unitKerja" className="text-gray-700 font-medium">
+              Unit Kerja
+            </Label>
+            <Input
+              type="text"
+              id="unitKerja"
+              name="unitKerja"
+              value={formData.unitKerja}
+              onChange={handleChange}
+              placeholder="Masukkan unit kerja"
+            />
+          </div>
+
+     {/* TELEPON */}
+<div>
+  <Label htmlFor="telepon" className="text-gray-700 font-medium">
+    Nomor Telepon Aktif
+  </Label>
+  <div className="relative">
+    <div className="flex items-center">
+      <span className="text-gray-500 mr-2">+62</span>
+      <Input
+        type="text"
+        id="telepon"
+        name="telepon"
+        value={formData.telepon}
+        onChange={handleChange}
+        placeholder="8xx xxx xxxx"
+        pattern="[0-9]*"
+        className="pl-2 border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300 w-full"
+      />
+    </div>
+  </div>
+</div>
+          {/* STATUS */}
+          <div>
+            <Label htmlFor="status" className="text-gray-700 font-medium">
+              Status
+            </Label>
+            <Input
+              type="text"
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              placeholder="Masukkan status"
+            />
+          </div>
+
+          {/* SUBMIT BUTTON */}
+          <div className="md:col-span-2 flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="secondary"
               onClick={() => router.push('/pengguna')}
-              disabled={loading}
             >
-              Kembali
+              Batal
             </Button>
-            <Button 
-              type="submit" 
-              className="bg-green-600 hover:bg-green-700 text-white" 
-              disabled={loading}
-            >
-              {loading ? "Menyimpan..." : "Simpan Perubahan"}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Memproses...' : 'Update'}
             </Button>
           </div>
         </form>
@@ -480,7 +505,6 @@ function EditUserPage(): React.ReactNode {
 }
 
 const ProtectedPage = withRoleGuard(EditUserPage, [1])
-
 export default function Page() {
   return <ProtectedPage />
 }
