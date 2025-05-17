@@ -11,21 +11,22 @@ import axios from "axios"
 import { toast } from "sonner"
 
 interface FormData {
-  name: string // Changed from 'nama' to match DB
-  username: string // Changed from 'nip' to match DB (using NIP as username)
+  name: string
+  username: string
   nik: string
   instansi: string
+  work_unit: string
   email: string
-  role: string
+  role: number | string
   password: string
-  position: string // Changed from 'jabatan' to match DB
-  phone: string // Changed from 'telepon' to match DB
+  position: string
+  phone: string
   status: string
-  active_year: string // Added for active year selection
+  active_year: number | string
 }
 
 interface Role {
-  id: string
+  id: number
   name: string
 }
 
@@ -41,7 +42,7 @@ interface Instansi {
 
 interface ActiveYear {
   id: string
-  active_year: string
+  active_year: number
 }
 
 const TambahPengguna: React.FC = () => {
@@ -50,13 +51,14 @@ const TambahPengguna: React.FC = () => {
     username: "",
     nik: "",
     instansi: "",
+    work_unit: "",
     email: "",
     role: "",
     password: "",
     position: "",
     phone: "",
     active_year: "",
-    status: "active", // Changed to match DB values
+    status: "aktif", // Changed to match API expected value
   })
 
   const [roles, setRoles] = useState<Role[]>([])
@@ -157,7 +159,7 @@ const TambahPengguna: React.FC = () => {
     return true
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -169,13 +171,9 @@ const TambahPengguna: React.FC = () => {
     if (formData.username.length >= 8) await checkUsernameAvailability(formData.username)
     if (formData.email) await checkEmailAvailability(formData.email)
 
-    if (!usernameValid) {
-      toast.error("Username/NIP sudah digunakan, silakan gunakan yang lain")
-      return
-    }
-
-    if (!emailValid) {
-      toast.error("Email sudah digunakan atau tidak valid")
+    if (!usernameValid || !emailValid) {
+      if (!usernameValid) toast.error("Username/NIP sudah digunakan, silakan gunakan yang lain")
+      if (!emailValid) toast.error("Email sudah digunakan atau tidak valid")
       return
     }
 
@@ -184,19 +182,29 @@ const TambahPengguna: React.FC = () => {
 
     setIsSubmitting(true)
 
-    try {
+     try {
+      const phoneWithPrefix = formData.phone.startsWith("0")
+        ? "+62" + formData.phone.slice(1)
+        : formData.phone.startsWith("62")
+        ? "+" + formData.phone
+        : formData.phone.startsWith("+62")
+        ? formData.phone
+        : "+62" + formData.phone
+
+      // Convert to correct types before sending
       const formattedData = {
         name: formData.name,
-        username: formData.username, // NIP will be used as username
+        username: formData.username,
         email: formData.email,
+        work_unit: formData.work_unit,
         password: formData.password,
-        position: formData.position, // jabatan -> position
-        phone: formData.phone.startsWith('+62') ? formData.phone : `+62${formData.phone}`,
-        status: formData.status.toLowerCase(), // Aktif -> active
+        position: formData.position,
+        phone: phoneWithPrefix,
+        status: formData.status, // Already in correct format
         nik: formData.nik,
-        agency_id_panrb: formData.instansi,
-        active_year: formData.active_year,
-        role_id: formData.role
+        agency_id_panrb: formData.instansi, // Keep as string, let API handle conversion
+        active_year: Number(formData.active_year), // Ensure number
+        role_id: Number(formData.role), // Ensure number
       }
 
       const response = await axios.post("/api/users", formattedData)
@@ -224,226 +232,239 @@ const TambahPengguna: React.FC = () => {
   }
 
   return (
+    <>
       <Sidebar>
-      <div className="w-full px-6 py-8 bg-white shadow-md rounded-lg">
-        <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <h1 className="text-3xl font-semibold text-gray-800">Tambah Pengguna</h1>
-        </div>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* ACTIVE YEAR */}
-        <div className="md:col-span-2">
-        <Label htmlFor="role" className="text-gray-700 font-medium">Tahun Penilaian</Label>
-        <select
-            id="active_year"
-            name="active_year"
-            value={formData.active_year || "2025"}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-            >
-            <option value="" disabled>Pilih Tahun Penilaian</option>
-            {activeyears
-              .sort((a, b) => a.active_year.localeCompare(b.active_year))
-              .map((active_year) => (
-              <option key={active_year.id} value={active_year.active_year}>
-              {active_year.active_year}
-              </option>
-              ))}
-            </select>
+        <div className="w-full px-6 py-8 bg-white shadow-md rounded-lg">
+          <div className="flex justify-between items-center mb-6 border-b pb-4">
+            <h1 className="text-3xl font-semibold text-gray-800">Tambah Pengguna</h1>
           </div>
-          {/* ROLE */}
-          <div className="md:col-span-2">
-        <Label htmlFor="role" className="text-gray-700 font-medium">Role</Label>
-        <select
-          id="role"
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          required
-          className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-        >
-            <option value="" disabled>Pilih Role</option>
-            {roles
-            .sort((a, b) => a.id.localeCompare(b.id))
-            .map((role) => (
-              <option key={role.id} value={role.id}>
-              {role.name}
-              </option>
-            ))}
-        </select>
-          </div>
-
-          {/* LEFT COLUMN */}
-          <div className="grid gap-4">
-        <div>
-          <Label htmlFor="username" className="text-gray-700 font-medium">NIP (Username)</Label>
-          <Input 
-            id="username" 
-            name="username" 
-            value={formData.username} 
-            onChange={handleChange} 
-            required 
-            className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-          />
-          {!usernameValid && (
-            <p className="text-sm text-red-500 mt-1">NIP sudah digunakan</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="nik" className="text-gray-700 font-medium">NIK</Label>
-          <Input 
-            id="nik" 
-            name="nik" 
-            value={formData.nik} 
-            onChange={handleChange} 
-            required 
-            className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-          />
-        </div>
-        <div>
-          <Label htmlFor="instansi" className="text-gray-700 font-medium">Nama Instansi</Label>
-          <select
-            id="instansi"
-            name="instansi"
-            value={formData.instansi}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-          >
-            <option value="" disabled>Pilih Instansi</option>
-                 {instansis
-                 .filter((item, index, self) => 
-                   index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
-                 )
-                 .sort((a, b) => {
-                   const idA = a.instansi?.agency_id || '';
-                   const idB = b.instansi?.agency_id || '';
-                   return idA.localeCompare(idB);
-                 })
-                 .map((item) => (
-                   <option key={item.id} value={item.instansi?.agency_id || ''}>
-                   {item.instansi?.agency_name || "NA"}
-                   </option>
-                 ))}
-          </select>
-        </div>
-        <div>
-          <Label htmlFor="email" className="text-gray-700 font-medium">Email Aktif</Label>
-          <Input 
-            id="email" 
-            name="email" 
-            type="email" 
-            value={formData.email} 
-            onChange={handleChange} 
-            required 
-            className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-          />
-          {!emailValid && (
-            <p className="text-sm text-red-500 mt-1">
-          {formData.email.includes('@') ? "Email sudah digunakan" : "Format email tidak valid"}
-            </p>
-          )}
-        </div>
-        <div>
-                      <Label htmlFor="password">Password</Label>
-                      <div className="relative">
-                      <Input
-                        id="password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Minimal 8 karakter"
-                      />
-                      <span
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                      >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
-                      </span>
-                      </div>
-                    </div>
-          </div>
-
-          {/* RIGHT COLUMN */}
-          <div className="grid gap-4">
-        <div>
-          <Label htmlFor="name" className="text-gray-700 font-medium">Nama</Label>
-          <Input 
-            id="name" 
-            name="name" 
-            value={formData.name} 
-            onChange={handleChange} 
-            required 
-            className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-          />
-        </div>
-        <div>
-          <Label htmlFor="position" className="text-gray-700 font-medium">Jabatan</Label>
-          <Input 
-            id="position" 
-            name="position" 
-            value={formData.position} 
-            onChange={handleChange} 
-            required 
-            className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-          />
-        </div>
-        <div>
-          <Label htmlFor="phone" className="text-gray-700 font-medium">Nomor Telepon Aktif</Label>
-          <div className="relative">
-            <div className="flex items-center">
-              <span className="text-gray-500 mr-2">+62</span>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* ACTIVE YEAR */}
+            <div className="md:col-span-2">
+              <Label htmlFor="active_year" className="text-gray-700 font-medium">Tahun Penilaian</Label>
+              <select
+                id="active_year"
+                name="active_year"
+                value={formData.active_year}
                 onChange={handleChange}
                 required
-                className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-                placeholder="8123456789"
-                pattern="[0-9]*"
-              />
+                className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+              >
+                <option value="" disabled>Pilih Tahun Penilaian</option>
+                {activeyears
+                  .sort((a, b) => b.active_year - a.active_year) // Sort numerically
+                  .map((year) => (
+                    <option key={year.id} value={year.active_year}>
+                      {year.active_year}
+                    </option>
+                  ))}
+              </select>
             </div>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">Contoh: 8123456789</p>
-        </div>
-        <div>
-          <Label htmlFor="status" className="text-gray-700 font-medium">Status</Label>
-          <select
-            id="status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
-          >
-            <option value="active">Aktif</option>
-            <option value="inactive">Non Aktif</option>
-          </select>
-        </div>
-          </div>
+            {/* ROLE - Changed value handling */}
+            <div className="md:col-span-2">
+              <Label htmlFor="role" className="text-gray-700 font-medium">Role</Label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+              >
+                <option value="" disabled>Pilih Role</option>
+                {roles
+                  .sort((a, b) => a.id - b.id) // Sort numerically
+                  .map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
 
-          {/* BUTTONS */}
-          <div className="col-span-1 md:col-span-2 flex justify-between mt-6">
-        <Button 
-          type="button" 
-          onClick={handleBack} 
-          className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md"
-        >
-          Kembali
-        </Button>
-        <Button 
-          type="submit" 
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md"
-          disabled={isSubmitting || !usernameValid || !emailValid}
-        >
-          {isSubmitting ? "Menyimpan..." : "Simpan"}
-        </Button>
-          </div>
-        </form>
-      </div>
+            {/* LEFT COLUMN */}
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="username" className="text-gray-700 font-medium">NIP (Username)</Label>
+                <Input 
+                  id="username" 
+                  name="username" 
+                  value={formData.username} 
+                  onChange={handleChange} 
+                  required 
+                  className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                />
+                {!usernameValid && (
+                  <p className="text-sm text-red-500 mt-1">NIP sudah digunakan</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="nik" className="text-gray-700 font-medium">NIK</Label>
+                <Input 
+                  id="nik" 
+                  name="nik" 
+                  value={formData.nik} 
+                  onChange={handleChange} 
+                  required 
+                  className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="instansi" className="text-gray-700 font-medium">Nama Instansi</Label>
+                <select
+                  id="instansi"
+                  name="instansi"
+                  value={formData.instansi}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                >
+                  <option value="" disabled>Pilih Instansi</option>
+                  {instansis
+                    .filter((item, index, self) => 
+                      index === self.findIndex((t) => t.instansi?.agency_id === item.instansi?.agency_id)
+                    )
+                    .sort((a, b) => {
+                      const idA = a.instansi?.agency_id || '';
+                      const idB = b.instansi?.agency_id || '';
+                      return idA.localeCompare(idB);
+                    })
+                    .map((item) => (
+                      <option key={item.id} value={item.instansi?.agency_id || ''}>
+                        {item.instansi?.agency_name || "NA"}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="email" className="text-gray-700 font-medium">Email Aktif</Label>
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  value={formData.email} 
+                  onChange={handleChange} 
+                  required 
+                  className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                />
+                {!emailValid && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formData.email.includes('@') ? "Email sudah digunakan" : "Format email tidak valid"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Minimal 8 karakter"
+                  />
+                  <span
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="name" className="text-gray-700 font-medium">Nama</Label>
+                <Input 
+                  id="name" 
+                  name="name" 
+                  value={formData.name} 
+                  onChange={handleChange} 
+                  required 
+                  className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="position" className="text-gray-700 font-medium">Jabatan</Label>
+                <Input 
+                  id="position" 
+                  name="position" 
+                  value={formData.position} 
+                  onChange={handleChange} 
+                  required 
+                  className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="work_unit" className="text-gray-700 font-medium">Unit Kerja</Label>
+                <Input 
+                  id="work_unit" 
+                  name="work_unit" 
+                  value={formData.work_unit} 
+                  onChange={handleChange} 
+                  required 
+                  className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone" className="text-gray-700 font-medium">Nomor Telepon Aktif</Label>
+                <div className="relative">
+                  <div className="flex items-center">
+                    <span className="text-gray-500 mr-2">+62</span>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      className="border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                      placeholder="8123456789"
+                      pattern="[0-9]*"
+                    />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">Contoh: 8123456789</p>
+              </div>
+              <div>
+                <Label htmlFor="status" className="text-gray-700 font-medium">Status</Label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-md p-3 focus:ring focus:ring-green-300"
+                >
+                  <option value="active">Aktif</option>
+                  <option value="inactive">Non Aktif</option>
+                </select>
+              </div>
+            </div>
+
+            {/* BUTTONS */}
+            <div className="col-span-1 md:col-span-2 flex justify-between mt-6">
+              <Button 
+                type="button" 
+                onClick={handleBack} 
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md"
+              >
+                Kembali
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md"
+                disabled={isSubmitting || !usernameValid || !emailValid}
+              >
+                {isSubmitting ? "Menambah User..." : "Tambah"}
+              </Button>
+            </div>
+          </form>
+        </div>
       </Sidebar>
+    </>
   )
 }
 
