@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from 'next/navigation'
 import axios from "axios"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,7 +28,11 @@ interface Instansi {
   category: string
 }
 
-const TambahPengguna: React.FC = () => {
+const EditPengguna: React.FC = () => {
+  const router = useRouter()
+  const params = useParams()
+  const id = params?.id as string
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     username: "",
@@ -45,7 +49,7 @@ const TambahPengguna: React.FC = () => {
   const [instansis, setInstansis] = useState<Instansi[]>([])
   const [koorInstansiId, setKoorInstansiId] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchAgencyIdAndInstansi = async () => {
@@ -84,7 +88,32 @@ const TambahPengguna: React.FC = () => {
       }
     }
 
+    const fetchUserData = async () => {
+          if (!id) return
+    
+          try {
+            const response = await axios.get(`/api/users/${id}`)
+            const userData = response.data
+    
+            setFormData({
+              name: userData.name || '',
+              username: userData.username || '',
+              instansi: userData.agency_id_panrb?.toString() || '',
+              email: userData?.email || '',
+              password: '',
+              position: userData.position || '',
+              work_unit: userData.work_unit || '',
+              phone: userData.phone || '',
+              status: userData.status || '',
+              role_id: formData.role_id, // Include the role_id property
+            })
+          } catch (err: unknown) {
+            setError("Gagal memuat detail pengguna")
+          }
+        }
+
     fetchAgencyIdAndInstansi()
+    fetchUserData()
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -103,7 +132,7 @@ const TambahPengguna: React.FC = () => {
       return
     }
 
-    const loadingToast = toast.loading("Sedang menambahkan pengguna...")
+    const loadingToast = toast.loading("Sedang mengupdate pengguna...")
 
     try {
       const payload = {
@@ -113,18 +142,16 @@ const TambahPengguna: React.FC = () => {
         position: formData.position,
         phone: formData.phone,
         work_unit: formData.work_unit,
-        koorInstansiId: koorInstansiId, // Ensure this is included
         password: formData.password || undefined,
-        status: formData.status,
       }
 
       console.log("Submitting payload:", payload)
 
-      const response = await axios.post("/api/analis_instansi/create", payload)
+      const response = await axios.put(`/api/users/${id}`, payload)
       console.log("Response from API:", response.data)
       
       toast.dismiss(loadingToast)
-      toast.success("Pengguna berhasil ditambahkan!")
+      toast.success('Data pengguna berhasil diperbarui')
       router.push("/koordinator-instansi/enumerator")
     } catch (error) {
       toast.dismiss(loadingToast)
@@ -157,7 +184,7 @@ const TambahPengguna: React.FC = () => {
     <Sidebar>
       <div className="w-full px-6 py-8 bg-white shadow-md rounded-lg">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <h1 className="text-3xl font-semibold text-gray-800">Tambah Analis Instansi</h1>
+          <h1 className="text-3xl font-semibold text-gray-800">Edit Analis Instansi</h1>
         </div>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Section */}
@@ -265,4 +292,4 @@ const TambahPengguna: React.FC = () => {
   )
 }
 
-export default TambahPengguna
+export default EditPengguna

@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             agencies: {
               select: { name: true },
             },
+            status: true,
           },
         },
       },
@@ -60,6 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         work_unit: string;
         agency_id: number | null;
         agencies: { name: string } | null;
+        status: string | null;
       } | null;
     }>;
 
@@ -86,6 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         unit_kerja: analis?.work_unit ?? null,
         agency_id: analis?.agency_id?.toString() ?? null,
         agency_name: analis?.agencies?.name ?? null,
+        status: analis?.status ?? null,
       }));
 
     return res.status(200).json({ koor_instansi, analis_instansi });

@@ -110,9 +110,9 @@ export default async function handler(
 
   // Handle PUT request to update an existing enumerator by id
   if (req.method === 'PUT') {
-    const { name, nip, unit_kerja, agency_id } = req.body;
+    const { name, username, work_unit, email, position, phone, password } = req.body;
 
-    if (!name || !nip || !unit_kerja || !agency_id) {
+    if (!name || !username || !work_unit) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
@@ -120,14 +120,28 @@ export default async function handler(
       const updatedEnumerator = await prisma.koor_instansi_analis.update({
         where: { id: BigInt(id as string) }, // Use dynamic ID parameter from the URL
         data: {
-          // name, // Removed as it does not exist in the Prisma schema
-          // username: nip, // Removed as it does not exist in the Prisma schema
-          // work_unit: unit_kerja, // Removed as it does not exist in the Prisma schema
-          // agency_id: BigInt(agency_id), // Removed as it does not exist in the Prisma schema
+          user_koor_instansi_analis_analis_instansi_idTouser: {
+            update: {
+              name: name,
+              username: username,
+              email: email,
+              position: position,
+              phone: phone,
+              work_unit: work_unit,
+              password: password,
+            },
+          },
         },
       });
+      
+      // Convert BigInt values to strings
+      const serializedupdatedEnumerator = JSON.parse(
+        JSON.stringify(updatedEnumerator, (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+        )
+    );
 
-      return res.status(200).json(updatedEnumerator);
+      return res.status(200).json(serializedupdatedEnumerator);
     } catch (error) {
       console.error('Error updating enumerator:', error);
       return res.status(500).json({ error: 'Failed to update enumerator' });

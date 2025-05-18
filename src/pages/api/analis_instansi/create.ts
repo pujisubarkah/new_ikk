@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Verify coordinator exists
     const koorUser = await prisma.user.findUnique({
       where: { id: koorIdBigInt },
-      select: { id: true, agency_id_panrb: true },
+      select: { id: true, agency_id_panrb: true, active_year: true },
     })
 
     if (!koorUser || !koorUser.agency_id_panrb) {
@@ -96,6 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           password: hashedPassword,
           status,
           agency_id_panrb: koorUser.agency_id_panrb,
+          active_year: koorUser.active_year,
           role_user: {
             create: { role_id: BigInt(5) }, // Role analis instansi
           },
