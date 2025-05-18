@@ -35,35 +35,36 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `/api/koorinstansi/instansi` // <<< GANTI ini kalau perlu pakai ID dari context/session
-        );
-        if (!response.ok) throw new Error("Failed to fetch data");
+ useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const id = localStorage.getItem("id");
+      if (!id) throw new Error("ID koor_nasional tidak ditemukan di localStorage");
 
-        const result: APIResponseItem[] = await response.json();
-        const formattedData: Kebijakan[] = result.map((item, index) => ({
-  no: index + 1,
-  instansi: item.instansi || "-",
-  total: item.total_kebijakan || 0,
+      const response = await fetch(`/api/koornas/${id}/policy`);
+      if (!response.ok) throw new Error("Gagal mengambil data dari API");
 
-  id: item.agency_id_panrb,
-}));
+      const result = await response.json();
 
+      const formattedData: Kebijakan[] = result.data.map((item: any, index: number) => ({
+        no: index + 1,
+        instansi: item.agency_name || "-",
+        total: item.total || 0,
+        id: item.agency_id_panrb || null,
+      }));
 
-        setData(formattedData);
-      } catch {
-        // Error handling
-      } finally {
-        setLoading(false);
-      }
-    };
+      setData(formattedData);
+    } catch (error) {
+      console.error("Gagal fetch data kebijakan:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
-  }, []);
+  fetchData();
+}, []);
+
 
   const filteredData = data.filter((item) =>
     item.instansi.toLowerCase().includes(search.toLowerCase())
