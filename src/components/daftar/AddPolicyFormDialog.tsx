@@ -1,104 +1,147 @@
-// components/AddPolicyFormDialog.tsx
-"use client";
-import { useState } from "react";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+'use client';
 
-const DASAR_HUKUM_OPTIONS = [
-  "UNDANG UNDANG",
-  "PERATURAN PEMERINTAH",
-  "PERATURAN PRESIDEN",
-  "PERATURAN MENTERI",
-  "PERATURAN DAERAH",
-  "PERATURAN KEPALA DAERAH",
-  "PERATURAN KEPALA INSTANSI",
-  "LAINNYA",
-];
+import { useEffect, useState } from 'react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
-interface AddPolicyFormDialogProps {
-  onPolicyAdded: () => void;
-}
+// --- OPTIONS ---
+const sektorOptions = [
+  'Infrastruktur',
+  'Pangan',
+  'Ketenagakerjaan',
+  'Sosial',
+  'Pendidikan',
+  'Kesehatan',
+  'Aparatur Negara',
+  'Perencana',
+  'Lingkungan',
+  'Lainnya',
+] as const;
 
-export default function AddPolicyFormDialog({ onPolicyAdded }: AddPolicyFormDialogProps) {
+const dasarHukumOptions = ['UU', 'PP', 'Permen', 'Perda'] as const;
+
+// --- SCHEMA ---
+const formSchema = z.object({
+  nama_kebijakan: z.string().min(1, 'Nama kebijakan wajib diisi'),
+  detail_nama_kebijakan: z.string().min(1, 'Detail nama kebijakan wajib diisi'),
+  sektor_kebijakan: z.enum(sektorOptions),
+  sektor_kebijakan_lain: z.string().optional(),
+  tanggal_berlaku: z.string().min(1, 'Tanggal berlaku wajib diisi'),
+  link_drive: z.string().url('Link Drive tidak valid'),
+  created_by: z.string().min(1, 'User ID tidak ditemukan'),
+  program_detail: z.object({
+    program: z.string().min(1, 'Nama program wajib diisi'),
+    file_url: z.string().url('Link file tidak valid'),
+    dasar_hukum: z.array(
+      z.object({
+        jenis: z.enum(dasarHukumOptions),
+        nomor: z.string().min(1, 'Nomor dasar hukum wajib diisi'),
+      })
+    ),
+  }),
+});
+
+export type PolicyFormData = z.infer<typeof formSchema>;
+
+export default function AddPolicyForm() {
   const [open, setOpen] = useState(false);
-  const [sektorLainnya, setSektorLainnya] = useState(false);
-  const [dasarHukumDipilih, setDasarHukumDipilih] = useState<string[]>([]);
+  const [selectedDasarHukum, setSelectedDasarHukum] = useState<string[]>([]);
+  const [nomorDasarHukum, setNomorDasarHukum] = useState<Record<string, string>>({});
 
-  const handleCheckboxChange = (value: string) => {
-    setDasarHukumDipilih((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<PolicyFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      sektor_kebijakan: undefined,
+      sektor_kebijakan_lain: '',
+      nama_kebijakan: '',
+      detail_nama_kebijakan: '',
+      tanggal_berlaku: '',
+      link_drive: '',
+      created_by: '',
+      program_detail: {
+        program: '',
+        file_url: '',
+        dasar_hukum: [],
+      },
+    },
+  });
+
+  const sektor = watch('sektor_kebijakan');
+
+  // Load user ID from localStorage
+  useEffect(() => {
+    const userId = localStorage.getItem('id');
+    if (userId) {
+      setValue('created_by', userId);
+    }
+  }, [setValue]);
+
+  const handleCheckboxChange = (jenis: string) => {
+    setSelectedDasarHukum((prev) =>
+      prev.includes(jenis)
+        ? prev.filter((item) => item !== jenis)
+        : [...prev, jenis]
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    try {
-      const userId = localStorage.getItem("id");
-      if (!userId) throw new Error("User ID tidak ditemukan");
-
-      const tanggalBerlaku = formData.get("tanggal_berlaku") as string;
-      const dateInput = new Date(tanggalBerlaku);
-      const today = new Date();
-      const minDate = new Date(today);
-      const maxDate = new Date(today);
-      minDate.setFullYear(today.getFullYear() - 2);
-      maxDate.setFullYear(today.getFullYear() - 1);
-
-      if (dateInput < minDate || dateInput > maxDate) {
-        toast.dismiss();
-        toast.error("Tanggal kebijakan harus berada di antara 1 hingga 2 tahun terakhir.");
-        return;
-      }
-
-      const payload = {
-        nama_kebijakan: formData.get("nama_kebijakan") as string,
-        sektor_kebijakan: formData.get("sektor_kebijakan") as string,
-        sektor_kebijakan_lain: sektorLainnya
-          ? formData.get("sektor_kebijakan_lain") as string
-          : null,
-        tanggal_berlaku: formData.get("tanggal_berlaku") as string,
-        link_drive: formData.get("link_drive") as string,
-        program: formData.get("program") as string,
-        link_bukti: formData.get("link_bukti") as string,
-        dasar_hukum: dasarHukumDipilih.map((item) => ({
-          jenis: item,
-          nomor: formData.get(`nomor_${item}`),
-        })),
-        created_by: userId,
-      };
-
-      toast.loading("Menyimpan kebijakan...");
-      const res = await fetch("/api/policies/create", {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!res.ok) throw new Error("Gagal menyimpan data.");
-
-      toast.dismiss();
-      toast.success("Kebijakan berhasil ditambahkan!");
-      setOpen(false);
-      form.reset();
-      setSektorLainnya(false);
-      setDasarHukumDipilih([]);
-      onPolicyAdded();
-    } catch (err) {
-      toast.dismiss();
-      const errorMessage =
-        err instanceof Error ? err.message : "Terjadi kesalahan saat mengirim data.";
-      toast.error(errorMessage);
-    }
+  const handleNomorChange = (e: React.ChangeEvent<HTMLInputElement>, jenis: string) => {
+    setNomorDasarHukum((prev) => ({
+      ...prev,
+      [jenis]: e.target.value,
+    }));
   };
 
-  const handleSektorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSektorLainnya(e.target.value === "Lainnya");
+  const onSubmit = async (data: PolicyFormData) => {
+    const dasar_hukum = selectedDasarHukum.map((jenis) => ({
+      jenis: jenis as typeof dasarHukumOptions[number],
+      nomor: nomorDasarHukum[jenis] || '',
+    }));
+
+    const payload: PolicyFormData = {
+      ...data,
+      sektor_kebijakan_lain: sektor === 'Lainnya' ? data.sektor_kebijakan_lain : undefined,
+      program_detail: {
+        ...data.program_detail,
+        dasar_hukum,
+      },
+    };
+
+    try {
+      const res = await fetch('/api/policies/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        toast.success('Berhasil!', {
+          description: 'Kebijakan berhasil diajukan.',
+        });
+        setOpen(false);
+      } else {
+        throw new Error(result.message || 'Gagal menyimpan.');
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Gagal', {
+        description: error.message || 'Terjadi kesalahan saat mengirim data.',
+      });
+    }
   };
 
   return (
@@ -109,21 +152,39 @@ export default function AddPolicyFormDialog({ onPolicyAdded }: AddPolicyFormDial
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-        <form onSubmit={handleSubmit} className="space-y-6">
-
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Nama Kebijakan */}
           <div>
             <label htmlFor="nama_kebijakan" className="block text-sm font-medium text-gray-700 mb-2">
               Nama Kebijakan
             </label>
             <input
+              {...register('nama_kebijakan')}
               type="text"
               id="nama_kebijakan"
-              name="nama_kebijakan"
-              required
               placeholder="Contoh: Kebijakan Perlindungan Sosial"
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.nama_kebijakan && (
+              <p className="text-red-500 text-xs mt-1">{errors.nama_kebijakan.message}</p>
+            )}
+          </div>
+
+          {/* Detail Nama Kebijakan */}
+          <div>
+            <label htmlFor="detail_nama_kebijakan" className="block text-sm font-medium text-gray-700 mb-2">
+              Detail Nama Kebijakan
+            </label>
+            <input
+              {...register('detail_nama_kebijakan')}
+              type="text"
+              id="detail_nama_kebijakan"
+              placeholder="Contoh: Program Perlindungan Anak Terlantar"
+              className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+            {errors.detail_nama_kebijakan && (
+              <p className="text-red-500 text-xs mt-1">{errors.detail_nama_kebijakan.message}</p>
+            )}
           </div>
 
           {/* Sektor Kebijakan */}
@@ -132,57 +193,53 @@ export default function AddPolicyFormDialog({ onPolicyAdded }: AddPolicyFormDial
               Sektor Kebijakan
             </label>
             <select
+              {...register('sektor_kebijakan')}
               id="sektor_kebijakan"
-              name="sektor_kebijakan"
-              required
-              onChange={handleSektorChange}
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Pilih Sektor</option>
-              <option value="Infrastruktur">Infrastruktur</option>
-              <option value="Pangan">Pangan</option>
-              <option value="Ketenagakerjaan">Ketenagakerjaan</option>
-              <option value="Sosial">Sosial</option>
-              <option value="Pendidikan">Pendidikan</option>
-              <option value="Kesehatan">Kesehatan</option>
-              <option value="Aparatur Negara">Aparatur Negara</option>
-              <option value="Perencana">Perencana</option>
-              <option value="Lingkungan">Lingkungan</option>
-              <option value="Lainnya">Lainnya</option>
+              {sektorOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
             </select>
-            {sektorLainnya && (
+            {errors.sektor_kebijakan && (
+              <p className="text-red-500 text-xs mt-1">{errors.sektor_kebijakan.message}</p>
+            )}
+
+            {sektor === 'Lainnya' && (
               <input
+                {...register('sektor_kebijakan_lain')}
                 type="text"
-                id="sektor_kebijakan_lain"
-                name="sektor_kebijakan_lain"
                 placeholder="Sebutkan sektor lainnya"
                 className="mt-3 w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             )}
           </div>
 
-          {/* Dasar Hukum Kebijakan */}
+          {/* Dasar Hukum */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Dasar Hukum Kebijakan
             </label>
             <div className="space-y-2">
-              {DASAR_HUKUM_OPTIONS.map((option) => (
+              {dasarHukumOptions.map((option) => (
                 <div key={option} className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     id={option}
-                    value={option}
                     onChange={() => handleCheckboxChange(option)}
-                    checked={dasarHukumDipilih.includes(option)}
+                    checked={selectedDasarHukum.includes(option)}
                   />
                   <label htmlFor={option} className="text-sm font-medium text-gray-700 w-48">
                     {option}
                   </label>
-                  {dasarHukumDipilih.includes(option) && (
+                  {selectedDasarHukum.includes(option) && (
                     <input
                       type="text"
-                      name={`nomor_${option}`}
+                      value={nomorDasarHukum[option] || ''}
+                      onChange={(e) => handleNomorChange(e, option)}
                       placeholder={`Nomor ${option}`}
                       className="flex-1 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -198,26 +255,32 @@ export default function AddPolicyFormDialog({ onPolicyAdded }: AddPolicyFormDial
               Nama Program/Kegiatan
             </label>
             <input
+              {...register('program_detail.program')}
               type="text"
               id="program"
-              name="program"
               placeholder="Contoh: Program Perlindungan Lansia"
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.program_detail?.program && (
+              <p className="text-red-500 text-xs mt-1">{errors.program_detail.program.message}</p>
+            )}
           </div>
 
           {/* Link Bukti Program/Kegiatan */}
           <div>
-            <label htmlFor="link_bukti" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="file_url" className="block text-sm font-medium text-gray-700 mb-2">
               Link Bukti Program/Kegiatan (Google Drive)
             </label>
             <input
+              {...register('program_detail.file_url')}
               type="url"
-              id="link_bukti"
-              name="link_bukti"
-              placeholder="https://drive.google.com/..."
+              id="file_url"
+              placeholder="https://drive.google.com/...  "
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.program_detail?.file_url && (
+              <p className="text-red-500 text-xs mt-1">{errors.program_detail.file_url.message}</p>
+            )}
           </div>
 
           {/* Tanggal Berlaku */}
@@ -226,12 +289,14 @@ export default function AddPolicyFormDialog({ onPolicyAdded }: AddPolicyFormDial
               Tanggal Berlaku Kebijakan
             </label>
             <input
+              {...register('tanggal_berlaku')}
               type="date"
               id="tanggal_berlaku"
-              name="tanggal_berlaku"
-              required
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.tanggal_berlaku && (
+              <p className="text-red-500 text-xs mt-1">{errors.tanggal_berlaku.message}</p>
+            )}
             <p className="text-xs text-gray-500 mt-2">
               Hanya untuk kebijakan yang telah berlaku efektif minimal 1 tahun dan maksimal 2 tahun terakhir.
             </p>
@@ -243,13 +308,15 @@ export default function AddPolicyFormDialog({ onPolicyAdded }: AddPolicyFormDial
               Link Dokumen (Google Drive)
             </label>
             <input
+              {...register('link_drive')}
               type="url"
               id="link_drive"
-              name="link_drive"
-              required
-              placeholder="https://drive.google.com/... "
+              placeholder="https://drive.google.com/...  "
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.link_drive && (
+              <p className="text-red-500 text-xs mt-1">{errors.link_drive.message}</p>
+            )}
           </div>
 
           {/* Submit Button */}
