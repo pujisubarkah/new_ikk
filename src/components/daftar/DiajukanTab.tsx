@@ -82,7 +82,7 @@ export default function DiajukanTab() {
                         }}
                     >
                         <button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow transition-colors">
-                            <span>Kirim Kebijakan ke Pusat</span>
+                            <span>Kirim Kebijakan ke Koornas</span>
                         </button>
                     </SendPolicyDialog>
                 </div>
