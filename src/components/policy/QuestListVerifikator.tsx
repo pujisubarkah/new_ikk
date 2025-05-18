@@ -30,6 +30,7 @@ interface QuestionListProps {
   isSubmitted: boolean;
   verifierNotes?: Record<string, string>;
   onNoteChange?: (questionId: string, note: string) => void;
+  onLinkUpload: (questionId: string, fileLink: string) => void; // Added this property
 }
 
 const stepDimensionMap: Record<number, string> = {
