@@ -11,22 +11,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const questions = await prisma.instrument_question.findMany({
+  where: {
+    NOT: {
+      id: 12,
+    },
+  },
+  select: {
+    id: true,
+    dimension_name: true,
+    indicator_column_code: true,
+    indicator_question: true,
+    indicator_description: true,
+    bukti_dukung_description: true,
+    instrument_answer: {
       select: {
-        id: true,
-        dimension_name: true,
-        indicator_column_code: true,
-        indicator_question: true,
-        indicator_description: true,
-        bukti_dukung_description: true,
-        instrument_answer: {
-          select: {
-            level_id: true,
-            level_score: true,
-            level_description: true,
-          },
-        },
+        level_id: true,
+        level_score: true,
+        level_description: true,
       },
-    });
+    },
+  },
+});
+
 
     const serializedQuestions = questions.map((question) =>
       serializeBigInt({
