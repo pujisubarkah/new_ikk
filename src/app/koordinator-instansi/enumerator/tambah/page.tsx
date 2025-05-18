@@ -12,14 +12,14 @@ import { toast } from "sonner"
 interface FormData {
   name: string
   username: string
-  work_unit: string
+  work_unit?: string
   instansi: string
   email: string
   role_id: number
-  password: string
+  password?: string
   position: string
   phone: string
-  status: "Aktif" | "Non Aktif"
+  status: "aktif" | "Nonaktif"
 }
 
 interface Instansi {
@@ -39,52 +39,57 @@ const TambahPengguna: React.FC = () => {
     password: "",
     position: "",
     phone: "",
-    status: "Aktif",
+    status: "aktif",
   })
 
   const [instansis, setInstansis] = useState<Instansi[]>([])
+  const [koorInstansiId, setKoorInstansiId] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
- useEffect(() => {
-  const fetchAgencyIdAndInstansi = async () => {
-    try {
-      const koorInstansiId = localStorage.getItem("id")
+  useEffect(() => {
+    const fetchAgencyIdAndInstansi = async () => {
+      try {
+        setIsLoading(true)
+        const idFromStorage = localStorage.getItem("id")
+        
+        if (!idFromStorage) {
+          toast.warning("ID koordinator instansi tidak ditemukan")
+          setIsLoading(false)
+          return
+        }
 
-      if (!koorInstansiId) {
-        toast.warning("ID koordinator instansi tidak ditemukan")
-        return
+        setKoorInstansiId(idFromStorage)
+        console.log("Koordinator ID from storage:", idFromStorage)
+
+        const response = await axios.get(`/api/koorinstansi/info?koor_instansi_id=${idFromStorage}`)
+        const agencyId = response.data.agency_id?.agency_id_panrb
+
+        if (agencyId) {
+          setFormData(prev => ({ ...prev, instansi: agencyId }))
+
+          const instansiDetail = await axios.get(`/api/instansi/${agencyId}/instansi`)
+          
+          setInstansis([{
+            id: agencyId,
+            name: instansiDetail.data.agency_name,
+            category: "",
+          }])
+        }
+      } catch (err) {
+        console.error("Error fetching agency data:", err)
+        toast.error("Gagal memuat data instansi")
+      } finally {
+        setIsLoading(false)
       }
-
-      const response = await axios.get(`/api/koorinstansi/info?koor_instansi_id=${koorInstansiId}`)
-      const agencyId = response.data.agency_id?.agency_id_panrb
-
-    if (agencyId) {
-      setFormData((prev) => ({ ...prev, instansi: agencyId }))
-
-      const instansiDetail = await axios.get(`/api/instansi/${agencyId}/instansi`)
-
-      // Mapping manual biar sesuai interface
-      setInstansis([
-        {
-          id: agencyId,
-          name: instansiDetail.data.agency_name, // Ubah key di sini
-          category: "", // kosongin aja dulu kalau nggak penting
-        },
-      ])
     }
-  } catch (err) {
-    toast.error("Gagal memuat data instansi")
-    console.error("Gagal memuat data instansi", err)
-  }
-}
 
-  fetchAgencyIdAndInstansi()
-}, [])
-
+    fetchAgencyIdAndInstansi()
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value,
     }))
@@ -92,23 +97,60 @@ const TambahPengguna: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
+    if (!koorInstansiId) {
+      toast.error("ID Koordinator belum dimuat, silakan refresh halaman")
+      return
+    }
+
     const loadingToast = toast.loading("Sedang menambahkan pengguna...")
-    
+
     try {
-      await axios.post("/api/analis_instansi/create", formData)
+      const payload = {
+        name: formData.name,
+        username: formData.username,
+        email: formData.email,
+        position: formData.position,
+        phone: formData.phone,
+        work_unit: formData.work_unit,
+        koorInstansiId: koorInstansiId, // Ensure this is included
+        password: formData.password || undefined,
+        status: formData.status
+      }
+
+      console.log("Submitting payload:", payload)
+
+      const response = await axios.post("/api/analis_instansi/create", payload)
+      console.log("Response from API:", response.data)
+      
       toast.dismiss(loadingToast)
       toast.success("Pengguna berhasil ditambahkan!")
       router.push("/koordinator-instansi/enumerator")
     } catch (error) {
       toast.dismiss(loadingToast)
-      toast.error("Gagal menambahkan pengguna")
-      console.error("Gagal menambahkan pengguna:", error)
+      console.error("Error submitting form:", error)
+      
+      if (axios.isAxiosError(error)) {
+        console.error("API error details:", error.response?.data)
+        toast.error(`Gagal menambahkan pengguna: ${error.response?.data?.error || error.message}`)
+      } else {
+        toast.error("Gagal menambahkan pengguna")
+      }
     }
   }
 
   const handleBack = () => {
     router.push("/koordinator-instansi/enumerator")
+  }
+
+  if (isLoading) {
+    return (
+      <Sidebar>
+        <div className="w-full px-6 py-8 bg-white shadow-md rounded-lg">
+          <p>Memuat data...</p>
+        </div>
+      </Sidebar>
+    )
   }
 
   return (
@@ -125,8 +167,8 @@ const TambahPengguna: React.FC = () => {
               <Input id="username" name="username" value={formData.username} onChange={handleChange} required />
             </div>
             <div>
-              <Label htmlFor="nik">Unit Kerja</Label>
-              <Input id="Work_unit" name="work_unit" value={formData.work_unit} onChange={handleChange} required />
+              <Label htmlFor="work_unit">Unit Kerja</Label>
+              <Input id="work_unit" name="work_unit" value={formData.work_unit} onChange={handleChange} required />
             </div>
             <div>
               <Label htmlFor="instansi">Nama Instansi</Label>
@@ -144,7 +186,14 @@ const TambahPengguna: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} required />
+              <Input 
+                id="password" 
+                name="password" 
+                type="password" 
+                value={formData.password} 
+                onChange={handleChange} 
+                placeholder="Kosongkan untuk password default (12345678)"
+              />
             </div>
           </div>
 
@@ -175,17 +224,13 @@ const TambahPengguna: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
-              <select
+              <Input
                 id="status"
                 name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-md p-2"
-              >
-                <option value="Aktif">Aktif</option>
-                <option value="Non Aktif">Non Aktif</option>
-              </select>
+                value="Aktif"
+                readOnly
+                className="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700"
+              />
             </div>
           </div>
 
