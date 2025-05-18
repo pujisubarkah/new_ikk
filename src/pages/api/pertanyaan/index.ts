@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import { serializeBigInt } from '@/lib/serializeBigInt';
 
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -27,9 +28,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    const serializedQuestions = questions.map((question: any) =>
+    const serializedQuestions = questions.map((question) =>
       serializeBigInt({
         ...question,
+        instrument_answer: question.instrument_answer.map((ans: any) => ({
+          level_id: typeof ans.level_id === "bigint" ? Number(ans.level_id) : ans.level_id ?? 0,
+          level_score: typeof ans.level_score === "bigint" ? Number(ans.level_score) : ans.level_score ?? 0,
+          level_description: ans.level_description ?? "",
+        })),
         full_description: `${question.indicator_description ?? ""} ${question.bukti_dukung_description ?? ""}`.trim(),
       })
     );
