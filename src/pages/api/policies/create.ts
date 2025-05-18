@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { serializeBigInt } from '@/lib/serializeBigInt';
 
-// Define Zod schema untuk validasi request body
+// Schema validasi dengan Zod
 const policySchema = z.object({
   nama_kebijakan: z.string().min(1, 'Nama kebijakan harus diisi'),
   detail_nama_kebijakan: z.string().min(1, 'Detail nama kebijakan harus diisi'),
@@ -19,6 +19,12 @@ const policySchema = z.object({
   }),
   link_drive: z.string().url('Link Drive harus valid').min(1, 'Link Drive harus diisi'),
   created_by: z.string().min(1, 'Created by harus diisi'),
+
+  program_detail: z.object({
+    dasar_hukum: z.any(), // jsonb bebas bentuknya
+    program: z.string().min(1, 'Nama program harus diisi'),
+    file_url: z.string().url('Link file program harus valid')
+  })
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -27,14 +33,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Validasi body menggunakan Zod schema
-    const parsedBody = policySchema.parse(req.body);
-
-    const userId = parsedBody.created_by;
-
-    console.log('📥 Received userId from headers:', userId);
+    // Log body mentah sebelum validasi
     console.log('📥 Received body:', req.body);
 
+    // Validasi body
+    const parsedBody = policySchema.parse(req.body);
+
+    // Log body setelah validasi
+    console.log('✅ Parsed body:', parsedBody);
+
+    const userId = parsedBody.created_by;
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -42,16 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const {
-      nama_kebijakan,
-      detail_nama_kebijakan,
-      sektor_kebijakan,
-      sektor_kebijakan_lain,
-      tanggal_berlaku,
-      link_drive,
-    } = parsedBody;
-
-    // Cari user untuk mengambil agency_id dan agency_id_panrb
+    // Cari user untuk agency_id dan agency_id_panrb
     const user = await prisma.user.findUnique({
       where: { id: BigInt(userId) },
       select: {
@@ -67,15 +66,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Buat record baru di tabel policy
+    // Simpan policy sekaligus dengan relasi policy_program
     const newPolicy = await prisma.policy.create({
       data: {
-        name: nama_kebijakan,
-        name_detail: detail_nama_kebijakan,
-        sector: sektor_kebijakan,
-        lainnya: sektor_kebijakan === 'Lainnya' ? sektor_kebijakan_lain : null,
-        file_url: link_drive,
-        effective_date: new Date(tanggal_berlaku),
+        name: parsedBody.nama_kebijakan,
+        name_detail: parsedBody.detail_nama_kebijakan,
+        sector: parsedBody.sektor_kebijakan,
+        lainnya: parsedBody.sektor_kebijakan === 'Lainnya' ? parsedBody.sektor_kebijakan_lain : null,
+        file_url: parsedBody.link_drive,
+        effective_date: new Date(parsedBody.tanggal_berlaku),
 
         policy_process: 'DIAJUKAN',
         policy_status: 'BELUM_TERVERIFIKASI',
@@ -86,22 +85,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         is_valid: false,
         assigned_by_admin_id: BigInt(userId),
         agency_id: user.agency_id,
-
-        // Ambil langsung dari user.agency_id_panrb
         agency_id_panrb: user.agency_id_panrb,
+        active_year: new Date().getFullYear(),
 
-        active_year: 2025,
-
-        // Biarkan null
         validated_by: null,
         enumerator_id: null,
         processed_by_enumerator_id: null,
         assigned_by_admin_at: null,
         type: null,
+
+        // Relasi policy_program
+        policy_program: {
+          create: {
+            dasar_hukum: parsedBody.program_detail.dasar_hukum,
+            program: parsedBody.program_detail.program,
+            file_url: parsedBody.program_detail.file_url,
+          }
+        }
       },
+      include: {
+        policy_program: true, // supaya response lengkap
+      }
     });
 
-    // Pastikan BigInt diubah menjadi string
+    // Serialize BigInt ke string
     const responseData = serializeBigInt(newPolicy);
 
     return res.status(201).json({
@@ -111,6 +118,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch (error) {
     console.error('Error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validasi gagal',
+        errors: error.errors,
+      });
+    }
     return res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan server',
