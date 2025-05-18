@@ -18,7 +18,7 @@ export default function KebijakanTable() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-semibold text-gray-700">Daftar Kebijakan</h2>
           <div className="flex gap-4">
-            <AddPolicyFormDialog onPolicyAdded={() => {}} />
+            <AddPolicyFormDialog />
           </div>
         </div>
 
