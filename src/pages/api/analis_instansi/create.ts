@@ -1,12 +1,11 @@
-import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { serializeBigInt } from '@/lib/serializeBigInt';
-import { z } from 'zod';
+import bcrypt from 'bcryptjs'
+import prisma from '@/lib/prisma'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { serializeBigInt } from '@/lib/serializeBigInt'
+import { z } from 'zod'
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 10
 
-// Define Zod schema
 const createAnalisSchema = z.object({
   name: z.string().min(3, 'Nama minimal 3 karakter'),
   username: z.string().min(3, 'Username minimal 3 karakter').optional(),
@@ -15,25 +14,26 @@ const createAnalisSchema = z.object({
   phone: z.string().min(10, 'Nomor telepon minimal 10 karakter'),
   work_unit: z.string().optional(),
   koorInstansiId: z.string().min(1, 'ID Koordinator diperlukan'),
-  password: z.string()
-    .min(8, 'Password minimal 8 karakter')
-    .optional(),
-  status: z.enum(['aktif', 'Non aktif']).default('aktif')
-});
+  password: z.string().min(8, 'Password minimal 8 karakter').optional(),
+  status: z.enum(['aktif', 'Non aktif']).default('aktif'),
+})
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Method Not Allowed' })
   }
 
   try {
-    const validationResult = createAnalisSchema.safeParse(req.body);
+    console.log('📥 Received body:', req.body)
+
+    const validationResult = createAnalisSchema.safeParse(req.body)
 
     if (!validationResult.success) {
+      console.log('❌ Validation errors:', validationResult.error.flatten())
       return res.status(400).json({
         error: 'Validasi gagal',
-        details: validationResult.error.flatten()
-      });
+        details: validationResult.error.flatten(),
+      })
     }
 
     const {
@@ -45,41 +45,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       work_unit,
       koorInstansiId,
       password: inputPassword,
-      status
-    } = validationResult.data;
+      status,
+    } = validationResult.data
 
-    // Gunakan password dari body atau default
-    const finalPassword = inputPassword || '12345678';
-    const hashedPassword = await bcrypt.hash(finalPassword, SALT_ROUNDS);
+    const finalPassword = inputPassword || '12345678'
+    const hashedPassword = await bcrypt.hash(finalPassword, SALT_ROUNDS)
 
-    // Cari koordinator
+    // Convert to BigInt
+    const koorIdBigInt = BigInt(koorInstansiId)
+
+    // Verify coordinator exists
     const koorUser = await prisma.user.findUnique({
-      where: { id: BigInt(koorInstansiId) },
-      select: { id: true, agency_id_panrb: true }
-    });
+      where: { id: koorIdBigInt },
+      select: { id: true, agency_id_panrb: true },
+    })
 
     if (!koorUser || !koorUser.agency_id_panrb) {
-      return res.status(400).json({ 
-        error: 'Koordinator tidak valid atau tidak memiliki instansi' 
-      });
+      return res.status(400).json({
+        error: 'Koordinator tidak valid atau tidak memiliki instansi',
+      })
     }
 
-    // Cek apakah user sudah ada
+    // Check for existing user
     const existingUser = await prisma.user.findFirst({
-      where: { OR: [{ email }, { username }] }
-    });
+      where: {
+        OR: [{ email }, { username }],
+      },
+    })
 
     if (existingUser) {
       return res.status(409).json({
         error: 'User sudah ada',
         conflicts: {
           email: existingUser.email === email,
-          username: existingUser.username === username
-        }
-      });
+          username: existingUser.username === username,
+        },
+      })
     }
 
-    // Buat user baru dan relasi dalam transaksi
+    // Transaction for user creation and relation
     const [newUser, relation] = await prisma.$transaction([
       prisma.user.create({
         data: {
@@ -92,35 +96,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           password: hashedPassword,
           status,
           agency_id_panrb: koorUser.agency_id_panrb,
-          role_user: { create: { role_id: BigInt(5) } }
-        }
+          role_user: {
+            create: { role_id: BigInt(5) }, // Role analis instansi
+          },
+        },
       }),
       prisma.koor_instansi_analis.create({
-        data: { koor_instansi_id: koorUser.id }
-      })
-    ]);
+        data: {
+          koor_instansi_id: koorUser.id,
+        },
+      }),
+    ])
 
-    // Update relasi dengan ID user baru
+    // Update relation with new user ID
     await prisma.koor_instansi_analis.update({
       where: { id: relation.id },
-      data: { analis_instansi_id: newUser.id }
-    });
-
-   
+      data: { analis_instansi_id: newUser.id },
+    })
 
     return res.status(201).json({
       success: true,
       data: {
         user: serializeBigInt(newUser),
-        relation: serializeBigInt(relation)
-      }
-    });
-
+        relation: serializeBigInt(relation),
+      },
+    })
   } catch (error) {
-    console.error('Error:', error);
+    console.error('💥 Error saat proses handler:', error)
     return res.status(500).json({
       error: 'Terjadi kesalahan server',
-      details: process.env.NODE_ENV === 'development' ? error : undefined
-    });
+      details: process.env.NODE_ENV === 'development' ? error : undefined,
+    })
   }
 }
