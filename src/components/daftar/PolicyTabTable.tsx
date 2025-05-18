@@ -11,16 +11,16 @@ export default function PolicyTabTable() {
 
     return (
         <div className="w-full">
-            {/* Tab Navigation */}
-            <div className="flex flex-wrap gap-2 mb-6 mt-4">
+            {/* Tab Navigation - Styling disamakan seperti DashboardPage */}
+            <div className="flex space-x-2 md:space-x-4 mb-6 overflow-x-auto">
                 {["Diajukan", "Disetujui", "Diproses", "Selesai"].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 rounded-lg font-semibold text-sm ${
+                        className={`px-4 py-2 text-sm md:text-base rounded-t-lg font-semibold whitespace-nowrap ${
                             activeTab === tab
-                                ? "bg-blue-600 text-white shadow-md"
-                                : "bg-white border border-blue-600 text-blue-600 hover:bg-blue-50"
+                                ? "bg-white text-blue-600 border-b-2 border-blue-600"
+                                : "text-gray-600 bg-gray-200"
                         }`}
                     >
                         Kebijakan {tab}
