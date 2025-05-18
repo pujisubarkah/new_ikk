@@ -26,7 +26,7 @@ const sektorOptions = [
   'Lainnya',
 ] as const;
 
-const dasarHukumOptions = ['UU', 'PP', 'Permen', 'Perda'] as const;
+const dasarHukumOptions = ['UNDANG-UNDANG', 'PERATURAN PEMERINTAH', 'PERATURAN PRESIDEN','PERATURAN MENTERI','PERATURAN BADAN/LEMBAGA/KOMISI', 'PREATURAN DAERAH', 'PERATURAN GUBERNUR', 'PERATURAN BUPATI','PERATURAN WALIKOTA','PERATURAN LAIN'] as const;
 
 // --- SCHEMA ---
 const formSchema = z.object({
@@ -244,7 +244,7 @@ export default function AddPolicyForm() {
                       type="text"
                       value={nomorDasarHukum[option] || ''}
                       onChange={(e) => handleNomorChange(e, option)}
-                      placeholder={`Nomor ${option}`}
+                      placeholder={`${option} No. XX/Th XXXX`}
                       className="flex-1 text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                   )}
@@ -309,7 +309,7 @@ export default function AddPolicyForm() {
           {/* Link Dokumen Drive */}
           <div>
             <label htmlFor="link_drive" className="block text-sm font-medium text-gray-700 mb-2">
-              Link Dokumen (Google Drive)
+              Link Folder Dokumen Dasar Hukum (Google Drive)
             </label>
             <input
               {...register('link_drive')}
