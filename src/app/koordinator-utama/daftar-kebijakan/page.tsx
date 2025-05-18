@@ -19,52 +19,54 @@ interface Kebijakan {
   id: string;
 }
 
+interface APIResponse {
+  data: APIResponseItem[];
+}
+
 interface APIResponseItem {
   agency_id_panrb: string;
-  instansi: string;
-  total_kebijakan: number;
+  agency_name: string;
+  total: number;
 }
 
 const ITEMS_PER_PAGE = 5;
 
 const Page = () => {
   const router = useRouter();
-
   const [data, setData] = useState<Kebijakan[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const id = localStorage.getItem("id");
-      if (!id) throw new Error("ID koor_nasional tidak ditemukan di localStorage");
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const id = localStorage.getItem("id");
+        if (!id) throw new Error("ID koor_nasional tidak ditemukan di localStorage");
 
-      const response = await fetch(`/api/koornas/${id}/policy`);
-      if (!response.ok) throw new Error("Gagal mengambil data dari API");
+        const response = await fetch(`/api/koornas/${id}/policy`);
+        if (!response.ok) throw new Error("Gagal mengambil data dari API");
 
-      const result = await response.json();
+        const result: APIResponse = await response.json();
 
-      const formattedData: Kebijakan[] = result.data.map((item: any, index: number) => ({
-        no: index + 1,
-        instansi: item.agency_name || "-",
-        total: item.total || 0,
-        id: item.agency_id_panrb || null,
-      }));
+        const formattedData: Kebijakan[] = result.data.map((item, index) => ({
+          no: index + 1,
+          instansi: item.agency_name || "-",
+          total: item.total || 0,
+          id: item.agency_id_panrb || "",
+        }));
 
-      setData(formattedData);
-    } catch (error) {
-      console.error("Gagal fetch data kebijakan:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setData(formattedData);
+      } catch (error) {
+        console.error("Gagal fetch data kebijakan:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchData();
-}, []);
-
+    fetchData();
+  }, []);
 
   const filteredData = data.filter((item) =>
     item.instansi.toLowerCase().includes(search.toLowerCase())
@@ -83,9 +85,7 @@ const Page = () => {
     <Sidebar>
       <div className="w-full px-6 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Daftar Kebijakan
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Daftar Kebijakan</h1>
           <input
             type="text"
             placeholder="Cari instansi atau tanggal..."
@@ -111,14 +111,13 @@ const Page = () => {
                 <th className="px-6 py-3 border-b">No</th>
                 <th className="px-6 py-3 border-b">Nama Instansi</th>
                 <th className="px-6 py-3 border-b">Total Kebijakan</th>
-           
                 <th className="px-6 py-3 border-b text-center">Detail</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                  <td colSpan={4} className="text-center py-6 text-gray-500">
                     Memuat data...
                   </td>
                 </tr>
@@ -128,7 +127,6 @@ const Page = () => {
                     <td className="px-6 py-4 border-b text-center">{item.no}</td>
                     <td className="px-6 py-4 border-b">{item.instansi}</td>
                     <td className="px-6 py-4 border-b text-center">{item.total}</td>
-                  
                     <td className="px-6 py-4 border-b text-center">
                       <button
                         onClick={() =>
@@ -143,7 +141,7 @@ const Page = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                  <td colSpan={4} className="text-center py-6 text-gray-500">
                     Tidak ada hasil yang ditemukan.
                   </td>
                 </tr>
@@ -175,7 +173,9 @@ const Page = () => {
             </PaginationContent>
 
             <PaginationNext
-              onClick={currentPage === totalPages ? undefined : () => handlePageChange(currentPage + 1)}
+              onClick={
+                currentPage === totalPages ? undefined : () => handlePageChange(currentPage + 1)
+              }
               className={currentPage === totalPages ? "cursor-not-allowed text-gray-400" : ""}
             >
               Next
