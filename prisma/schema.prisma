@@ -274,8 +274,8 @@ model notifikasi {
 }
 
 model policy {
-  id                                           BigInt         @id(map: "policy_baru_pkey") @default(autoincrement())
-  created_at                                   DateTime?      @db.Timestamptz(6)
+  id                                           BigInt           @id(map: "policy_baru_pkey") @default(autoincrement())
+  created_at                                   DateTime?        @db.Timestamptz(6)
   created_by                                   BigInt?
   name                                         String?
   name_detail                                  String?
@@ -291,78 +291,33 @@ model policy {
   policy_status                                String?
   policy_process                               String?
   progress                                     String?
-  effective_date                               DateTime?      @db.Date
+  effective_date                               DateTime?        @db.Date
   enumerator_id                                BigInt?
   assigned_by_admin_id                         BigInt?
   processed_by_enumerator_id                   BigInt?
-  assigned_by_admin_at                         DateTime?      @db.Timestamp(6)
-  dasar_hukum                                  Json?
-  program                                      String?        @db.VarChar(255)
+  assigned_by_admin_at                         DateTime?        @db.Timestamp(6)
   ikk_file                                     ikk_file[]
   ikk_ki_score                                 ikk_ki_score[]
   ikk_ku_score                                 ikk_ku_score[]
-  agencies                                     agencies?      @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_agency_id_fkey")
-  instansi                                     instansi?      @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_agency_id_panrb_fkey")
-  user_policy_assigned_by_admin_idTouser       user?          @relation("policy_assigned_by_admin_idTouser", fields: [assigned_by_admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_assigned_by_admin_id_fkey")
-  user_policy_created_byTouser                 user?          @relation("policy_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_created_by_fkey")
-  user_policy_enumerator_idTouser              user?          @relation("policy_enumerator_idTouser", fields: [enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_enumerator_id_fkey")
-  user_policy_processed_by_enumerator_idTouser user?          @relation("policy_processed_by_enumerator_idTouser", fields: [processed_by_enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_processed_by_enumerator_id_fkey")
-  user_policy_validated_byTouser               user?          @relation("policy_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_validated_by_fkey")
+  agencies                                     agencies?        @relation(fields: [agency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_agency_id_fkey")
+  instansi                                     instansi?        @relation(fields: [agency_id_panrb], references: [agency_id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_agency_id_panrb_fkey")
+  user_policy_assigned_by_admin_idTouser       user?            @relation("policy_assigned_by_admin_idTouser", fields: [assigned_by_admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_assigned_by_admin_id_fkey")
+  user_policy_created_byTouser                 user?            @relation("policy_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_created_by_fkey")
+  user_policy_enumerator_idTouser              user?            @relation("policy_enumerator_idTouser", fields: [enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_enumerator_id_fkey")
+  user_policy_processed_by_enumerator_idTouser user?            @relation("policy_processed_by_enumerator_idTouser", fields: [processed_by_enumerator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_processed_by_enumerator_id_fkey")
+  user_policy_validated_byTouser               user?            @relation("policy_validated_byTouser", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "policy_baru_validated_by_fkey")
+  policy_program                               policy_program[]
 
   @@schema("ikk_new")
 }
 
-model policy_details {
-  id                 BigInt    @id
-  created_at         DateTime? @db.Timestamp(6)
-  created_by         BigInt?
-  modified_by        BigInt?
-  updated_at         DateTime? @db.Timestamp(6)
-  base_score         Float?
-  effective_date     DateTime? @db.Timestamp(6)
-  file_original_name String?   @db.VarChar(255)
-  file_path          String?   @db.VarChar(255)
-  file_size          String?   @db.VarChar(255)
-  file_type          String?   @db.VarChar(255)
-  progress           Float?
-  sector             String?   @db.VarChar(255)
-  validationkiscore  Float?
-  validationkuscore  Float?
-  validationkinote   String?
-
-  @@schema("ikk_new")
-}
-
-model policy_process {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  name        String?   @db.VarChar(255)
-
-  @@schema("ikk_new")
-}
-
-model policy_sample {
-  id            BigInt    @id
-  created_at    DateTime? @db.Timestamp(6)
-  created_by    BigInt?
-  modified_by   BigInt?
-  updated_at    DateTime? @db.Timestamp(6)
-  id_user_admin BigInt?
-  policy_id     BigInt?
-
-  @@schema("ikk_new")
-}
-
-model policy_status {
-  id          BigInt    @id
-  created_at  DateTime? @db.Timestamp(6)
-  created_by  BigInt?
-  modified_by BigInt?
-  updated_at  DateTime? @db.Timestamp(6)
-  name        String?   @db.VarChar(255)
+model policy_program {
+  id          BigInt  @id @default(autoincrement())
+  policy_id   BigInt?
+  dasar_hukum Json
+  program     String
+  file_url    String?
+  policy      policy? @relation(fields: [policy_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("ikk_new")
 }
