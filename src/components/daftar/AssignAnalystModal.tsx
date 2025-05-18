@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 interface Analyst {
   id: number;
   name: string;
+  status: string; // Added status property
 }
 
 interface Policy {
@@ -113,11 +114,13 @@ export default function AssignAnalystModal({ isOpen, onClose, policy }: AssignAn
             disabled={loading}
           >
             <option value="">{loading ? 'Memuat analis...' : '-- Pilih Analis --'}</option>
-            {analysts.map((analyst) => (
+            {analysts
+              .filter((analyst) => analyst.status === 'aktif')
+              .map((analyst) => (
               <option key={analyst.id} value={analyst.id}>
                 {analyst.name}
               </option>
-            ))}
+              ))}
           </select>
           {!loading && analysts.length === 0 && (
             <p className="text-xs text-red-600 mt-1">Tidak ada analis tersedia.</p>

@@ -33,6 +33,7 @@ export default async function handler(
         id: a.analis_instansi_id?.toString(), // Convert BigInt ke string
         username: a.user_koor_instansi_analis_analis_instansi_idTouser?.username,
         name: a.user_koor_instansi_analis_analis_instansi_idTouser?.name,
+        status: a.user_koor_instansi_analis_analis_instansi_idTouser?.status,
       }));
 
     if (formatted.length === 0) {
