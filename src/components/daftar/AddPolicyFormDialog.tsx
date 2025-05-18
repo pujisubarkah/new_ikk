@@ -136,10 +136,14 @@ export default function AddPolicyForm() {
       } else {
         throw new Error(result.message || 'Gagal menyimpan.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Terjadi kesalahan saat mengirim data.';
       toast.error('Gagal', {
-        description: error.message || 'Terjadi kesalahan saat mengirim data.',
+        description: message,
       });
     }
   };
