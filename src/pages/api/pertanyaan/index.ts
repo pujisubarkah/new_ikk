@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const serializedQuestions = questions.map((question) =>
       serializeBigInt({
         ...question,
-        instrument_answer: question.instrument_answer.map((ans: any) => ({
+        instrument_answer: question.instrument_answer.map((ans: { level_id: bigint | number | null; level_score: bigint | number | null; level_description: string | null }) => ({
           level_id: typeof ans.level_id === "bigint" ? Number(ans.level_id) : ans.level_id ?? 0,
           level_score: typeof ans.level_score === "bigint" ? Number(ans.level_score) : ans.level_score ?? 0,
           level_description: ans.level_description ?? "",

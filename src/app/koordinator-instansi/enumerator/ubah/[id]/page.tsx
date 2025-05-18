@@ -49,7 +49,6 @@ const EditPengguna: React.FC = () => {
   const [instansis, setInstansis] = useState<Instansi[]>([])
   const [koorInstansiId, setKoorInstansiId] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchAgencyIdAndInstansi = async () => {
@@ -80,8 +79,8 @@ const EditPengguna: React.FC = () => {
             category: "",
           }])
         }
-      } catch (err) {
-        console.error("Error fetching agency data:", err)
+      } catch (error) {
+        console.error("Error fetching agency data:", error)
         toast.error("Gagal memuat data instansi")
       } finally {
         setIsLoading(false)
@@ -107,8 +106,8 @@ const EditPengguna: React.FC = () => {
               status: userData.status || '',
               role_id: formData.role_id, // Include the role_id property
             })
-          } catch (err: unknown) {
-            setError("Gagal memuat detail pengguna")
+          } catch (error: unknown) {
+            console.error("Error fetching user data:", error)
           }
         }
 
