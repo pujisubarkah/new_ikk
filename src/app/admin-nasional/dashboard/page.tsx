@@ -311,7 +311,7 @@ const DashboardPage: React.FC = () => {
 
   // --- FILTER USERS ---
   const filteredUsers = users.filter(
-    (user) => user.role_user?.role_id === "4" && user.status !== "aktif"
+    (user) => user.role_user?.role_id === "4" && user.status === "inactive"
   );
 
   return (
