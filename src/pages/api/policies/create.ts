@@ -3,7 +3,6 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { serializeBigInt } from '@/lib/serializeBigInt';
 
-// Schema validasi dengan Zod
 const policySchema = z.object({
   nama_kebijakan: z.string().min(1, 'Nama kebijakan harus diisi'),
   detail_nama_kebijakan: z.string().min(1, 'Detail nama kebijakan harus diisi'),
@@ -21,10 +20,16 @@ const policySchema = z.object({
   created_by: z.string().min(1, 'Created by harus diisi'),
 
   program_detail: z.object({
-    dasar_hukum: z.any(), // jsonb bebas bentuknya
+    dasar_hukum: z.any(),
     program: z.string().min(1, 'Nama program harus diisi'),
     file_url: z.string().url('Link file program harus valid')
   })
+}).refine((data) => {
+  // Jika sektor_kebijakan adalah 'Lainnya', maka sektor_kebijakan_lain harus diisi
+  return data.sektor_kebijakan !== 'Lainnya' || (data.sektor_kebijakan_lain && data.sektor_kebijakan_lain.trim() !== '');
+}, {
+  message: 'Sektor kebijakan lain harus diisi jika memilih "Lainnya"',
+  path: ['sektor_kebijakan_lain'],
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
