@@ -1,8 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { z } from 'zod';
 
-// Validasi schema untuk ikk_file
 const FileSchema = z.object({
   file_url_a1: z.string().optional(),
   file_url_a2: z.string().optional(),
@@ -18,7 +17,6 @@ const FileSchema = z.object({
   file_url_jf: z.string().optional(),
 });
 
-// Validasi schema utama
 const ScoreSchema = z.object({
   policy_id: z.union([z.string(), z.number()]),
   a1: z.union([z.string(), z.number()]).optional(),
@@ -38,7 +36,9 @@ const ScoreSchema = z.object({
   informasi_c: z.string().optional(),
   informasi_d: z.string().optional(),
   informasi_jf: z.string().optional(),
-  created_by: z.string().optional(),
+  approved_by: z.string().optional(),
+  approval_status: z.enum(['disetujui', 'ditolak']).optional(),
+  modified_by: z.string().optional(),
   ikk_file: FileSchema.optional(),
 });
 
@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({
         message: 'Validasi input gagal',
         issues: err.errors,
-        received: process.env.NODE_ENV === 'development' ? req.body : undefined,
+        received: req.body,
       });
     }
     console.error('❌ Validasi gagal:', err);
@@ -82,92 +82,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     informasi_c,
     informasi_d,
     informasi_jf,
-    created_by,
-    ikk_file,
+    modified_by,
   } = parsed;
 
   try {
     const bigPolicyId = BigInt(policy_id);
-    const bigCreatedBy = created_by ? BigInt(created_by) : undefined;
+    const bigModifiedBy = modified_by ? BigInt(modified_by) : undefined;
+    const data = await prisma.ikk_ki_score.update({
+      where: { id: bigPolicyId },
+      data: {
+        a1: a1 ? BigInt(a1) : undefined,
+        a2: a2 ? BigInt(a2) : undefined,
+        a3: a3 ? BigInt(a3) : undefined,
+        b1: b1 ? BigInt(b1) : undefined,
+        b2: b2 ? BigInt(b2) : undefined,
+        b3: b3 ? BigInt(b3) : undefined,
+        c1: c1 ? BigInt(c1) : undefined,
+        c2: c2 ? BigInt(c2) : undefined,
+        c3: c3 ? BigInt(c3) : undefined,
+        d1: d1 ? BigInt(d1) : undefined,
+        d2: d2 ? BigInt(d2) : undefined,
+        jf: jf ?? null,
 
-    // Upsert the ikk_ki_score record first (without ikk_file)
-    await prisma.ikk_ki_score.upsert({
-      where: {
-        id: bigPolicyId,
-      },
-      update: {
-        a1: a1 ? BigInt(a1) : undefined,
-        a2: a2 ? BigInt(a2) : undefined,
-        a3: a3 ? BigInt(a3) : undefined,
-        b1: b1 ? BigInt(b1) : undefined,
-        b2: b2 ? BigInt(b2) : undefined,
-        b3: b3 ? BigInt(b3) : undefined,
-        c1: c1 ? BigInt(c1) : undefined,
-        c2: c2 ? BigInt(c2) : undefined,
-        c3: c3 ? BigInt(c3) : undefined,
-        d1: d1 ? BigInt(d1) : undefined,
-        d2: d2 ? BigInt(d2) : undefined,
-        jf: jf ?? false,
         informasi_a,
         informasi_b,
         informasi_c,
         informasi_d,
         informasi_jf,
-        modified_by: bigCreatedBy,
+
+        modified_by: bigModifiedBy,
+
+        ikk_file: undefined, // Remove nested update here; handle ikk_file update separately below if needed
       },
-      create: {
-        id: bigPolicyId,
-        policy_id: bigPolicyId,
-        a1: a1 ? BigInt(a1) : undefined,
-        a2: a2 ? BigInt(a2) : undefined,
-        a3: a3 ? BigInt(a3) : undefined,
-        b1: b1 ? BigInt(b1) : undefined,
-        b2: b2 ? BigInt(b2) : undefined,
-        b3: b3 ? BigInt(b3) : undefined,
-        c1: c1 ? BigInt(c1) : undefined,
-        c2: c2 ? BigInt(c2) : undefined,
-        c3: c3 ? BigInt(c3) : undefined,
-        d1: d1 ? BigInt(d1) : undefined,
-        d2: d2 ? BigInt(d2) : undefined,
-        jf: jf ?? false,
-        informasi_a,
-        informasi_b,
-        informasi_c,
-        informasi_d,
-        informasi_jf,
-        created_by: bigCreatedBy,
-      },
+      // No include needed unless you want to include valid relations
     });
 
-    // Handle ikk_file in a separate upsert
-    if (ikk_file) {
-      await prisma.ikk_file.upsert({
-        where: { id: bigPolicyId },
-        update: {
-          ...Object.fromEntries(
-            Object.entries(ikk_file).filter(([, v]) => v !== undefined)
-          ),
-        },
-        create: {
-          id: bigPolicyId,
-          ...Object.fromEntries(
-            Object.entries(ikk_file).filter(([, v]) => v !== undefined)
-          ),
-          created_by: bigCreatedBy,
-          iki_score_id: bigPolicyId,
-        },
-      });
-    }
-
-    return res.status(200).json({ message: 'Data berhasil disimpan' });
+    return res.status(200).json({ message: 'Data berhasil diperbarui', data });
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error('❌ Gagal menyimpan ke database:', error);
-      return res.status(500).json({
-        message: 'Terjadi kesalahan saat menyimpan',
-        error: error.message,
-        body: process.env.NODE_ENV === 'development' ? parsed : undefined,
-      });
+      return res.status(500).json({ message: 'Gagal memperbarui data' });
     }
     console.error('❌ Gagal menyimpan ke database:', error);
     return res.status(500).json({ message: 'Terjadi kesalahan saat menyimpan' });

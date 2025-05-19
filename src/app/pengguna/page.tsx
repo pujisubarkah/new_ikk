@@ -1,7 +1,7 @@
 'use client';
 
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Sidebar from '@/components/sidebar-admin';
@@ -61,7 +61,8 @@ function TabelInstansi() {
     return roleMap[tab] || 0;
   };
 
-  const fetchData = async () => {
+
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setCurrentPage(1);
     try {
@@ -73,11 +74,11 @@ function TabelInstansi() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [fetchData]);
 
   const handleEdit = (id: number, name: string) => {
     toast.info(`Mengarahkan ke halaman edit ${name}...`);
@@ -112,10 +113,10 @@ function TabelInstansi() {
 
   const filteredData = data.filter(
     (item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.instansi?.agency_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.active_year?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.username.toLowerCase().includes(searchQuery.toLowerCase())
+      (item.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.instansi?.agency_name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.active_year ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.username ?? '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredData.length / USERS_PER_PAGE);

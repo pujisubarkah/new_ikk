@@ -205,7 +205,7 @@ export default function PolicyPage() {
         }, 1000); // debounce 1 detik
 
         return () => clearTimeout(timeout);
-    }, [selectedAnswers, uploadedFiles, policyId]);
+    }, [selectedAnswers, uploadedFiles, policyId, additionalInfoA, additionalInfoB, additionalInfoC, additionalInfoD, apiQuestions]);
 
     // Ubah jawaban
     const handleAnswerChange = (questionId: string, answerDescription: string, answerScore: number) => {
@@ -233,31 +233,40 @@ export default function PolicyPage() {
     };
 
     // Unggah file pendukung
-    const handleLinkUpload = async (questionId: string, link: string, questionIndex: number) => {
-        const question = apiQuestions.find(q => q.id === questionId);
-        if (!question) return;
-        const fileName = getFileNameFromQuestion(question.dimension_name, questionIndex);
-        if (!fileName) return;
-        try {
-            await fetch("/api/upload-supporting-file", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    policy_id: policyId,
-                    created_by: localStorage.getItem("id"),
-                    [fileName]: link
-                })
-            });
-            setUploadedFiles(prev => ({
-                ...prev,
-                [questionId]: link
-            }));
-            toast.success("File berhasil disimpan");
-        } catch (error) {
-            console.error("Gagal menyimpan file:", error);
-            toast.error("Gagal menyimpan file");
+   const handleLinkUpload = async (questionId: string, link: string, questionIndex: number) => {
+  const question = apiQuestions.find(q => q.id === questionId);
+  if (!question) return;
+  const fileName = getFileNameFromQuestion(question.dimension_name, questionIndex);
+  if (!fileName) return;
+
+  try {
+    const userId = localStorage.getItem("id");
+
+    // Kirim ke /api/save-ikk-ki-score termasuk file_url_*
+    await fetch("/api/save-ikk-ki-score", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        policy_id: policyId,
+        created_by: userId,
+        active_year: 2025,
+        ikk_file: {
+          [fileName]: link
         }
-    };
+      }),
+    });
+
+    setUploadedFiles((prev) => ({
+      ...prev,
+      [questionId]: link,
+    }));
+
+    toast.success("File berhasil disimpan");
+  } catch (error) {
+    console.error("Gagal menyimpan file:", error);
+    toast.error("Gagal menyimpan file");
+  }
+};
 
     // Simpan semua jawaban dan kirim ke koordinator
     const handleConfirm = async () => {
