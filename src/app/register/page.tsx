@@ -192,7 +192,7 @@ const TambahPengguna: React.FC = () => {
       const penunjukkanId = suratResponse.data.id;
 
       // 2. Simpan user
-      await axios.post('/api/users', {
+      await axios.post('/api/users/register', {
         name: formData.nama,
         username: formData.nip,
         nik: formData.nik,
