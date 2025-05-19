@@ -177,6 +177,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('Added as validator:', user.id);
       }
 
+       // Special handling for specific roles
+      if (body.role_id === 4) {
+        await prisma.koor_instansi_analis.create({
+          data: {
+            koor_instansi_id: user.id,
+          },
+        });
+        console.log('Added as analis:', user.id);
+      }
+
       if (body.role_id === 5) {
         await prisma.koor_instansi_analis.create({
           data: {
