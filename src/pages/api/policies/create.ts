@@ -7,7 +7,7 @@ const policySchema = z.object({
   nama_kebijakan: z.string().min(1, 'Nama kebijakan harus diisi'),
   detail_nama_kebijakan: z.string().min(1, 'Detail nama kebijakan harus diisi'),
   sektor_kebijakan: z.string().min(1, 'Sektor kebijakan harus diisi'),
-  sektor_kebijakan_lain: z.string().nullable(),
+  sektor_kebijakan_lain: z.string().nullable().optional(), // ubah jadi optional
   tanggal_berlaku: z.string().refine((val) => {
     const inputDate = new Date(val);
     const minDate = new Date();
@@ -24,12 +24,14 @@ const policySchema = z.object({
     program: z.string().min(1, 'Nama program harus diisi'),
     file_url: z.string().url('Link file program harus valid')
   })
-}).refine((data) => {
-  // Jika sektor_kebijakan adalah 'Lainnya', maka sektor_kebijakan_lain harus diisi
-  return data.sektor_kebijakan !== 'Lainnya' || (data.sektor_kebijakan_lain && data.sektor_kebijakan_lain.trim() !== '');
-}, {
-  message: 'Sektor kebijakan lain harus diisi jika memilih "Lainnya"',
-  path: ['sektor_kebijakan_lain'],
+}).superRefine((data, ctx) => {
+  if (data.sektor_kebijakan === 'Lainnya' && !data.sektor_kebijakan_lain) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['sektor_kebijakan_lain'],
+      message: 'Harus diisi ketika sektor kebijakan adalah Lainnya'
+    });
+  }
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
