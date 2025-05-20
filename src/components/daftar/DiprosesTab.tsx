@@ -11,7 +11,7 @@ interface Policy {
     progress: string;
     tanggalAssign: string;
     nilai_akhir: string;
-    nilai_akhir_verif: string;
+    nilai_akhir_verif?: string;
 }
 
 export default function DiprosesTab() {
