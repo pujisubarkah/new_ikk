@@ -10,6 +10,7 @@ interface Policy {
     analis: string;
     tanggal: string;
     nilai_akhir: string;
+    nilai_akhir_verif: string;
 }
 
 export default function DisetujuiTab() {
@@ -38,6 +39,7 @@ export default function DisetujuiTab() {
                     nama_analis?: string;
                     tanggal_berlaku?: string;
                     nilai_akhir?: string;
+                    nilai_akhir_verif?: string;
                 }
 
                 const mapped = fetched.map((item: FetchedPolicy) => ({
@@ -48,6 +50,7 @@ export default function DisetujuiTab() {
                         ? new Date(item.tanggal_berlaku).toLocaleDateString('id-ID')
                         : '-',
                     nilai_akhir: item.nilai_akhir || '-',
+                    nilai_akhir_verif: item.nilai_akhir_verif || '-',
                 }));
 
                 setData(mapped);
