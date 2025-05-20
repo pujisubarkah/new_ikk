@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from "react";
-import Sidebar from "@/components/sidebar-enum";
+import Sidebar from "@/components/sidebar-koorins";
 import { FaPaperPlane } from "react-icons/fa";
 import { useRouter, useParams } from 'next/navigation';
 import {
