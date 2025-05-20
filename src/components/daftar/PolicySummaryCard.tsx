@@ -52,14 +52,14 @@ export default function PolicySummaryCard({ label, count, color }: PolicyCount) 
 
   return (
     <div
-      className={`${bgColor} ${borderColor} border-l-4 p-4 rounded-lg shadow-md flex flex-col items-center justify-between gap-3 sm:gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer`}
+      className={`${bgColor} ${borderColor} border-l-4 p-4 rounded-lg shadow-md flex flex-col items-center justify-between gap-3 sm:gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer w-[300px] sm:w-[350px] m-2`}
     >
       <div className={`${textColor} font-semibold text-base sm:text-lg text-center`}>
-        {label}
+      {label}
       </div>
       <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${iconBg}`}>
-        <span className="text-xl sm:text-2xl">{renderIcon()}</span>
-        <span className="font-bold text-lg sm:text-xl">{count}</span>
+      <span className="text-xl sm:text-2xl">{renderIcon()}</span>
+      <span className="font-bold text-lg sm:text-xl">{count}</span>
       </div>
     </div>
   );
