@@ -154,7 +154,7 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
           <>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.enumerator}</td>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nilai_akhir || '-'}</td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nilai_akhir || '-'}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.nilai_akhir_verif || '-'}</td>
           </>
         )}
       </tr>
