@@ -16,6 +16,7 @@ interface Policy {
   progress?: string;
   tanggalAssign?: string;
   nilai_akhir: string;
+  nilai_akhir_verif: string;
   instansi?: string;
   status?: string;
 }
