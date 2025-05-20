@@ -40,6 +40,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         ikk_total_score: true,
                     },
                 },
+                ikk_ku_score: {
+                    select:{
+                        ikk_total_score: true,
+                    }
+                }
             },
         });
 
@@ -50,6 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             enumerator: policy.user_policy_enumerator_idTouser?.name || null,
             proses: policy.policy_process,
             nilai_akhir: policy.ikk_ki_score?.[0]?.ikk_total_score ?? null,
+            nilai_akhir_verif: policy.ikk_ku_score?.[0]?.ikk_total_score ?? null,
         }));
 
         return res.status(200).json(serializeBigInt({ data: formatted }));
