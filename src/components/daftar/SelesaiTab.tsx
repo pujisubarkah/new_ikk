@@ -10,6 +10,7 @@ interface Policy {
     enumerator: string;
     nilai: string;
     nilai_akhir: string; // Added to match the required property in PolicyTableRow
+    nilai_akhir_verif?: string; // Optional property
 }
 
 interface FetchedPolicy {
@@ -18,6 +19,7 @@ interface FetchedPolicy {
     enumerator: string;
     proses: string;
     nilai_akhir: number;
+    nilai_akhir_verif: number;
 }
 
 export default function SelesaiTab() {
@@ -45,7 +47,7 @@ export default function SelesaiTab() {
                     nama: item.nama_kebijakan || '-',
                     enumerator: item.enumerator || 'Tidak tersedia',
                     nilai: item.nilai_akhir !== undefined ? item.nilai_akhir.toString() : '-',
-                    nilai_akhir: item.nilai_akhir !== undefined ? item.nilai_akhir.toString() : '-', // Added to match Policy interface
+                    nilai_akhir: item.nilai_akhir_verif !== undefined ? item.nilai_akhir_verif.toString() : '-', // Added to match Policy interface
                 }));
 
                 setData(mapped);
