@@ -14,6 +14,7 @@ interface Policy {
     status: string;
     proses: string; // Make required to match PolicyTableRow
     nilai_akhir: string; // Make required to match PolicyTableRow
+    nilai_akhir_verif: string;
 }
 
 export default function DiajukanTab() {
@@ -43,6 +44,7 @@ export default function DiajukanTab() {
                     status?: string;
                     proses?: string;
                     nilai_akhir?: string;
+                    nilai_akhir_verif?: string;
                 }
 
                 const mapped = fetched.map((item: FetchedPolicy) => ({
@@ -54,7 +56,8 @@ export default function DiajukanTab() {
                     file: item.file_url || '-',
                     status: item.status || '-',
                     proses: item.proses,
-                    nilai_akhir: item.nilai_akhir // Will be undefined if not present
+                    nilai_akhir: item.nilai_akhir || '-', // Will be undefined if not present
+                    nilai_akhir_verif: item.nilai_akhir_verif || '-', // Will be undefined if not present
                 }));
 
                 setData(mapped);
