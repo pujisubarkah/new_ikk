@@ -10,7 +10,7 @@ interface Policy {
     analis: string;
     tanggal: string;
     nilai_akhir: string;
-    nilai_akhir_verif: string;
+    nilai_akhir_verif?: string;
 }
 
 export default function DisetujuiTab() {
