@@ -16,8 +16,7 @@ export interface Question {
 }
 
 type SelectedAnswer = {
-  description: string;
-  score: number;
+  score: number | null; // Bisa null jika belum dijawab
 };
 
 interface AnswerPreviewProps {
@@ -32,6 +31,7 @@ interface AnswerPreviewProps {
   };
 }
 
+// Mapping nama dimensi ke key catatan
 const dimensionLabelMap: Record<string, string> = {
   'Perencanaan Kebijakan': 'a',
   'Implementasi Kebijakan': 'b',
@@ -47,7 +47,7 @@ export default function AnswerPreview({
 }: AnswerPreviewProps) {
   return (
     <div className="bg-white p-6 rounded-xl shadow space-y-8">
-      <h2 className="text-xl font-bold text-gray-800">Preview Hasil Jawaban</h2>
+      <h2 className="text-xl font-bold text-gray-800">Preview Hasil Pernyataan Analis Instansi</h2>
 
       {/* Loop per dimensi */}
       {Object.keys(dimensionLabelMap).map((dimensionName) => {
@@ -83,25 +83,29 @@ export default function AnswerPreview({
                 </thead>
                 <tbody>
                   {questions.map((item) => {
-                    const answer = selectedAnswers[item.id];
+                    const selectedScore = selectedAnswers[item.id]?.score ?? null;
+                    const answerOption = item.instrument_answer.find(
+                      (opt) => Number(opt.level_score) === Number(selectedScore)
+                    );
+                    const description = answerOption?.level_description || 'Belum dijawab';
                     const fileLink = uploadedFiles[item.id];
 
                     return (
                       <tr key={item.id} className="hover:bg-gray-50">
                         <td className="px-4 py-2 border">{item.indicator_column_code}</td>
                         <td className="px-4 py-2 border">{item.indicator_question}</td>
-                        <td className="px-4 py-2 border">
-                          {answer?.description ? answer.description : 'Belum dijawab'}
+                        <td className="px-4 py-2 border text-blue-600">
+                          {description}
                         </td>
-                        <td className="px-4 py-2 border">
-                          {fileLink ? (
-                            <a href={fileLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                              Lihat File
-                            </a>
-                          ) : (
-                            'Tidak ada file'
-                          )}
-                        </td>
+                   <td className="px-4 py-2 border">
+  {fileLink ? (
+    <a href={fileLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+      Lihat File
+    </a>
+  ) : (
+    'Tidak ada file'
+  )}
+</td>
                       </tr>
                     );
                   })}
