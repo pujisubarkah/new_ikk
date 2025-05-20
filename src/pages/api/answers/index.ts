@@ -6,17 +6,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { method } = req;
 
     if (method === "GET") {
-        const { policyId } = req.query;
+    const { policyId } = req.query;
 
-        if (!policyId) {
-            return res.status(400).json({ error: "Missing policyId" });
-        }
+    if (!policyId) {
+        return res.status(400).json({ error: "Missing policyId" });
+    }
 
-        try {
-            const answers = await prisma.ikk_ki_score.findUnique({
-                where: {
-                    id: BigInt(policyId as string),
-                },
+    try {
+        const [scoreData, fileData] = await Promise.all([
+            prisma.ikk_ki_score.findUnique({
+                where: { id: BigInt(policyId as string) },
                 select: {
                     a1: true,
                     a2: true,
@@ -36,17 +35,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     informasi_d: true,
                     informasi_jf: true,
                 },
-            });
+            }),
+            prisma.ikk_file.findUnique({
+                where: { id: BigInt(policyId as string) },
+                select: {
+                    file_url_a1: true,
+                    file_url_a2: true,
+                    file_url_a3: true,
+                    file_url_b1: true,
+                    file_url_b2: true,
+                    file_url_b3: true,
+                    file_url_c1: true,
+                    file_url_c2: true,
+                    file_url_c3: true,
+                    file_url_d1: true,
+                    file_url_d2: true,
+                    file_url_jf: true,
+                },
+            })
+        ]);
 
-            // Serialize BigInt ke String
-            const sanitizedAnswers = answers ? serializeBigInt(answers) : null;
+        // Gabungkan hasil
+        const combinedData = {
+            ...serializeBigInt(scoreData ?? {}),
+            ...serializeBigInt(fileData ?? {}),
+        };
 
-            return res.status(200).json({ data: sanitizedAnswers });
-        } catch (error) {
-            console.error("Error fetching answers:", error);
-            return res.status(500).json({ error: "Failed to fetch answers" });
-        }
+        return res.status(200).json({ data: combinedData });
+
+    } catch (error) {
+        console.error("Error fetching answers:", error);
+        return res.status(500).json({ error: "Failed to fetch answers" });
     }
+}
 
     if (method === "POST") {
         const body = req.body;
