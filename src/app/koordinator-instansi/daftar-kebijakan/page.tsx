@@ -10,9 +10,7 @@ export default function KebijakanTable() {
     <Sidebar>
       <div className="flex flex-col p-6 space-y-6 bg-gray-50">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-         <PolicySummary />
-        </div>
+        <PolicySummary />
 
         {/* Header & Tombol Aksi */}
         <div className="flex justify-between items-center">
