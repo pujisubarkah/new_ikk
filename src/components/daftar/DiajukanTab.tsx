@@ -14,7 +14,7 @@ interface Policy {
     status: string;
     proses: string; // Make required to match PolicyTableRow
     nilai_akhir: string; // Make required to match PolicyTableRow
-    nilai_akhir_verif: string;
+    nilai_akhir_verif?: string;
 }
 
 export default function DiajukanTab() {
