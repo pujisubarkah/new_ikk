@@ -43,14 +43,14 @@ export default function PolicySummary() {
   }[];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 w-full mx-auto bg-white shadow-md rounded-lg">
       {summaryMap.map(({ key, label, color }) => (
-        <PolicySummaryCard
-          key={key}
-          label={label}
-          count={summary[key] || 0}
-          color={color}
-        />
+      <PolicySummaryCard
+      key={key}
+      label={label}
+      count={summary[key] || 0}
+      color={color}
+      />
       ))}
     </div>
   );
