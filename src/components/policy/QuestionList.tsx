@@ -33,7 +33,6 @@ interface QuestionListProps {
   onDimensionInfoChange: (dimensionKey: string, info: string) => void;
   apiQuestions: Question[];
   dimensionNotes: Record<string, string>;
-  isSubmitted: boolean; // <-- Tambahin ini
 }
 
 // Mapping step ke nama dimensi
