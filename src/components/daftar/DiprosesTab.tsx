@@ -11,6 +11,7 @@ interface Policy {
     progress: string;
     tanggalAssign: string;
     nilai_akhir: string;
+    nilai_akhir_verif: string;
 }
 
 export default function DiprosesTab() {
@@ -48,6 +49,7 @@ interface ApiPolicy {
   progress?: string;
   tanggal_proses: string;
   nilai_akhir?: string;
+  nilai_akhir_verif?: string;
 }
 
 const mappedData = apiData.map((item: ApiPolicy) => ({
@@ -57,6 +59,7 @@ const mappedData = apiData.map((item: ApiPolicy) => ({
   progress: item.progress ? `${item.progress}%` : '0%',
   tanggalAssign: formatDate(item.tanggal_proses),
   nilai_akhir: item.nilai_akhir || '0', // Default to '0' if nilai_akhir is missing
+  nilai_akhir_verif: item.nilai_akhir_verif || '0',
 }));
 
 setData(mappedData);
