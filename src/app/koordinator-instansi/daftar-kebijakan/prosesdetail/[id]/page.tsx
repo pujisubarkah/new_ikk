@@ -31,17 +31,19 @@ type Policy = {
   nilai_akhir: number;
 };
 
+type AnswerOption = {
+  level_id: number;
+  level_score: string;
+  level_description: string;
+};
+
 type Question = {
   id: string;
   dimension_name: string;
   indicator_question: string;
   indicator_description: string;
   indicator_column_code: string;
-  instrument_answer: {
-    level_id: number;
-    level_score: string;
-    level_description: string;
-  }[];
+  instrument_answer: AnswerOption[];
 };
 
 export default function PolicyPage() {
@@ -73,7 +75,9 @@ export default function PolicyPage() {
       try {
         setLoading(true);
         setError(null);
+
         if (!policyId) throw new Error('Policy ID tidak ditemukan di URL');
+
         const policyRes = await fetch(`/api/policies/${policyId}`);
         if (!policyRes.ok) throw new Error('Gagal memuat data kebijakan');
         const policyData = await policyRes.json();
@@ -82,6 +86,7 @@ export default function PolicyPage() {
         const questionsRes = await fetch('/api/pertanyaan');
         if (!questionsRes.ok) throw new Error('Gagal memuat pertanyaan');
         const questionsData = await questionsRes.json();
+
         if (Array.isArray(questionsData.data)) {
           setApiQuestions(questionsData.data);
         }
@@ -92,38 +97,53 @@ export default function PolicyPage() {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [policyId]);
 
   // Load jawaban lama dari API
   useEffect(() => {
     if (!policyId || !apiQuestions.length) return;
+
     const loadSavedAnswers = async () => {
       try {
         const answersRes = await fetch(`/api/answers?policyId=${policyId}`);
         if (!answersRes.ok) return;
+
         const answersData = await answersRes.json();
 
         const savedAnswers: Record<string, { description: string; score: number }> = {};
         const savedFiles: Record<string, string> = {};
 
-        // Mapping file_url_* → uploadedFiles
+        // 🔗 Mapping file_url_* → uploadedFiles
         for (const key in answersData.data) {
           if (key.startsWith('file_url_')) {
-            const id = key.replace('file_url_', '');
-            const url = answersData.data[key]?.trim();
-            if (url) savedFiles[id] = url;
+            const columnCode = key.replace('file_url_', ''); // hasil: a1, b1, dll.
+
+            // Cari pertanyaan dengan indicator_column_code == columnCode
+            const matchedQuestion = apiQuestions.find(
+              q => q.indicator_column_code === columnCode
+            );
+
+            if (matchedQuestion) {
+              const url = answersData.data[key]?.trim();
+              if (url) {
+                savedFiles[matchedQuestion.id] = url;
+              }
+            }
           }
         }
 
-        // Mapping selectedAnswers
+        // ✅ Mapping selectedAnswers
         apiQuestions.forEach((q) => {
           const columnCode = q.indicator_column_code;
           const score = answersData.data?.[columnCode];
+
           if (score !== undefined && q.instrument_answer) {
             const matchedAnswer = q.instrument_answer.find(
               (a) => a.level_score === String(score)
             );
+
             if (matchedAnswer) {
               savedAnswers[q.id] = {
                 description: matchedAnswer.level_description,
@@ -133,13 +153,13 @@ export default function PolicyPage() {
           }
         });
 
-        // Mapping informasi tambahan
+        // 📝 Mapping informasi tambahan
         setAdditionalInfoA(answersData.data?.informasi_a || '');
         setAdditionalInfoB(answersData.data?.informasi_b || '');
         setAdditionalInfoC(answersData.data?.informasi_c || '');
         setAdditionalInfoD(answersData.data?.informasi_d || '');
 
-        // Update state
+        // 📤 Update state akhir
         setSelectedAnswers(savedAnswers);
         setUploadedFiles(savedFiles);
 
@@ -147,12 +167,14 @@ export default function PolicyPage() {
         console.error('Gagal memuat jawaban lama:', error);
       }
     };
+
     loadSavedAnswers();
   }, [policyId, apiQuestions]);
 
   // Auto-save jawaban
   useEffect(() => {
     if (!policyId || Object.keys(selectedAnswers).length === 0 || isReadOnly) return;
+
     const timeout = setTimeout(async () => {
       const userId = localStorage.getItem('id');
       const answersToSubmit: Record<string, number> = {};
@@ -169,7 +191,6 @@ export default function PolicyPage() {
         }
       });
 
-      // Tambahkan informasi tambahan
       infoToSubmit.informasi_a = additionalInfoA;
       infoToSubmit.informasi_b = additionalInfoB;
       infoToSubmit.informasi_c = additionalInfoC;
@@ -206,6 +227,7 @@ export default function PolicyPage() {
         console.error('Auto-save gagal:', error);
       }
     }, 1000);
+
     return () => clearTimeout(timeout);
   }, [
     selectedAnswers,
@@ -234,6 +256,7 @@ export default function PolicyPage() {
   const handleLinkUpload = async (questionId: string, link: string, questionIndex: number) => {
     const question = apiQuestions.find(q => q.id === questionId);
     if (!question) return;
+
     const fileName = getFileNameFromQuestion(question.dimension_name, questionIndex);
     if (!fileName) return;
 
@@ -251,10 +274,12 @@ export default function PolicyPage() {
           },
         }),
       });
+
       setUploadedFiles(prev => ({
         ...prev,
         [questionId]: link,
       }));
+
       toast.success('File berhasil disimpan');
     } catch (error) {
       console.error('Gagal menyimpan file:', error);
@@ -270,8 +295,10 @@ export default function PolicyPage() {
       'Evaluasi dan Keberlanjutan Kebijakan': 'c',
       'Transparansi dan Partisipasi Publik': 'd',
     };
+
     const prefix = prefixMap[dimension];
     if (!prefix) return null;
+
     const order = questionIndex % 3 + 1;
     return `file_url_${prefix}${order}`;
   };
@@ -338,6 +365,7 @@ ${unansweredQuestions.map((q) => `- ${q.indicator_question}`).join('\n')}`;
           informasi_jf: infoToSubmit.informasi_jf,
         }),
       });
+
       if (!saveResponse.ok) throw new Error('Gagal menyimpan jawaban');
 
       const sendResponse = await fetch('/api/policies/send_to_ki', {
@@ -348,6 +376,7 @@ ${unansweredQuestions.map((q) => `- ${q.indicator_question}`).join('\n')}`;
         },
         body: JSON.stringify({ id: policyId }),
       });
+
       if (!sendResponse.ok) {
         const errorData = await sendResponse.json();
         throw new Error(errorData.error || 'Gagal mengirim ke koordinator');
@@ -435,6 +464,7 @@ ${unansweredQuestions.map((q) => `- ${q.indicator_question}`).join('\n')}`;
                 Edit Pernyataan
               </button>
             )}
+
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <button

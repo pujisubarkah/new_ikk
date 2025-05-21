@@ -77,7 +77,7 @@ export default function AnswerPreview({
                   <tr className="bg-gray-100">
                     <th className="px-4 py-2 border text-left">No.</th>
                     <th className="px-4 py-2 border text-left">Pertanyaan</th>
-                    <th className="px-4 py-2 border text-left">Jawaban</th>
+                    <th className="px-4 py-2 border text-left">Pernyataan</th>
                     <th className="px-4 py-2 border text-left">File Pendukung</th>
                   </tr>
                 </thead>
