@@ -36,7 +36,7 @@ export default function PdfSummarizer() {
       } else {
         setError(data.message || "Failed to summarize");
       }
-    } catch (error) {
+    } catch {
       setError("An error occurred while summarizing.");
     } finally {
       setIsLoading(false);
