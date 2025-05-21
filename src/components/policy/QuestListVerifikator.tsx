@@ -27,13 +27,13 @@ interface QuestionListProps {
   policyId: string;
   activeStep: number;
   selectedAnswers: Record<string, { description: string; score: number }>;
-  onAnswerChange: (code: string, desc: string, score: number) => void;
-  uploadedFiles?: any;
+  onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
+  uploadedFiles: Record<string, string>;
   apiQuestions: Question[];
   isSubmitted: boolean;
-  onLinkUpload?: (code: string, file: File) => void;
-  verifierNotes?: Record<string, string>;
-  onNoteChange?: (code: string, note: string) => void;
+  onLinkUpload: (questionId: string, file: File) => Promise<void>;
+  verifierNotes: Record<string, string>;
+  onNoteChange: (questionId: string, note: string) => void;
 }
 
 
