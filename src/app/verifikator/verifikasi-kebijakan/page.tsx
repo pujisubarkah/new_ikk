@@ -38,7 +38,7 @@ const KebijakanTable = () => {
     totalKebijakanMasuk: 0,
     totalProses: 0,
     totalDisetujui: 0,
-    totalDitolak: 0,
+    totalDitolak: 0, // Still here in case needed elsewhere
   })
   const router = useRouter()
 
@@ -112,11 +112,11 @@ const KebijakanTable = () => {
     <Sidebar>
       <main className="flex-1 p-8 md:p-20">
         {/* Summary cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <SummaryCard title="Kebijakan Diajukan" value={stats.totalKebijakanMasuk} color="blue-200" textColor="blue-800" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* Di sini berubah dari "Kebijakan Diajukan" menjadi "Kebijakan Masuk" */}
+          <SummaryCard title="Kebijakan Masuk" value={stats.totalKebijakanMasuk} color="blue-200" textColor="blue-800" />
           <SummaryCard title="Kebijakan Diproses" value={stats.totalProses} color="blue-100" textColor="blue-700" />
           <SummaryCard title="Kebijakan Selesai" value={stats.totalDisetujui} color="blue-50" textColor="blue-600" />
-          <SummaryCard title="Kebijakan Ditolak" value={stats.totalDitolak} color="blue-300" textColor="blue-900" />
         </div>
 
         {/* Tabs */}

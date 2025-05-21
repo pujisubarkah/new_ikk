@@ -151,7 +151,7 @@ const Page = () => {
                         }
                         className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs mx-auto"
                       >
-                        <FaCheckCircle /> Verified
+                        <FaCheckCircle /> Verifikasi
                       </button>
                     </td>
                   </tr>

@@ -65,7 +65,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
                     </div>
                 </div>
                 <div>
-                    <small className="text-gray-500 text-sm">Nilai Akhir Kebijakan</small>
+                    <small className="text-gray-500 text-sm">Nilai Self Assessmen</small>
                     <strong className="text-gray-800 mt-1 block">
                         {policy.nilai_akhir ?? '-'}
                     </strong>

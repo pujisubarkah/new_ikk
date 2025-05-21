@@ -29,6 +29,7 @@ type Policy = {
   instansi: string;
   progress_pengisian: number;
   nilai_akhir: number;
+  nilai_akhir_verif: number;
   status_pengiriman?: string;
 };
 

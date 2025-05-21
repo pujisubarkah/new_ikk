@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Sidebar from '@/components/sidebar-enum';
+import Sidebar from '@/components/sidebar-koorins';
 import { FaPaperPlane, FaEye, FaEdit } from 'react-icons/fa';
 import { useRouter, useParams } from 'next/navigation';
 import {
@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 // Komponen terpisah
 import PolicyCard from '@/components/policy/PolicyCard';
 import PolicyStepsNav from '@/components/policy/PolicyStepsNav';
-import QuestionList from '@/components/policy/QuestionList';
+import QuestionList from '@/components/policy/QuestlList';
 import AnswerPreview from '@/components/policy/AnswerPreview';
 
 type Policy = {
@@ -382,8 +382,8 @@ ${unansweredQuestions.map((q) => `- ${q.indicator_question}`).join('\n')}`;
         throw new Error(errorData.error || 'Gagal mengirim ke koordinator');
       }
 
-      toast.success('Jawaban berhasil dikirim ke koordinator');
-      router.push(`/enumerator/kebijakan`);
+      toast.success('Jawaban berhasil dikirim ke koordinator nasional');
+      router.push(`/koordinator-instansi/daftar-kebijakan`);
     } catch (error: unknown) {
       console.error('Error:', error);
       if (error instanceof Error) {
@@ -474,7 +474,7 @@ ${unansweredQuestions.map((q) => `- ${q.indicator_question}`).join('\n')}`;
                   }`}
                 >
                   <FaPaperPlane className="text-white" />
-                  {isSaving ? 'Menyimpan...' : 'Simpan & Kirim ke Koordinator'}
+                  {isSaving ? 'Menyimpan...' : 'Kirim ke Koornas'}
                 </button>
               </DialogTrigger>
               <DialogContent>
@@ -515,31 +515,14 @@ ${unansweredQuestions.map((q) => `- ${q.indicator_question}`).join('\n')}`;
               activeStep={activeStep}
               selectedAnswers={selectedAnswers}
               onAnswerChange={handleAnswerChange}
-              onLinkUpload={handleLinkUpload}
+              onLinkUpload={(questionId: string, fileLink: string) => {
+                // Find the index of the question for getFileNameFromQuestion
+                const questionIndex = apiQuestions.findIndex(q => q.id === questionId);
+                handleLinkUpload(questionId, fileLink, questionIndex);
+              }}
               uploadedFiles={uploadedFiles}
               apiQuestions={apiQuestions}
-              onDimensionInfoChange={(dimension: string, value: string) => {
-                switch (dimension) {
-                  case 'a':
-                    setAdditionalInfoA(value);
-                    break;
-                  case 'b':
-                    setAdditionalInfoB(value);
-                    break;
-                  case 'c':
-                    setAdditionalInfoC(value);
-                    break;
-                  case 'd':
-                    setAdditionalInfoD(value);
-                    break;
-                }
-              }}
-              dimensionNotes={{
-                a: additionalInfoA,
-                b: additionalInfoB,
-                c: additionalInfoC,
-                d: additionalInfoD,
-              }}
+              isSubmitted={isReadOnly}
             />
           )}
         </div>

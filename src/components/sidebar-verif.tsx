@@ -46,12 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         
       ],
     },
-    {
-      label: 'Master Data',
-      items: [
-        { name: 'Admin Instansi', icon: Users, href: '/verifikator/koordinator-instansi' },
-      ],
-    },
+ 
     {
       label: 'Bantuan',
       items: [
