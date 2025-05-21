@@ -358,15 +358,31 @@ export default function PolicyPage() {
 
           {/* Daftar Pertanyaan */}
           <QuestionList
+            policyId={policyId}
             activeStep={activeStep}
             selectedAnswers={selectedAnswers}
             onAnswerChange={handleAnswerChange}
             uploadedFiles={uploadedFiles}
             apiQuestions={apiQuestions}
             isSubmitted={isSubmitted}
-            onLinkUpload={(questionId, fileLink) =>
-              setUploadedFiles((prev) => ({ ...prev, [questionId]: fileLink }))
-            }
+            onLinkUpload={async (questionId: string, file: File) => {
+              // Example: upload file and get the link, then update state
+              // Replace this with your actual upload logic
+              const formData = new FormData();
+              formData.append('file', file);
+              try {
+                const response = await fetch('/api/upload', {
+                  method: 'POST',
+                  body: formData,
+                });
+                if (!response.ok) throw new Error('Upload gagal');
+                const data = await response.json();
+                const fileLink = data.link; // adjust according to your API response
+                setUploadedFiles((prev) => ({ ...prev, [questionId]: fileLink }));
+              } catch (err) {
+                toast.error('Gagal mengupload file');
+              }
+            }}
             verifierNotes={verifierNotes}
             onNoteChange={handleNoteChange}
           />
