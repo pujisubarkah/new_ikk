@@ -379,7 +379,7 @@ export default function PolicyPage() {
                 const data = await response.json();
                 const fileLink = data.link; // adjust according to your API response
                 setUploadedFiles((prev) => ({ ...prev, [questionId]: fileLink }));
-              } catch (err) {
+              } catch {
                 toast.error('Gagal mengupload file');
               }
             }}
