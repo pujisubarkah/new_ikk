@@ -38,6 +38,7 @@
     "next": "15.3.0",
     "next-auth": "^4.24.11",
     "nodemailer": "^6.10.1",
+    "pdfjs-dist": "^4.8.69",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-datepicker": "^8.3.0",
