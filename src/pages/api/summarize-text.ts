@@ -1,16 +1,65 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest } from "next/server";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).json({ message: "Method not allowed" });
+const OPENROUTER_API = "https://openrouter.ai/api/v1/chat/completions ";
+const MODEL = "mistralai/mistral-7b-instruct"; // Ganti dengan model lain jika mau
 
-  const { text } = req.body;
+export async function POST(request: NextRequest) {
+  try {
+    const { text } = await request.json();
 
-  if (!text || typeof text !== "string") {
-    return res.status(400).json({ message: "Invalid text input" });
+    if (!text || typeof text !== "string") {
+      return new Response(
+        JSON.stringify({ message: "Invalid input: 'text' is required." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const prompt = `
+Ringkas dokumen berikut dalam bahasa Indonesia menjadi maksimal 150 kata.
+Berikan ringkasan yang jelas dan informatif tanpa tambahan penjelasan.
+
+Dokumen:
+${text}
+`;
+
+    const response = await fetch(OPENROUTER_API, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY!}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000", // optional
+        "X-Title": "PDF Summarizer", // optional
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        max_tokens: 300,
+        temperature: 0.5,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const summary = data.choices[0]?.message?.content.trim() || "Summary could not be generated.";
+
+    return new Response(
+      JSON.stringify({ summary }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error: any) {
+    console.error("Summarization error:", error.message);
+    return new Response(
+      JSON.stringify({ message: error.message || "Internal server error." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
-
-  // Simulasi summarization (ganti dengan model nyata jika perlu)
-  const summary = text.split(".").slice(0, 3).join(".") + "...";
-
-  return res.status(200).json({ summary });
 }
