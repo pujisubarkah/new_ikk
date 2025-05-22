@@ -34,20 +34,12 @@ export default function Home() {
       {/* Hero Section */}
       <main className="text-white px-4 text-center bg-[#16578d] py-20">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Selamat Datang di
-          </h1>
+        
           <h2 className="text-3xl md:text-4xl font-semibold mb-6">
-            Sistem Informasi Indeks Kualitas Kebijakan
+            Sistem Informasi Pengukuran Kualitas Kebijakan
           </h2>
           <p className="text-lg md:text-xl text-white/90 leading-relaxed">
-            Membangun kualitas kebijakan{' '}
-            <span className="text-white font-semibold">
-              berbasis bukti dan berdampak
-            </span>{' '}
-            untuk masa depan yang lebih baik. Sistem ini membantu Anda menilai,
-            memantau, dan meningkatkan kualitas kebijakan dengan pendekatan
-            analitik dan data yang solid.
+            Meningkatkan Kualitas Kebijakan Instansi Pemerintah berbasis bukti dukung{' '}
           </p>
         </div>
       </main>
