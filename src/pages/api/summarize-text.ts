@@ -55,10 +55,14 @@ ${text}
       JSON.stringify({ summary }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
-    console.error("Summarization error:", error.message);
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Internal server error.";
+    console.error("Summarization error:", message);
     return new Response(
-      JSON.stringify({ message: error.message || "Internal server error." }),
+      JSON.stringify({ message }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
