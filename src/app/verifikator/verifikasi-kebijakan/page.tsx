@@ -30,10 +30,7 @@ interface SelesaiPolicy {
   }[];
 }
 
-interface PolicyData {
-  agencies: Agency[];
-  totalKebijakanMasuk: number;
-}
+
 
 const tabs = [
   { key: 'masuk', label: 'Kebijakan Masuk' },
