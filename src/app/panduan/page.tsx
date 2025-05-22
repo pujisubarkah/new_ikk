@@ -97,6 +97,13 @@ export default function PanduanIKKPage() {
                 <li>1 file PDF per pertanyaan</li>
                 <li>Jika butuh beberapa file, gabungkan dulu (merge PDF)</li>
                 <li>Jika disimpan di cloud, upload tautan file PDF yang berisi link Drive/Dropbox, pastikan akses publik</li>
+                <a 
+                  href="/panduan/unggah-bukti-dukung" 
+                  target="_blank" 
+                  className="text-blue-600 underline"
+                  >
+                  Lihat panduan share link publik
+                  </a>
               </ul>
               <p>
                 Enumerator juga dapat menambahkan penjelasan jawaban pada kolom input teks di halaman pengisian.
