@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,6 @@ interface FormData {
   telepon: string;
   status: string;
   suratPenunjukkan: string;
-  suratTugasJFAnalis?: string; // ← Tambahan
   penunjukkan_id?: number;
   role_id: number;
   melibatkanJFAnalis?: string; // ← Tambahan untuk radio button
@@ -45,7 +43,6 @@ const TambahPengguna: React.FC = () => {
   // ================== HOOKS ==================
   const { toast } = useToast();
   const router = useRouter();
-
   const [formData, setFormData] = useState<FormData>({
     nama: "",
     nip: "",
@@ -65,6 +62,7 @@ const TambahPengguna: React.FC = () => {
 
   const [instansis, setInstansis] = useState<Instansi[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // ================== CONSTANTS ==================
@@ -89,11 +87,11 @@ const TambahPengguna: React.FC = () => {
         setInstansis(response.data);
       } catch (err) {
         console.error("Failed to fetch instansi:", err);
+        setError("Gagal memuat data instansi");
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchInstansi();
   }, []);
 
@@ -107,7 +105,6 @@ const TambahPengguna: React.FC = () => {
       const newUrl = new URL(url);
       return ["http:", "https:"].includes(newUrl.protocol);
     } catch (e) {
-      console.error("Failed to fetch instansi:", e);
       return false;
     }
   };
@@ -127,7 +124,6 @@ const TambahPengguna: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       melibatkanJFAnalis: value,
-      suratTugasJFAnalis: value === "tidak" ? undefined : prev.suratTugasJFAnalis || "",
     }));
   };
 
@@ -168,17 +164,6 @@ const TambahPengguna: React.FC = () => {
       isValid = false;
     }
 
-    // Validasi jika melibatkan JF Analis dan belum upload surat tugas
-    if (formData.melibatkanJFAnalis === "ya") {
-      if (!formData.suratTugasJFAnalis?.trim()) {
-        newErrors.suratTugasJFAnalis = "Surat tugas jabatan fungsional wajib diisi";
-        isValid = false;
-      } else if (!isValidUrl(formData.suratTugasJFAnalis)) {
-        newErrors.suratTugasJFAnalis = "Harus berupa URL yang valid";
-        isValid = false;
-      }
-    }
-
     setErrors(newErrors);
     return isValid;
   };
@@ -197,7 +182,6 @@ const TambahPengguna: React.FC = () => {
     }
 
     setIsLoading(true);
-
     try {
       // Upload surat penunjukkan
       const suratResponse = await axios.post("/api/surat_penunjukkan", {
@@ -220,7 +204,7 @@ const TambahPengguna: React.FC = () => {
         status: "inaktif",
         password: formData.password,
         penunjukkan_id: penunjukkanId,
-        surat_tugas_jf_analis: formData.suratTugasJFAnalis, // ← Kirim juga surat tugas JF Analis
+        melibatkan_jf_analis: formData.melibatkanJFAnalis, // Kirim nilai 'ya' / 'tidak'
       });
 
       router.push("/registrasi-berhasil");
@@ -245,10 +229,9 @@ const TambahPengguna: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-
       <main className="flex-grow px-6 py-8">
         <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
-          <h1 className="text-xl font-bold mb-6">Tambah Pengguna</h1>
+          <h1 className="text-xl font-bold mb-6">Registrasi Koordinator Instansi</h1>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -264,9 +247,7 @@ const TambahPengguna: React.FC = () => {
                 onChange={handleChange}
                 className={errors.nama ? "border-red-500" : ""}
               />
-              {errors.nama && (
-                <p className="text-red-500 text-sm mt-1">{errors.nama}</p>
-              )}
+              {errors.nama && <p className="text-red-500 text-sm mt-1">{errors.nama}</p>}
             </div>
 
             {/* NIP */}
@@ -281,9 +262,7 @@ const TambahPengguna: React.FC = () => {
                 onChange={handleChange}
                 className={errors.nip ? "border-red-500" : ""}
               />
-              {errors.nip && (
-                <p className="text-red-500 text-sm mt-1">{errors.nip}</p>
-              )}
+              {errors.nip && <p className="text-red-500 text-sm mt-1">{errors.nip}</p>}
             </div>
 
             {/* Email */}
@@ -298,9 +277,7 @@ const TambahPengguna: React.FC = () => {
                 onChange={handleChange}
                 className={errors.email ? "border-red-500" : ""}
               />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
 
             {/* Jabatan */}
@@ -315,9 +292,7 @@ const TambahPengguna: React.FC = () => {
                 onChange={handleChange}
                 className={errors.jabatan ? "border-red-500" : ""}
               />
-              {errors.jabatan && (
-                <p className="text-red-500 text-sm mt-1">{errors.jabatan}</p>
-              )}
+              {errors.jabatan && <p className="text-red-500 text-sm mt-1">{errors.jabatan}</p>}
             </div>
 
             {/* Unit Kerja */}
@@ -332,9 +307,7 @@ const TambahPengguna: React.FC = () => {
                 onChange={handleChange}
                 className={errors.unitKerja ? "border-red-500" : ""}
               />
-              {errors.unitKerja && (
-                <p className="text-red-500 text-sm mt-1">{errors.unitKerja}</p>
-              )}
+              {errors.unitKerja && <p className="text-red-500 text-sm mt-1">{errors.unitKerja}</p>}
             </div>
 
             {/* Telepon */}
@@ -349,9 +322,7 @@ const TambahPengguna: React.FC = () => {
                 onChange={handleChange}
                 className={errors.telepon ? "border-red-500" : ""}
               />
-              {errors.telepon && (
-                <p className="text-red-500 text-sm mt-1">{errors.telepon}</p>
-              )}
+              {errors.telepon && <p className="text-red-500 text-sm mt-1">{errors.telepon}</p>}
             </div>
 
             {/* Instansi */}
@@ -369,24 +340,13 @@ const TambahPengguna: React.FC = () => {
                 <option value="" disabled>
                   Pilih Instansi
                 </option>
-                {instansis
-                  .filter(
-                    (item, index, self) =>
-                      index ===
-                      self.findIndex(
-                        (t) => t.instansi?.agency_id === item.instansi?.agency_id
-                      )
-                  )
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((instansi) => (
-                    <option key={instansi.id} value={instansi.instansi?.agency_id || instansi.id}>
-                      {instansi.name}
-                    </option>
-                  ))}
+                {instansis.map((instansi) => (
+                  <option key={instansi.id} value={instansi.instansi?.agency_id || instansi.id}>
+                    {instansi.name}
+                  </option>
+                ))}
               </select>
-              {errors.instansi && (
-                <p className="text-red-500 text-sm mt-1">{errors.instansi}</p>
-              )}
+              {errors.instansi && <p className="text-red-500 text-sm mt-1">{errors.instansi}</p>}
             </div>
 
             {/* Password */}
@@ -401,9 +361,7 @@ const TambahPengguna: React.FC = () => {
                 onChange={handleChange}
                 className={errors.password ? "border-red-500" : ""}
               />
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
 
             {/* Surat Penunjukkan */}
@@ -416,7 +374,7 @@ const TambahPengguna: React.FC = () => {
                 placeholder="Masukkan link Google Drive/Sheets"
                 value={formData.suratPenunjukkan}
                 onChange={handleChange}
-                onBlur={async () => {
+                onBlur={() => {
                   if (formData.suratPenunjukkan && !isValidUrl(formData.suratPenunjukkan)) {
                     setErrors((prev) => ({
                       ...prev,
@@ -427,19 +385,10 @@ const TambahPengguna: React.FC = () => {
                 className={errors.suratPenunjukkan ? "border-red-500" : ""}
               />
               {errors.suratPenunjukkan && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.suratPenunjukkan}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{errors.suratPenunjukkan}</p>
               )}
               <p className="text-sm text-gray-500 mt-1">
-                Masukkan link file yang dapat diakses publik (misalnya Google Drive atau One Drive). 
-                <a 
-                  href="/panduan/unggah-bukti-dukung" 
-                  target="_blank" 
-                  className="text-blue-600 underline"
-                  >
-                  Lihat panduan
-                  </a>
+                Masukkan link file yang dapat diakses publik (misalnya Google Drive atau Sheets).
               </p>
             </div>
 
@@ -448,7 +397,6 @@ const TambahPengguna: React.FC = () => {
               <Label>
                 Apakah dalam penilaian indeks kualitas kebijakan ini, Anda melibatkan jabatan fungsional analis kebijakan?
               </Label>
-
               <div className="flex items-center mt-2 space-x-4">
                 <label className="inline-flex items-center">
                   <input
@@ -461,7 +409,6 @@ const TambahPengguna: React.FC = () => {
                   />
                   <span className="ml-2">Ya</span>
                 </label>
-
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
@@ -476,63 +423,9 @@ const TambahPengguna: React.FC = () => {
               </div>
             </div>
 
-            {/* Upload Surat Tugas Jika Jawab YA */}
-            {formData.melibatkanJFAnalis === "ya" && (
-              <div className="md:col-span-2">
-                <Label htmlFor="suratTugasJFAnalis">
-                  Surat Tugas Jabatan Fungsional Analis Kebijakan *
-                </Label>
-                <Input
-                  id="suratTugasJFAnalis"
-                  name="suratTugasJFAnalis"
-                  type="text"
-                  placeholder="Masukkan link Google Drive/Sheets"
-                  value={formData.suratTugasJFAnalis || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      suratTugasJFAnalis: e.target.value,
-                    })
-                  }
-                  onBlur={async () => {
-                    if (formData.melibatkanJFAnalis === "ya" && formData.suratTugasJFAnalis) {
-                      const isValid = isValidUrl(formData.suratTugasJFAnalis);
-                      if (!isValid) {
-                        setErrors((prev) => ({
-                          ...prev,
-                          suratTugasJFAnalis: "Harus berupa URL yang valid",
-                        }));
-                      }
-                    }
-                  }}
-                  className={errors.suratTugasJFAnalis ? "border-red-500" : ""}
-                />
-                {errors.suratTugasJFAnalis && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.suratTugasJFAnalis}
-                  </p>
-                )}
-                <p className="text-sm text-gray-500 mt-1">
-                  Masukkan link file yang dapat diakses publik (misalnya Google Drive atau One Drive). 
-                  <a 
-                  href="/panduan/unggah-bukti-dukung" 
-                  target="_blank" 
-                  className="text-blue-600 underline"
-                  >
-                  Lihat panduan
-                  </a>
-                </p>
-              </div>
-            )}
-
             {/* Submit & Back Buttons */}
             <div className="md:col-span-2 flex justify-between mt-6">
-              <Button
-                type="button"
-                onClick={handleBack}
-                variant="secondary"
-                disabled={isLoading}
-              >
+              <Button type="button" onClick={handleBack} variant="secondary" disabled={isLoading}>
                 Kembali
               </Button>
               <Button type="submit" disabled={isLoading}>
@@ -542,7 +435,6 @@ const TambahPengguna: React.FC = () => {
           </form>
         </div>
       </main>
-
       <Footer />
     </div>
   );
