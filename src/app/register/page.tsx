@@ -65,7 +65,6 @@ const TambahPengguna: React.FC = () => {
 
   const [instansis, setInstansis] = useState<Instansi[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // ================== CONSTANTS ==================
@@ -90,7 +89,6 @@ const TambahPengguna: React.FC = () => {
         setInstansis(response.data);
       } catch (err) {
         console.error("Failed to fetch instansi:", err);
-        setError("Gagal memuat data instansi");
       } finally {
         setIsLoading(false);
       }
@@ -109,6 +107,7 @@ const TambahPengguna: React.FC = () => {
       const newUrl = new URL(url);
       return ["http:", "https:"].includes(newUrl.protocol);
     } catch (e) {
+      console.error("Failed to fetch instansi:", e);
       return false;
     }
   };
