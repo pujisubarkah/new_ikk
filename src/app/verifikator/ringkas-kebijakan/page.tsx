@@ -4,6 +4,8 @@ import { useState } from "react";
 import Sidebar from "@/components/sidebar-verif"; // Sesuaikan dengan struktur Anda
 import { RefreshCcw, MessageSquare, XCircle } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
+import type { TextItem } from "pdfjs-dist/types/src/display/api";
+
 
 // Set worker source to CDN
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
@@ -81,13 +83,16 @@ export default function PdfSummarizer() {
         for (let i = 1; i <= pdfDoc.numPages; i++) {
           const page = await pdfDoc.getPage(i);
           const textContent = await page.getTextContent();
-          const strings = textContent.items.map((item: any) => item.str).join(" ");
+         const strings = textContent.items
+  .filter((item): item is TextItem => "str" in item)
+  .map((item) => item.str)
+  .join(" ");
           fullText += strings + "\n";
         }
 
         setText(fullText); // Simpan teks PDF ke state
         setError(""); // Reset error
-      } catch (err) {
+      } catch {
         setError("Failed to parse PDF content.");
       }
     };
