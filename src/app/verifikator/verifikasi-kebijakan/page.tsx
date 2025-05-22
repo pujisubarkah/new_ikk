@@ -43,7 +43,7 @@ const tabs = [
 
 const KebijakanTable = () => {
   const [activeTab, setActiveTab] = useState<'masuk' | 'proses' | 'selesai'>('masuk')
-  const [data, setData] = useState<PolicyData[]>([])
+  // const [data, setData] = useState<PolicyData[]>([])
   const [masukData, setMasukData] = useState<MasukPolicy[]>([]) 
   const [prosesData, setProsesData] = useState<Agency[]>([])
   const [selesaiData, setSelesaiData] = useState<SelesaiPolicy[]>([])
@@ -77,26 +77,7 @@ const KebijakanTable = () => {
         const response = await axios.get(`/api/verifikator/${koordinatorInstansiId}/selesai`)
         setSelesaiData(response.data)
       } else {
-        const response = await axios.get(`/api/koordinator-instansi/agency`, {
-          params: { koordinator_instansi_id: koordinatorInstansiId },
-        })
-        const result = response.data
-        if (result.data) {
-          const tabData = result.data.map((item: PolicyData) => {
-            const agencyData = item.agencies.filter((agency: Agency) => {
-              switch (tab) {
-                case 'proses':
-                  return agency.names['DISETUJUI'] > 0
-                case 'selesai':
-                  return agency.names['DITOLAK'] > 0
-                default:
-                  return true
-              }
-            })
-            return { ...item, agencies: agencyData }
-          })
-          setData(tabData)
-        }
+        // Unused code for fetching agency data removed to resolve unused variable error
       }
     } catch (error) {
       console.error('Error fetching policies:', error)
@@ -123,12 +104,6 @@ const KebijakanTable = () => {
     }
   }
 
-  // Fungsi bantuan filter
-  const getFilteredData = (filterTab: string) => {
-    if (filterTab === 'masuk') return masukData
-    if (filterTab === 'proses') return prosesData
-    return []
-  }
 
   return (
     <Sidebar>
