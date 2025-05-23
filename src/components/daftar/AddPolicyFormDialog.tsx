@@ -177,13 +177,13 @@ export default function AddPolicyForm() {
           {/* Detail Nama Kebijakan */}
           <div>
             <label htmlFor="detail_nama_kebijakan" className="block text-sm font-medium text-gray-700 mb-2">
-              Detail Nama Kebijakan
+              Detail dan Deskripsi Kebijakan
             </label>
             <input
               {...register('detail_nama_kebijakan')}
               type="text"
               id="detail_nama_kebijakan"
-              placeholder="Contoh: Program Perlindungan Anak Terlantar"
+              placeholder="Contoh: Kebijakan Perlindungan Sosial adalah ... (dst)"
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
             {errors.detail_nama_kebijakan && (
@@ -253,6 +253,30 @@ export default function AddPolicyForm() {
             </div>
           </div>
 
+          {/* Link Dokumen Drive */}
+          <div>
+            <label htmlFor="link_drive" className="block text-sm font-medium text-gray-700 mb-2">
+              Link Folder Dokumen Dasar Hukum (Google Drive/OneDrive/Dropbox/Lainnya)
+            </label>
+            <input
+              {...register('link_drive')}
+              type="url"
+              id="link_drive"
+              placeholder="https://..."
+              className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+            <a 
+                  href="/panduan/unggah-bukti-dukung" 
+                  target="_blank" 
+                  className="text-blue-600 underline"
+                  >
+                  Lihat panduan unggah bukti dukung
+                  </a>
+            {errors.link_drive && (
+              <p className="text-red-500 text-xs mt-1">{errors.link_drive.message}</p>
+            )}
+          </div>
+
           {/* Program/Kegiatan */}
           <div>
             <label htmlFor="program" className="block text-sm font-medium text-gray-700 mb-2">
@@ -273,15 +297,22 @@ export default function AddPolicyForm() {
           {/* Link Bukti Program/Kegiatan */}
           <div>
             <label htmlFor="file_url" className="block text-sm font-medium text-gray-700 mb-2">
-              Link Bukti Program/Kegiatan (Google Drive)
+              Link File Bukti Program/Kegiatan (Google Drive/OneDrive/Dropbox/Lainnya) 
             </label>
             <input
               {...register('program_detail.file_url')}
               type="url"
               id="file_url"
-              placeholder="https://drive.google.com/...  "
+              placeholder="https://...  "
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
+            <a 
+                  href="/panduan/unggah-bukti-dukung" 
+                  target="_blank" 
+                  className="text-blue-600 underline"
+                  >
+                  Lihat panduan unggah bukti dukung
+                  </a>
             {errors.program_detail?.file_url && (
               <p className="text-red-500 text-xs mt-1">{errors.program_detail.file_url.message}</p>
             )}
@@ -302,26 +333,11 @@ export default function AddPolicyForm() {
               <p className="text-red-500 text-xs mt-1">{errors.tanggal_berlaku.message}</p>
             )}
             <p className="text-xs text-gray-500 mt-2">
-              Hanya untuk kebijakan yang telah berlaku efektif minimal 1 tahun dan maksimal 2 tahun terakhir.
+              Hanya untuk kebijakan yang telah berlaku efektif minimal 1 tahun dan maksimal 3 tahun terakhir.
             </p>
           </div>
 
-          {/* Link Dokumen Drive */}
-          <div>
-            <label htmlFor="link_drive" className="block text-sm font-medium text-gray-700 mb-2">
-              Link Folder Dokumen Dasar Hukum (Google Drive)
-            </label>
-            <input
-              {...register('link_drive')}
-              type="url"
-              id="link_drive"
-              placeholder="https://drive.google.com/...  "
-              className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-            {errors.link_drive && (
-              <p className="text-red-500 text-xs mt-1">{errors.link_drive.message}</p>
-            )}
-          </div>
+          
 
           {/* Submit Button */}
           <div className="flex justify-end">

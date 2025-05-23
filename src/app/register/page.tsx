@@ -386,8 +386,15 @@ const TambahPengguna: React.FC = () => {
                 <p className="text-red-500 text-sm mt-1">{errors.suratPenunjukkan}</p>
               )}
               <p className="text-sm text-gray-500 mt-1">
-                Masukkan link file yang dapat diakses publik (misalnya Google Drive atau Sheets).
+                Masukkan link file yang dapat diakses publik (Google Drive/One Drive/Dropbox/Lainnya).
               </p>
+              <a 
+                  href="/panduan/unggah-bukti-dukung" 
+                  target="_blank" 
+                  className="text-blue-600 underline"
+                  >
+                  Lihat panduan
+                  </a>
             </div>
 
             {/* Pertanyaan Jabatan Fungsional Analis Kebijakan */}

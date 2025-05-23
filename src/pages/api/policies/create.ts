@@ -11,10 +11,10 @@ const policySchema = z.object({
   tanggal_berlaku: z.string().refine((val) => {
     const inputDate = new Date(val);
     const minDate = new Date();
-    minDate.setFullYear(minDate.getFullYear() - 2);
+    minDate.setFullYear(minDate.getFullYear() - 3);
     return inputDate >= minDate;
   }, {
-    message: 'Tanggal kebijakan harus dalam 2 tahun terakhir',
+    message: 'Tanggal kebijakan harus dalam 3 tahun terakhir',
   }),
   link_drive: z.string().url('Link Drive harus valid').min(1, 'Link Drive harus diisi'),
   created_by: z.string().min(1, 'Created by harus diisi'),
