@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
 
@@ -36,15 +37,13 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center space-x-4">
-            <img src="/lanri_.png" alt="LAN RI" className="h-10 w-auto object-contain" />
-            <img src="/tanoto.png" alt="Tanoto Foundation" className="h-10 w-auto object-contain" />
-          </div>
-
-          <div className="md:hidden flex items-center">
-            <button onClick={() => setOpen(!open)} className="text-[#16578d] focus:outline-none">
-              {open ? <X size={28} /> : <Menu size={28} />}
-            </button>
+            <Image src="/lanri_.png" alt="LAN RI" width={80} height={40} className="h-10 w-auto object-contain" priority />
+    
+            
+            <div className="md:hidden flex items-center">
+              <button onClick={() => setOpen(!open)} className="text-[#16578d] focus:outline-none">
+                {open ? <X size={28} /> : <Menu size={28} />}
+              </button>
           </div>
         </div>
       </div>
