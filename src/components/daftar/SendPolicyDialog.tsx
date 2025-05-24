@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FaPaperPlane } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import useSWR, { mutate } from "swr";
 
 // Tipe data policy sesuai dengan respons dari backend
 interface PolicyResponse {
@@ -18,41 +18,41 @@ interface SendPolicyDialogProps {
   onSuccess?: () => void;
   disabled?: boolean;
   selectedPolicyIds?: string[];
-  children?: React.ReactNode; // Ensure children is included
-   onSend?: () => void; // Add the onSend prop as optional
+  children?: React.ReactNode;
+  onSend?: () => void;
 }
 
+// Fungsi fetcher untuk SWR
+const fetcher = (url: string) => axios.get(url).then(res => res.data);
+
 // Forward ref ke button
-const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPolicyDialogProps> = (
-  { onSuccess, disabled, selectedPolicyIds, children }, // Include children in the destructured props
+const SendPolicyDialogComponent: React.ForwardRefRenderFunction<HTMLButtonElement, SendPolicyDialogProps> = (
+  { onSuccess, disabled, selectedPolicyIds, children, onSend },
   ref
 ) => {
   const [openSendConfirmation, setOpenSendConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+
+  const userId = localStorage.getItem("id");
+
+  // Gunakan SWR untuk ambil data policy
+  const { data: policiesData } = useSWR(
+    userId ? `/api/policies/${userId}/diajukan` : null,
+    fetcher
+  );
 
   const handleSendPolicies = async () => {
     setIsLoading(true);
     try {
-      const userId = localStorage.getItem("id");
       if (!userId) throw new Error("User ID tidak ditemukan");
 
       let policiesToSend = selectedPolicyIds || [];
 
-      // Jika tidak ada policy dipilih, ambil dari API
-      if (policiesToSend.length === 0) {
-        const res = await axios.get<{ data: PolicyResponse[] }>(`/api/policies/${userId}/diajukan`);
-
-        // Pastikan res.data dan res.data.data ada dan bertipe array
-        if (res.data && Array.isArray(res.data.data)) {
-          policiesToSend = res.data.data
-            .filter((policy) => policy.policy_status === "BELUM_TERVERIFIKASI")
-            .map((policy) => policy.id.toString());
-        } else {
-          toast.error("Gagal mengambil daftar kebijakan");
-          console.error("Data tidak valid:", res.data);
-          return;
-        }
+      // Ambil dari SWR cache jika belum ada selectedPolicyIds
+      if (policiesToSend.length === 0 && policiesData?.data) {
+        policiesToSend = policiesData.data
+          .filter((policy: PolicyResponse) => policy.policy_status === "BELUM_TERVERIFIKASI")
+          .map((policy: PolicyResponse) => policy.id.toString());
       }
 
       if (policiesToSend.length === 0) {
@@ -70,7 +70,11 @@ const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPo
         toast.success("Kebijakan berhasil dikirim ke Koordinator Nasional");
         setOpenSendConfirmation(false);
         onSuccess?.();
-        router.refresh();
+        onSend?.();
+
+        // Trigger revalidation
+        mutate(`/api/policies/${userId}/diajukan`);
+        mutate(`/api/policies/${userId}/disetujui`);
       } else {
         throw new Error(sendRes.data.message || "Gagal mengirim kebijakan");
       }
@@ -85,10 +89,9 @@ const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPo
   return (
     <Dialog open={openSendConfirmation} onOpenChange={setOpenSendConfirmation}>
       <DialogTrigger asChild>
-        {/* Render children as the trigger */}
         {children || (
           <Button
-            ref={ref as React.Ref<HTMLButtonElement>}
+            ref={ref as any}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-200"
             disabled={disabled}
           >
@@ -112,12 +115,12 @@ const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPo
           </div>
         </DialogHeader>
         <DialogFooter>
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="mt-6 flex justify-end gap-3 w-full">
             <Button
               variant="secondary"
               onClick={() => setOpenSendConfirmation(false)}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
               disabled={isLoading}
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               Batal
             </Button>
@@ -128,8 +131,8 @@ const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPo
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Mengirim...
@@ -145,4 +148,4 @@ const SendPolicyDialog: React.ForwardRefRenderFunction<HTMLButtonElement, SendPo
   );
 };
 
-export default React.forwardRef(SendPolicyDialog);
+export default React.forwardRef(SendPolicyDialogComponent);

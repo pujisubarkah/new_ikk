@@ -15,14 +15,14 @@ export interface DialogProps {
   children?: React.ReactNode
 }
 
-const Dialog = React.forwardRef<HTMLDivElement, DialogProps>((props) => {
-  const { open, onOpenChange, children } = props
+function Dialog({ open, onOpenChange, children }: DialogProps) {
   return (
     <RadixDialog open={open} onOpenChange={onOpenChange}>
       {children}
     </RadixDialog>
   )
-})
+}
+
 
 Dialog.displayName = "Dialog"
 

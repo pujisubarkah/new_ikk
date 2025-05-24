@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -11,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { mutate } from 'swr';
 
 // --- OPTIONS ---
 const sektorOptions = [
@@ -26,7 +26,18 @@ const sektorOptions = [
   'Lainnya',
 ] as const;
 
-const dasarHukumOptions = ['UNDANG-UNDANG', 'PERATURAN PEMERINTAH', 'PERATURAN PRESIDEN','PERATURAN MENTERI','PERATURAN BADAN/LEMBAGA/KOMISI', 'PREATURAN DAERAH', 'PERATURAN GUBERNUR', 'PERATURAN BUPATI','PERATURAN WALIKOTA','PERATURAN LAIN'] as const;
+const dasarHukumOptions = [
+  'UNDANG-UNDANG',
+  'PERATURAN PEMERINTAH',
+  'PERATURAN PRESIDEN',
+  'PERATURAN MENTERI',
+  'PERATURAN BADAN/LEMBAGA/KOMISI',
+  'PREATURAN DAERAH',
+  'PERATURAN GUBERNUR',
+  'PERATURAN BUPATI',
+  'PERATURAN WALIKOTA',
+  'PERATURAN LAIN',
+] as const;
 
 // --- SCHEMA ---
 const formSchema = z.object({
@@ -128,11 +139,18 @@ export default function AddPolicyForm() {
       });
 
       const result = await res.json();
+
       if (res.ok) {
         toast.success('Berhasil!', {
           description: 'Kebijakan berhasil diajukan.',
         });
         setOpen(false);
+
+        // Trigger re-fetch data
+        const userId = localStorage.getItem('id');
+        if (userId) {
+          mutate(`/api/policies/${userId}/diajukan`);
+        }
       } else {
         throw new Error(result.message || 'Gagal menyimpan.');
       }
@@ -211,7 +229,6 @@ export default function AddPolicyForm() {
             {errors.sektor_kebijakan && (
               <p className="text-red-500 text-xs mt-1">{errors.sektor_kebijakan.message}</p>
             )}
-
             {sektor === 'Lainnya' && (
               <input
                 {...register('sektor_kebijakan_lain')}
@@ -256,7 +273,7 @@ export default function AddPolicyForm() {
           {/* Link Dokumen Drive */}
           <div>
             <label htmlFor="link_drive" className="block text-sm font-medium text-gray-700 mb-2">
-              Link Folder Dokumen Dasar Hukum (Google Drive/OneDrive/Dropbox/Lainnya)
+              Link Folder Dokumen Dasar Hukum
             </label>
             <input
               {...register('link_drive')}
@@ -265,13 +282,9 @@ export default function AddPolicyForm() {
               placeholder="https://..."
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
-            <a 
-                  href="/panduan/unggah-bukti-dukung" 
-                  target="_blank" 
-                  className="text-blue-600 underline"
-                  >
-                  Lihat panduan unggah bukti dukung
-                  </a>
+            <a href="/panduan/unggah-bukti-dukung" target="_blank" className="text-blue-600 underline">
+              Lihat panduan unggah bukti dukung
+            </a>
             {errors.link_drive && (
               <p className="text-red-500 text-xs mt-1">{errors.link_drive.message}</p>
             )}
@@ -297,22 +310,18 @@ export default function AddPolicyForm() {
           {/* Link Bukti Program/Kegiatan */}
           <div>
             <label htmlFor="file_url" className="block text-sm font-medium text-gray-700 mb-2">
-              Link File Bukti Program/Kegiatan (Google Drive/OneDrive/Dropbox/Lainnya) 
+              Link File Bukti Program/Kegiatan
             </label>
             <input
               {...register('program_detail.file_url')}
               type="url"
               id="file_url"
-              placeholder="https://...  "
+              placeholder="https://..."
               className="w-full text-base py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
-            <a 
-                  href="/panduan/unggah-bukti-dukung" 
-                  target="_blank" 
-                  className="text-blue-600 underline"
-                  >
-                  Lihat panduan unggah bukti dukung
-                  </a>
+            <a href="/panduan/unggah-bukti-dukung" target="_blank" className="text-blue-600 underline">
+              Lihat panduan unggah bukti dukung
+            </a>
             {errors.program_detail?.file_url && (
               <p className="text-red-500 text-xs mt-1">{errors.program_detail.file_url.message}</p>
             )}
@@ -336,8 +345,6 @@ export default function AddPolicyForm() {
               Hanya untuk kebijakan yang telah berlaku efektif minimal 1 tahun dan maksimal 3 tahun terakhir.
             </p>
           </div>
-
-          
 
           {/* Submit Button */}
           <div className="flex justify-end">

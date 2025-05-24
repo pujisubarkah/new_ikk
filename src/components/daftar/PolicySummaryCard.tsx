@@ -1,66 +1,35 @@
-"use client";
-import { FaHourglassHalf, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { CheckCircle, XCircle, Clock } from "lucide-react";
 
-interface PolicyCount {
+interface PolicySummaryCardProps {
   label: string;
   count: number;
-  color: "yellow" | "green" | "red"; // Warna dibatasi agar aman
+  color: "amber" | "green" | "red";
 }
 
-export default function PolicySummaryCard({ label, count, color }: PolicyCount) {
-  const renderIcon = () => {
-    switch (label) {
-      case "Diajukan":
-        return <FaHourglassHalf className="text-yellow-600" />;
-      case "Disetujui":
-        return <FaCheckCircle className="text-green-600" />;
-      case "Ditolak":
-        return <FaTimesCircle className="text-red-600" />;
-      default:
-        return null;
-    }
-  };
+const iconMap = {
+  amber: <Clock className="text-amber-500 w-6 h-6" />,
+  green: <CheckCircle className="text-green-500 w-6 h-6" />,
+  red: <XCircle className="text-red-500 w-6 h-6" />,
+};
 
-  // Mapping warna berdasarkan prop `color`
-  const bgColor =
-    color === "green"
-      ? "bg-green-50"
-      : color === "red"
-      ? "bg-red-50"
-      : "bg-yellow-50";
+const colorClasses = {
+  amber: "bg-amber-100 text-amber-800",
+  green: "bg-green-100 text-green-800",
+  red: "bg-red-100 text-red-800",
+};
 
-  const borderColor =
-    color === "green"
-      ? "border-green-300"
-      : color === "red"
-      ? "border-red-300"
-      : "border-yellow-300";
-
-  const textColor =
-    color === "green"
-      ? "text-green-700"
-      : color === "red"
-      ? "text-red-700"
-      : "text-yellow-700";
-
-  const iconBg =
-    color === "green"
-      ? "bg-green-100"
-      : color === "red"
-      ? "bg-red-100"
-      : "bg-yellow-100";
-
+export default function PolicySummaryCard({
+  label,
+  count,
+  color,
+}: PolicySummaryCardProps) {
   return (
-    <div
-      className={`${bgColor} ${borderColor} border-l-4 p-4 rounded-lg shadow-md flex flex-col items-center justify-between gap-3 sm:gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer w-[300px] sm:w-[350px] m-2`}
-    >
-      <div className={`${textColor} font-semibold text-base sm:text-lg text-center`}>
-      {label}
+    <div className={`p-5 rounded-xl shadow-sm ${colorClasses[color]} transition-all duration-300`}>
+      <div className="flex items-center space-x-3 mb-2">
+        {iconMap[color]}
+        <h2 className="text-lg font-semibold">{label}</h2>
       </div>
-      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${iconBg}`}>
-      <span className="text-xl sm:text-2xl">{renderIcon()}</span>
-      <span className="font-bold text-lg sm:text-xl">{count}</span>
-      </div>
+      <p className="text-3xl font-bold">{count}</p>
     </div>
   );
 }

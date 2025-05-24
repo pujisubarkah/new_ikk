@@ -20,6 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const policies = await prisma.policy.findMany({
       where: {
         created_by: createdBy,
+        policy_status: "BELUM_TERVERIFIKASI",
+        // Hanya ambil kebijakan yang sedang dalam proses pengajuan
         policy_process: "DIAJUKAN",
       },
       select: {

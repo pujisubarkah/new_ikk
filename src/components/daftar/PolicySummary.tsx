@@ -33,13 +33,13 @@ export default function PolicySummary() {
   if (!summary) return <p>Tidak ada data summary ditemukan.</p>;
 
   const summaryMap = [
-    { key: "DIAJUKAN", label: "Diajukan", color: "yellow" as const },
+    { key: "DIAJUKAN", label: "Diajukan", color: "amber" as const },
     { key: "DISETUJUI", label: "Disetujui", color: "green" as const },
     { key: "DITOLAK", label: "Ditolak", color: "red" as const },
   ] satisfies {
     key: string;
     label: string;
-    color: "yellow" | "green" | "red";
+    color: "amber" | "green" | "red";
   }[];
 
   return (

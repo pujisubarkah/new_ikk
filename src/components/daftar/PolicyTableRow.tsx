@@ -1,11 +1,13 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaEye, FaPaperPlane } from 'react-icons/fa';
-import AssignAnalystModal from './AssignAnalystModal'; // pastikan file ini tersedia
+import { FaEye, FaPaperPlane, FaTrash } from 'react-icons/fa';
+import useSWR, { mutate } from 'swr';
+import AssignAnalystModal from './AssignAnalystModal';
 import axios from 'axios';
 import { toast } from 'sonner';
 
+// Interfaces tetap sama
 interface Policy {
   id: number;
   nama: string;
@@ -24,13 +26,11 @@ interface Policy {
 interface PolicyRowProps {
   item: Policy;
   index: number;
-  showAnalyst?: boolean;
- showAction?: boolean;
-    showProgress?: boolean;
-    showAssignDate?: boolean;
-    showViewButton?: boolean;
   tab: 'diajukan' | 'disetujui' | 'diproses' | 'selesai';
 }
+
+// Fungsi fetcher untuk SWR
+const fetcher = (url: string) => axios.get(url).then(res => res.data);
 
 export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
   const router = useRouter();
@@ -65,6 +65,27 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
     }
   };
 
+  const handleDelete = async (policyId: number) => {
+    const confirmDelete = confirm('Yakin ingin menghapus kebijakan ini?');
+    if (!confirmDelete) return;
+
+    try {
+      await toast.promise(
+        axios.delete(`/api/policies/${policyId}/delete`),
+        {
+          loading: 'Menghapus kebijakan...',
+          success: 'Kebijakan berhasil dihapus!',
+          error: 'Ups! Gagal menghapus kebijakan!',
+        }
+      );
+
+      // Trigger re-fetch data
+      mutate('/api/policies/diajukan'); // Ini akan refresh semua data tab "diajukan"
+    } catch (err) {
+      console.error('Error deleting policy:', err);
+    }
+  };
+
   return (
     <>
       <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-150">
@@ -86,6 +107,19 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
               )}
             </td>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.proses || '-'}</td>
+
+            {/* Kolom Aksi: Edit & Delete */}
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 flex space-x-2 justify-center">
+             
+              
+              <button
+                onClick={() => handleDelete(item.id)}
+                className="text-red-500 hover:text-red-700"
+                title="Hapus Kebijakan"
+              >
+                <FaTrash size={16} />
+              </button>
+            </td>
           </>
         )}
 
@@ -97,18 +131,16 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
             </td>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.tanggal}</td>
             <td className="px-4 py-3 text-center whitespace-nowrap text-sm font-medium">
-  <button
-    onClick={() => {
-      console.log('Tombol "Pilih Analis" diklik');
-      console.log('Data policy yang dikirim ke modal:', item);
-      setIsModalOpen(true);
-    }}
-    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md shadow-sm"
-    title={`Pilih analis untuk ${item.nama}`}
-  >
-    Pilih Analis
-  </button>
-</td>
+              <button
+                onClick={() => {
+                  setIsModalOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md shadow-sm"
+                title={`Pilih analis untuk ${item.nama}`}
+              >
+                Pilih Analis
+              </button>
+            </td>
           </>
         )}
 
@@ -164,7 +196,7 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
       <AssignAnalystModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        policy={item} // Kirim seluruh objek policy jika perlu
+        policy={item}
       />
     </>
   );
