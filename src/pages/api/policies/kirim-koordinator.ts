@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             where: { id: BigInt(id) },
             data: {
                 policy_status: "MENUNGGU_VALIDASI_KU",
-                policy_process: "SELESAI",
+                policy_process: "PROSES",
                 assigned_by_admin_id: BigInt(koorinstansiId as string),
             },
         });

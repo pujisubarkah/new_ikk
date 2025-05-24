@@ -333,6 +333,10 @@ useEffect(() => {
       setOpen(false);
       mutate(`/api/answers?policyId=${policyId}`);
       setIsReadOnly(true);
+
+// ✅ Redirect ke halaman daftar kebijakan
+  router.push('/koordinator-instansi/daftar-kebijakan');
+
     } catch (error) {
       console.error(error);
       toast.error('Gagal menyimpan jawaban');

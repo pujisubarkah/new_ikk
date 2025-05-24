@@ -1,184 +1,186 @@
-"use client";
+'use client';
+import React, { useState } from 'react';
+import useSWR from 'swr';
+import { useRouter } from 'next/navigation';
+import Sidebar from '@/components/sidebar-koornas';
+import KebijakanMasukTab from '@/components/koorutama/KebijakanMasukTab';
+import KebijakanDiprosesTab from '@/components/koorutama/KebijakanProsesTab';
+import KebijakanSelesaiTab from '@/components/koorutama/KebijakanSelesaiTab';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import useSWR from "swr";
-import Sidebar from "@/components/sidebar-koornas";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from "@/components/ui/pagination";
-
+// Interface untuk data kebijakan
 interface Kebijakan {
   no: number;
   instansi: string;
   total: number;
+  validator?: string;
   id: string;
-}
-
-interface APIResponse {
-  data: APIResponseItem[];
+  status: 'masuk' | 'diproses' | 'selesai' | 'validasi';
 }
 
 interface APIResponseItem {
   agency_id_panrb: string;
   agency_name: string;
   total: number;
+  status: string;
+  validator?: string;
+}
+
+interface APIResponse {
+  data: APIResponseItem[];
 }
 
 const ITEMS_PER_PAGE = 5;
 
-const fetcher = (url: string) => fetch(url).then((res) => {
-  if (!res.ok) throw new Error("Gagal mengambil data dari API");
-  return res.json();
-});
-
-const Page = () => {
+// Fungsi fetcher untuk SWR
+const fetcher = (url: string) =>
+  fetch(url).then((res) => {
+    if (!res.ok) throw new Error('Gagal mengambil data dari API');
+    return res.json();
+  });
+export default function Page() {
   const router = useRouter();
-  const [search, setSearch] = useState("");
+  // State
+  const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<'masuk' | 'diproses' | 'selesai'>('masuk');
 
-  const id = typeof window !== "undefined" ? localStorage.getItem("id") : null;
-  const { data, error } = useSWR(id ? `/api/koornas/${id}/policy` : null, fetcher);
+  // Ambil ID dari localStorage
+  const id = typeof window !== 'undefined' ? localStorage.getItem('id') : null;
 
-  const loading = !data && !error;
+  // Gunakan SWR untuk fetching data berdasarkan ID
+  const { data, error } = useSWR<APIResponse>(id ? `/api/koornas/${id}/policy` : null, fetcher);
 
+  // Format data
   const formattedData: Kebijakan[] = data
     ? data.data.map((item: APIResponseItem, index: number) => ({
         no: index + 1,
-        instansi: item.agency_name || "-",
+        instansi: item.agency_name || '-',
         total: item.total || 0,
-        id: item.agency_id_panrb || "",
+        validator: item.validator || '-',
+        id: item.agency_id_panrb || '',
+        status: item.status as Kebijakan['status'] || 'masuk',
       }))
     : [];
 
-  const filteredData = formattedData.filter((item) =>
+  // Filter data
+  const filteredByTab = formattedData.filter((item) =>
+    activeTab === 'diproses'
+      ? item.status === 'diproses' || item.status === 'validasi'
+      : item.status === activeTab
+  );
+
+  const filteredBySearch = filteredByTab.filter((item) =>
     item.instansi.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-  const paginatedData = filteredData.slice(
+  // Pagination
+  const totalPages = Math.ceil(filteredBySearch.length / ITEMS_PER_PAGE);
+  const paginatedData = filteredBySearch.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handlePageChange = (page: number) => setCurrentPage(page);
-  const handleBack = () => router.push("/koordinator-utama/daftar-kebijakan");
-
   return (
     <Sidebar>
       <div className="w-full px-6 py-8">
+        {/* Tabs */}
+        <div className="flex space-x-2 md:space-x-4 mb-6 md:mb-8 overflow-x-auto">
+          <button
+            className={`px-4 py-2 text-sm md:text-base rounded-t-lg font-semibold whitespace-nowrap ${
+              activeTab === 'masuk'
+                ? 'bg-white text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 bg-gray-200'
+            }`}
+            onClick={() => {
+              setActiveTab('masuk');
+              setCurrentPage(1);
+            }}
+          >
+            Kebijakan Masuk
+          </button>
+          <button
+            className={`px-4 py-2 text-sm md:text-base rounded-t-lg font-semibold whitespace-nowrap ${
+              activeTab === 'diproses'
+                ? 'bg-white text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 bg-gray-200'
+            }`}
+            onClick={() => {
+              setActiveTab('diproses');
+              setCurrentPage(1);
+            }}
+          >
+            Kebijakan Diproses
+          </button>
+          <button
+            className={`px-4 py-2 text-sm md:text-base rounded-t-lg font-semibold whitespace-nowrap ${
+              activeTab === 'selesai'
+                ? 'bg-white text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 bg-gray-200'
+            }`}
+            onClick={() => {
+              setActiveTab('selesai');
+              setCurrentPage(1);
+            }}
+          >
+            Kebijakan Selesai
+          </button>
+        </div>
+
+        {/* Search Input */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Daftar Kebijakan</h1>
           <input
             type="text"
-            placeholder="Cari instansi atau tanggal..."
+            placeholder="Cari instansi..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border border-gray-300 rounded-lg px-4 py-2 w-72 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
+        {/* Tombol Kembali */}
         <div className="mb-4">
           <button
-            onClick={handleBack}
+            onClick={() => router.push('/koordinator-utama/daftar-kebijakan')}
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
           >
             Kembali
           </button>
         </div>
 
-        <div className="overflow-x-auto rounded-lg shadow-md bg-white">
-          <table className="min-w-full text-sm text-left text-gray-700">
-            <thead className="bg-blue-100 text-gray-800 font-semibold">
-              <tr>
-                <th className="px-6 py-3 border-b">No</th>
-                <th className="px-6 py-3 border-b">Nama Instansi</th>
-                <th className="px-6 py-3 border-b">Total Kebijakan</th>
-                <th className="px-6 py-3 border-b text-center">Detail</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={4} className="text-center py-6 text-gray-500">
-                    Memuat data...
-                  </td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={4} className="text-center py-6 text-red-500">
-                    Gagal memuat data.
-                  </td>
-                </tr>
-              ) : paginatedData.length > 0 ? (
-                paginatedData.map((item) => (
-                  <tr key={item.no} className="hover:bg-blue-50 transition duration-150">
-                    <td className="px-6 py-4 border-b text-center">{item.no}</td>
-                    <td className="px-6 py-4 border-b">{item.instansi}</td>
-                    <td className="px-6 py-4 border-b text-center">{item.total}</td>
-                    <td className="px-6 py-4 border-b text-center">
-                      <button
-                        onClick={() =>
-                          router.push(`/koordinator-utama/daftar-kebijakan-instansi/${item.id}`)
-                        }
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-lg text-xs"
-                      >
-                        Lihat
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} className="text-center py-6 text-gray-500">
-                    Tidak ada hasil yang ditemukan.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {/* Render Tab Content */}
+        {activeTab === 'masuk' && (
+          <KebijakanMasukTab
+            data={paginatedData}
+            loading={!data && !error}
+            error={error}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
 
-        <div className="flex justify-center mt-4">
-          <Pagination>
-            <PaginationPrevious
-              onClick={currentPage === 1 ? undefined : () => handlePageChange(currentPage - 1)}
-              className={currentPage === 1 ? "cursor-not-allowed text-gray-400" : ""}
-            >
-              Previous
-            </PaginationPrevious>
+        {activeTab === 'diproses' && (
+          <KebijakanDiprosesTab
+            data={paginatedData}
+            loading={!data && !error}
+            error={error}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
 
-            <PaginationContent>
-              {Array.from({ length: totalPages }, (_, index) => (
-                <PaginationItem key={index}>
-                  <PaginationLink
-                    isActive={currentPage === index + 1}
-                    onClick={() => handlePageChange(index + 1)}
-                  >
-                    {index + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-            </PaginationContent>
-
-            <PaginationNext
-              onClick={
-                currentPage === totalPages ? undefined : () => handlePageChange(currentPage + 1)
-              }
-              className={currentPage === totalPages ? "cursor-not-allowed text-gray-400" : ""}
-            >
-              Next
-            </PaginationNext>
-          </Pagination>
-        </div>
+        {activeTab === 'selesai' && (
+          <KebijakanSelesaiTab
+            data={paginatedData}
+            loading={!data && !error}
+            error={error}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
     </Sidebar>
   );
-};
-
-export default Page;
+}

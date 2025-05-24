@@ -21,21 +21,18 @@ interface Policy {
   nilai_akhir_verif?: string;
   instansi?: string;
   status?: string;
+  
 }
 
 interface PolicyRowProps {
   item: Policy;
   index: number;
   tab: 'diajukan' | 'disetujui' | 'diproses' | 'selesai';
+    showProgress?: boolean;
+  showAssignDate?: boolean;
   showViewButton?: boolean;
-  showAnalyst?: boolean;
   showAction?: boolean;
 }
-
-
-
-// Fungsi fetcher untuk SWR
-// (fetcher removed because it was unused)
 
 export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
   const router = useRouter();
@@ -54,7 +51,7 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
           { id: policyId },
           {
             headers: {
-              'x-koorinstansi-id': koorinstansiId,
+              'x-koorinstansi-id': koorinstansiId!,
               'Content-Type': 'application/json',
             },
           }
@@ -65,6 +62,10 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
           error: 'Ups! Gagal mengirim. Coba lagi ya Kak!',
         }
       );
+
+      // Revalidasi semua endpoint terkait
+      mutate('/api/policies/diproses'); // Untuk tab diproses
+      mutate('/api/policies/selesai');  // Jika sudah masuk ke tab selesai
     } catch (err) {
       console.error('Error sending to coordinator:', err);
     }
@@ -84,8 +85,9 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
         }
       );
 
-      // Trigger re-fetch data
-      mutate('/api/policies/diajukan'); // Ini akan refresh semua data tab "diajukan"
+      // Update cache SWR langsung
+      mutate('/api/policies/diajukan'); // Tab diajukan
+      mutate('/api/policies/disetujui'); // Opsional jika ada hubungan
     } catch (err) {
       console.error('Error deleting policy:', err);
     }
@@ -113,10 +115,8 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
             </td>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.proses || '-'}</td>
 
-            {/* Kolom Aksi: Edit & Delete */}
+            {/* Kolom Aksi: Delete */}
             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 flex space-x-2 justify-center">
-             
-              
               <button
                 onClick={() => handleDelete(item.id)}
                 className="text-red-500 hover:text-red-700"
@@ -137,9 +137,7 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-r">{item.tanggal}</td>
             <td className="px-4 py-3 text-center whitespace-nowrap text-sm font-medium">
               <button
-                onClick={() => {
-                  setIsModalOpen(true);
-                }}
+                onClick={() => setIsModalOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md shadow-sm"
                 title={`Pilih analis untuk ${item.nama}`}
               >
@@ -197,7 +195,7 @@ export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
         )}
       </tr>
 
-      {/* Modal dipindahkan keluar dari tabel agar tidak rusak struktur HTML */}
+      {/* Modal AssignAnalyst */}
       <AssignAnalystModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

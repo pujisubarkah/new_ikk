@@ -21,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: {
         created_by: createdBy,
         policy_process: "PROSES",
+        policy_status: "MENUNGGU_VALIDASI_KI",
       },
       select: {
         id: true,
