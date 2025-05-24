@@ -52,7 +52,19 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
             </strong>
         </div>
         <div className="flex items-center gap-2">
-            <small className="text-gray-500 text-sm">Progres</small>
+            <small className="text-gray-500 text-sm">Progres Self Assemen</small>
+            <div className="w-32 bg-gray-200 rounded-full h-2.5">
+                <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${policy.progress_pengisian}%` }}
+                ></div>
+            </div>
+            <span className="text-blue-600 text-sm font-medium">
+                {Number(policy.progress_pengisian).toFixed(2)}%
+            </span>
+        </div>
+         <div className="flex items-center gap-2">
+            <small className="text-gray-500 text-sm">Progres Verifikator</small>
             <div className="w-32 bg-gray-200 rounded-full h-2.5">
                 <div
                     className="bg-blue-600 h-2.5 rounded-full"
