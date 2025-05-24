@@ -3,33 +3,37 @@ import React from 'react';
 import { toast } from 'sonner';
 import { Lightbulb } from 'lucide-react';
 
-interface Question {
+interface AnswerOption {
+  level_id: number;
+  level_score: string;
+  level_description: string;
+}
+
+export interface Question {
   id: string;
   dimension_name: string;
   indicator_question: string;
-  indicator_description: string;
   indicator_column_code: string;
-  instrument_answer: {
-    level_id: number;
-    level_score: string;
-    level_description: string;
-  }[];
+  indicator_description: string;
+  instrument_answer: AnswerOption[];
 }
 
-type SelectedAnswer = {
-  description: string;
-  score: number;
-};
-
-interface QuestionListProps {
+export type QuestionListProps = {
   activeStep: number;
-  selectedAnswers: Record<string, SelectedAnswer>;
+  selectedAnswers: Record<string, { description: string; score: number }>;
+  onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
+  onLinkUpload: (questionId: string, link: string, questionIndex: number) => Promise<void>;
+  onDimensionInfoChange?: (dimension: string, value: string) => void;
   uploadedFiles: Record<string, string>;
-  onAnswerChange: (questionId: string, description: string, score: number) => void;
   apiQuestions: Question[];
-  isSubmitted: boolean;
-  onLinkUpload: (questionId: string, fileLink: string) => void;
-}
+  dimensionNotes?: {
+    a: string;
+    b: string;
+    c: string;
+    d: string;
+  };
+  isReadOnly?: boolean;
+};
 
 const stepDimensionMap: Record<number, string> = {
   0: "Perencanaan Kebijakan",
@@ -38,27 +42,53 @@ const stepDimensionMap: Record<number, string> = {
   3: "Transparansi dan Partisipasi Publik",
 };
 
+const dimensionCodeMap: Record<string, string> = {
+  "Perencanaan Kebijakan": "a",
+  "Implementasi Kebijakan": "b",
+  "Evaluasi dan Keberlanjutan Kebijakan": "c",
+  "Transparansi dan Partisipasi Publik": "d",
+};
+
 export default function QuestionList({
   activeStep,
   selectedAnswers,
   uploadedFiles,
   onAnswerChange,
+  onLinkUpload,
   apiQuestions,
+  dimensionNotes = { a: '', b: '', c: '', d: '' },
+  onDimensionInfoChange = () => {},
+  isReadOnly = false,
 }: QuestionListProps) {
   const dimensionName = stepDimensionMap[activeStep];
+  const dimensionCode = dimensionCodeMap[dimensionName];
   const filteredQuestions = apiQuestions.filter(q => q.dimension_name === dimensionName);
+
+  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (dimensionCode && onDimensionInfoChange) {
+      onDimensionInfoChange(dimensionCode, e.target.value);
+    }
+  };
 
   return (
     <div className="bg-white p-6 rounded-xl shadow space-y-6">
+      {/* Pesan hanya-baca */}
+      {isReadOnly && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded mb-4">
+          Jawaban sudah terkirim dan tidak dapat diedit.
+        </div>
+      )}
+
       <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
 
-      {filteredQuestions.map((item) => (
+      {/* Daftar Pertanyaan */}
+      {filteredQuestions.map((item, index) => (
         <div key={item.id} id={`question-${item.id}`} className="space-y-4 pb-4 border-b last:border-b-0">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-gray-800">{item.indicator_column_code}.</span>
             <p className="font-semibold text-gray-800">{item.indicator_question}</p>
 
-            {/* Lightbulb Icon */}
+            {/* Info Indikator */}
             <button
               type="button"
               onClick={() =>
@@ -70,13 +100,14 @@ export default function QuestionList({
               }
               className="text-blue-600 hover:text-blue-800 focus:outline-none"
               title="Lihat keterangan indikator"
+              disabled={isReadOnly}
             >
               <Lightbulb className="w-5 h-5" />
             </button>
           </div>
 
           {/* Jawaban Radio Button */}
-          <div className="space-y-3">
+          <fieldset className="space-y-3" disabled={isReadOnly}>
             {item.instrument_answer
               .sort((a, b) => a.level_id - b.level_id)
               .map((opt) => (
@@ -85,18 +116,16 @@ export default function QuestionList({
                     type="radio"
                     name={`question-${item.id}`}
                     checked={selectedAnswers[item.id]?.description === opt.level_description}
-                    onChange={() =>
-                      onAnswerChange(item.id, opt.level_description, Number(opt.level_score))
-                    }
-                    disabled={false} // bisa diubah jadi `isSubmitted` jika tersedia
+                    onChange={() => !isReadOnly && onAnswerChange(item.id, opt.level_description, Number(opt.level_score))}
+                    disabled={isReadOnly}
                     className="h-5 w-5 mt-1 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
                   <span className="text-gray-700">{opt.level_description}</span>
                 </label>
               ))}
-          </div>
+          </fieldset>
 
-          {/* Preview File Pendukung */}
+          {/* File Pendukung */}
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               File Pendukung
@@ -116,6 +145,25 @@ export default function QuestionList({
           </div>
         </div>
       ))}
+
+      {/* Catatan Tambahan Per Dimensi */}
+      <div className="mt-6">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Catatan Tambahan untuk Dimensi {dimensionName}
+        </label>
+        {isReadOnly ? (
+          <div className="whitespace-pre-wrap text-gray-800 bg-gray-50 p-3 rounded-md">
+            {dimensionNotes[dimensionCode as keyof typeof dimensionNotes] || 'Tidak ada catatan'}
+          </div>
+        ) : (
+          <textarea
+            value={dimensionNotes[dimensionCode as keyof typeof dimensionNotes] || ''}
+            onChange={handleNoteChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm min-h-[100px]"
+            placeholder="Tambahkan catatan untuk dimensi ini..."
+          />
+        )}
+      </div>
     </div>
   );
 }

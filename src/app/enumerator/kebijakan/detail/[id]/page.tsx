@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-
 // Komponen terpisah
 import PolicyCard from '@/components/policy/PolicyCard';
 import PolicyStepsNav from '@/components/policy/PolicyStepsNav';
@@ -30,17 +29,19 @@ type Policy = {
   nilai_akhir: number;
 };
 
+type AnswerOption = {
+  level_id: number;
+  level_score: string;
+  level_description: string;
+};
+
 type Question = {
   id: string;
   dimension_name: string;
   indicator_question: string;
   indicator_description: string;
   indicator_column_code: string;
-  instrument_answer: {
-    level_id: number;
-    level_score: string;
-    level_description: string;
-  }[];
+  instrument_answer: AnswerOption[];
 };
 
 export default function PolicyPage() {
@@ -59,7 +60,7 @@ export default function PolicyPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [open, setOpen] = useState(false);
 
-  // State informasi tambahan per dimensi
+  // Catatan tambahan per dimensi
   const [additionalInfoA, setAdditionalInfoA] = useState('');
   const [additionalInfoB, setAdditionalInfoB] = useState('');
   const [additionalInfoC, setAdditionalInfoC] = useState('');
@@ -81,6 +82,7 @@ export default function PolicyPage() {
         const questionsRes = await fetch('/api/pertanyaan');
         if (!questionsRes.ok) throw new Error('Gagal memuat pertanyaan');
         const questionsData = await questionsRes.json();
+
         if (Array.isArray(questionsData.data)) {
           setApiQuestions(questionsData.data);
         }
@@ -91,40 +93,42 @@ export default function PolicyPage() {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [policyId]);
 
   // Load jawaban dan file pendukung lama dari /api/answers
   useEffect(() => {
     if (!policyId || !apiQuestions.length) return;
+
     const loadSavedAnswers = async () => {
       try {
         const answersRes = await fetch(`/api/answers?policyId=${policyId}`);
         if (!answersRes.ok) return;
+
         const answersData = await answersRes.json();
 
         const savedAnswers: Record<string, { description: string; score: number }> = {};
         const savedFiles: Record<string, string> = {};
 
-        apiQuestions.forEach((q) => {
-          const columnCode = q.indicator_column_code;
-          const score = answersData.data?.[columnCode];
-          if (score !== undefined && q.instrument_answer) {
-            const matchedAnswer = q.instrument_answer.find(
-              (a) => a.level_score === String(score)
-            );
-            if (matchedAnswer) {
-              savedAnswers[q.id] = {
-                description: matchedAnswer.level_description,
-                score: Number(matchedAnswer.level_score),
-              };
-            }
+        Object.entries(answersData.data).forEach(([key, value]) => {
+          const question = apiQuestions.find(q => q.indicator_column_code === key);
+          if (!question) return;
+
+          if (key.startsWith('file_url_')) {
+            savedFiles[question.id] = String(value);
+            return;
           }
 
-          const dimension = q.dimension_name.charAt(0).toLowerCase();
-          const fileInfo = answersData.data?.[`informasi_${dimension}`];
-          if (fileInfo) {
-            savedFiles[q.id] = fileInfo;
+          const answerOption = question.instrument_answer.find(
+            a => a.level_score === String(value)
+          );
+
+          if (answerOption) {
+            savedAnswers[question.id] = {
+              description: answerOption.level_description,
+              score: parseInt(answerOption.level_score, 10),
+            };
           }
         });
 
@@ -136,16 +140,19 @@ export default function PolicyPage() {
         setAdditionalInfoB(answersData.data?.informasi_b || '');
         setAdditionalInfoC(answersData.data?.informasi_c || '');
         setAdditionalInfoD(answersData.data?.informasi_d || '');
+
       } catch (error) {
         console.error('Gagal memuat jawaban lama:', error);
       }
     };
+
     loadSavedAnswers();
   }, [policyId, apiQuestions]);
 
   // Auto-save jawaban dan file pendukung
   useEffect(() => {
     if (!policyId || Object.keys(selectedAnswers).length === 0) return;
+
     const timeout = setTimeout(async () => {
       const userId = localStorage.getItem('id');
       const answersToSubmit: Record<string, number> = {};
@@ -162,7 +169,6 @@ export default function PolicyPage() {
         }
       });
 
-      // Tambahkan informasi tambahan
       infoToSubmit.informasi_a = additionalInfoA;
       infoToSubmit.informasi_b = additionalInfoB;
       infoToSubmit.informasi_c = additionalInfoC;
@@ -223,58 +229,20 @@ export default function PolicyPage() {
     }));
   };
 
-  // Mapping kolom file berdasarkan dimensi
-  const getFileNameFromQuestion = (dimension: string, questionIndex: number): string | null => {
-    const prefixMap: Record<string, string> = {
-      'Perencanaan Kebijakan': 'a',
-      'Implementasi Kebijakan': 'b',
-      'Evaluasi dan Keberlanjutan Kebijakan': 'c',
-      'Transparansi dan Partisipasi Publik': 'd',
-    };
-    const prefix = prefixMap[dimension];
-    if (!prefix) return null;
-    const order = questionIndex % 3 + 1;
-    return `file_url_${prefix}${order}`;
-  };
-
-  // Unggah file pendukung
-  const handleLinkUpload = async (questionId: string, link: string, questionIndex: number) => {
-    const question = apiQuestions.find((q) => q.id === questionId);
-    if (!question) return;
-
-    const fileName = getFileNameFromQuestion(question.dimension_name, questionIndex);
-    if (!fileName) return;
-
-    try {
-      const userId = localStorage.getItem('id');
-      await fetch('/api/save-ikk-ki-score', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          policy_id: policyId,
-          created_by: userId,
-          active_year: 2025,
-          ikk_file: {
-            [fileName]: link,
-          },
-        }),
-      });
-      setUploadedFiles((prev) => ({
-        ...prev,
-        [questionId]: link,
-      }));
-      toast.success('File berhasil disimpan');
-    } catch (error) {
-      console.error('Gagal menyimpan file:', error);
-      toast.error('Gagal menyimpan file');
-    }
+  // Unggah link bukti dukung
+  const handleLinkUpload = (questionId: string, link: string, questionIndex: number) => {
+    setUploadedFiles((prev) => ({
+      ...prev,
+      [questionId]: link,
+    }));
   };
 
   // Simpan semua jawaban dan kirim ke koordinator
   const handleConfirm = async () => {
     const unansweredQuestions = apiQuestions.filter((item) => !selectedAnswers[item.id]);
     if (unansweredQuestions.length > 0) {
-      const pesan = `Masih ada ${unansweredQuestions.length} pertanyaan yang belum dijawab:\n${unansweredQuestions.map((q) => `- ${q.indicator_question}`).join('\n')}`;
+      const pesan = `Masih ada ${unansweredQuestions.length} pertanyaan yang belum dijawab:
+${unansweredQuestions.map((q) => `- ${q.indicator_question}`).join('\n')}`;
       alert(pesan);
       const firstUnansweredId = unansweredQuestions[0].id;
       const elemen = document.getElementById(`question-${firstUnansweredId}`);
@@ -286,6 +254,7 @@ export default function PolicyPage() {
 
     setIsSaving(true);
     const userId = localStorage.getItem('id');
+
     const answersToSubmit: Record<string, number> = {};
     const infoToSubmit: Record<string, string> = {};
 
@@ -295,12 +264,10 @@ export default function PolicyPage() {
         answersToSubmit[item.indicator_column_code] = answer.score;
       }
       if (uploadedFiles[item.id]) {
-        infoToSubmit[`informasi_${item.dimension_name.charAt(0).toLowerCase()}`] =
-          uploadedFiles[item.id];
+        infoToSubmit[`file_url_${item.indicator_column_code}`] = uploadedFiles[item.id];
       }
     });
 
-    // Tambahkan informasi tambahan
     infoToSubmit.informasi_a = additionalInfoA;
     infoToSubmit.informasi_b = additionalInfoB;
     infoToSubmit.informasi_c = additionalInfoC;
@@ -451,34 +418,25 @@ export default function PolicyPage() {
           <QuestionList
             activeStep={activeStep}
             selectedAnswers={selectedAnswers}
+            uploadedFiles={uploadedFiles}
             onAnswerChange={handleAnswerChange}
             onLinkUpload={handleLinkUpload}
-            uploadedFiles={uploadedFiles}
-            apiQuestions={apiQuestions}
             onDimensionInfoChange={(dimension: string, value: string) => {
               switch (dimension) {
-                case 'a':
-                  setAdditionalInfoA(value);
-                  break;
-                case 'b':
-                  setAdditionalInfoB(value);
-                  break;
-                case 'c':
-                  setAdditionalInfoC(value);
-                  break;
-                case 'd':
-                  setAdditionalInfoD(value);
-                  break;
-                default:
-                  break;
+                case 'a': setAdditionalInfoA(value); break;
+                case 'b': setAdditionalInfoB(value); break;
+                case 'c': setAdditionalInfoC(value); break;
+                case 'd': setAdditionalInfoD(value); break;
               }
             }}
+            apiQuestions={apiQuestions}
             dimensionNotes={{
               a: additionalInfoA,
               b: additionalInfoB,
               c: additionalInfoC,
               d: additionalInfoD,
             }}
+            isReadOnly={policyData.status_kebijakan === 'terkirim'}
           />
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import Sidebar from "@/components/sidebar-koornas";
 import {
   Pagination,
@@ -31,44 +32,31 @@ interface APIResponseItem {
 
 const ITEMS_PER_PAGE = 5;
 
+const fetcher = (url: string) => fetch(url).then((res) => {
+  if (!res.ok) throw new Error("Gagal mengambil data dari API");
+  return res.json();
+});
+
 const Page = () => {
   const router = useRouter();
-  const [data, setData] = useState<Kebijakan[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const id = localStorage.getItem("id");
-        if (!id) throw new Error("ID koor_nasional tidak ditemukan di localStorage");
+  const id = typeof window !== "undefined" ? localStorage.getItem("id") : null;
+  const { data, error } = useSWR(id ? `/api/koornas/${id}/policy` : null, fetcher);
 
-        const response = await fetch(`/api/koornas/${id}/policy`);
-        if (!response.ok) throw new Error("Gagal mengambil data dari API");
+  const loading = !data && !error;
 
-        const result: APIResponse = await response.json();
+  const formattedData: Kebijakan[] = data
+    ? data.data.map((item: APIResponseItem, index: number) => ({
+        no: index + 1,
+        instansi: item.agency_name || "-",
+        total: item.total || 0,
+        id: item.agency_id_panrb || "",
+      }))
+    : [];
 
-        const formattedData: Kebijakan[] = result.data.map((item, index) => ({
-          no: index + 1,
-          instansi: item.agency_name || "-",
-          total: item.total || 0,
-          id: item.agency_id_panrb || "",
-        }));
-
-        setData(formattedData);
-      } catch (error) {
-        console.error("Gagal fetch data kebijakan:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const filteredData = data.filter((item) =>
+  const filteredData = formattedData.filter((item) =>
     item.instansi.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -119,6 +107,12 @@ const Page = () => {
                 <tr>
                   <td colSpan={4} className="text-center py-6 text-gray-500">
                     Memuat data...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={4} className="text-center py-6 text-red-500">
+                    Gagal memuat data.
                   </td>
                 </tr>
               ) : paginatedData.length > 0 ? (

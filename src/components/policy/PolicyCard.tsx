@@ -19,6 +19,9 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
         'SELESAI': 'bg-green-500'
     };
 
+    const progressWidth = policy.progress_pengisian > 0 ? `${policy.progress_pengisian}%` : '0.25rem'; // minimal width biar kelihatan
+    const progressColor = policy.progress_pengisian > 0 ? 'bg-blue-600' : 'bg-gray-400';
+
     return (
         <div className="p-6 rounded-xl shadow-md bg-white">
             <button
@@ -55,8 +58,8 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
                     <div className="flex items-center gap-2 mt-1">
                         <div className="w-full bg-gray-200 rounded-full h-2.5 flex-1">
                             <div
-                                className="bg-blue-600 h-2.5 rounded-full"
-                                style={{ width: `${policy.progress_pengisian}%` }}
+                                className={`${progressColor} h-2.5 rounded-full transition-all duration-300`}
+                                style={{ width: progressWidth }}
                             ></div>
                         </div>
                         <span className="text-blue-600 text-sm font-medium">

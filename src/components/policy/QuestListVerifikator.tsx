@@ -23,18 +23,23 @@ type SelectedAnswer = {
   score: number;
 };
 
-interface QuestionListProps {
-  policyId: string;
+// ...other imports
+
+export type QuestionListProps = {
   activeStep: number;
   selectedAnswers: Record<string, { description: string; score: number }>;
-  onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
   uploadedFiles: Record<string, string>;
+  onAnswerChange: (questionId: string, answerDescription: string, answerScore: number) => void;
+  onLinkUpload: (questionId: string, link: string, questionIndex: number) => Promise<void>;
   apiQuestions: Question[];
   isSubmitted: boolean;
-  onLinkUpload: (questionId: string, file: File) => Promise<void>;
-  verifierNotes: Record<string, string>;
-  onNoteChange: (questionId: string, note: string) => void;
-}
+  dimensionNotes: {
+    a: string;
+    b: string;
+    c: string;
+    d: string;
+  };
+};
 
 
 export default function QuestionList({ activeStep, policyId }: QuestionListProps) {
@@ -112,36 +117,34 @@ export default function QuestionList({ activeStep, policyId }: QuestionListProps
 
   // Fungsi AI via OpenRouter
   const getAiRecommendation = async (questionText: string, answerDescription: string) => {
-    const prompt = `
+  const prompt = `
+Anda adalah seorang analis kebijakan yang ahli di bidangnya. 
 Pertanyaan: "${questionText}"
 Jawaban Pengguna: "${answerDescription}"
-
-Berdasarkan jawaban tersebut, tuliskan rekomendasi bukti dukung yang relevan.
+Berdasarkan jawaban tersebut, tuliskan rekomendasi bukti dukung yang relevan dalam bahasa Indonesia.
 Format: Singkat, jelas, dan profesional.
 `;
-
-    try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions ", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: process.env.NEXT_PUBLIC_OPENROUTER_MODEL,
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 200,
-          temperature: 0.5
-        })
-      });
-
-      const data = await response.json();
-      return data.choices?.[0]?.message?.content.trim() || "Tidak ada rekomendasi.";
-    } catch (error) {
-      console.error("AI Error:", error);
-      return "Gagal mendapatkan rekomendasi dari AI.";
-    }
-  };
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: process.env.NEXT_PUBLIC_OPENROUTER_MODEL,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 200,
+        temperature: 0.5
+      })
+    });
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content.trim() || "Tidak ada rekomendasi.";
+  } catch (error) {
+    console.error("AI Error:", error);
+    return "Gagal mendapatkan rekomendasi dari AI.";
+  }
+};
 
   // Handle perubahan jawaban
   const handleAnswerChange = async (questionCode: string, description: string, score: number) => {

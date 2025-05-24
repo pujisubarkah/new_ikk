@@ -1,12 +1,13 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import useSWR, { mutate } from 'swr';
 import axios from 'axios';
 import { toast } from 'sonner';
 
 interface Analyst {
   id: number;
   name: string;
-  status: string; // Added status property
+  status: string;
 }
 
 interface Policy {
@@ -21,39 +22,16 @@ interface AssignAnalystModalProps {
 }
 
 export default function AssignAnalystModal({ isOpen, onClose, policy }: AssignAnalystModalProps) {
-  const [analysts, setAnalysts] = useState<Analyst[]>([]);
   const [selectedAnalystId, setSelectedAnalystId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
+  const koorId = localStorage.getItem('id');
 
-    const fetchAnalysts = async () => {
-      try {
-        const koorId = localStorage.getItem('id');
-        const res = await axios.get(`/api/koorinstansi/${koorId}/analis`);
-        if (isMounted) {
-          setAnalysts(res.data || []);
-        }
-      } catch {
-        toast.error('Gagal memuat daftar analis');
-        if (isMounted) setAnalysts([]);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    if (isOpen) {
-      setLoading(true);
-      fetchAnalysts();
-    }
-
-    return () => {
-      isMounted = false;
-      setSelectedAnalystId(null); // reset pilihan saat modal ditutup
-    };
-  }, [isOpen]);
+  const fetcher = (url: string) => axios.get(url).then(res => res.data);
+  const { data: analystsData, isLoading, error } = useSWR<Analyst[]>(
+    isOpen && koorId ? `/api/koorinstansi/${koorId}/analis` : null,
+    fetcher
+  );
 
   const handleSubmit = async () => {
     if (!policy || !selectedAnalystId) {
@@ -68,14 +46,17 @@ export default function AssignAnalystModal({ isOpen, onClose, policy }: AssignAn
         analystId: selectedAnalystId,
       });
 
-      console.log('Hasil assign:', res.data);
-
       if (res.status === 200 || res.status === 201) {
         toast.success('Analis berhasil ditetapkan');
+        
+        // Revalidate cache SWR
+        mutate(`/api/koorinstansi/${koorId}/analis`);
+        mutate(`/api/policies/${policy.id}`);
+
         onClose();
       }
-    } catch (error) {
-      console.error('Assign gagal:', error);
+    } catch (err) {
+      console.error('Assign gagal:', err);
       toast.error('Gagal menetapkan analis');
     } finally {
       setSubmitting(false);
@@ -105,24 +86,28 @@ export default function AssignAnalystModal({ isOpen, onClose, policy }: AssignAn
 
         {/* Dropdown */}
         <div className="mb-6">
-          <label htmlFor="analystSelect" className="block text-sm font-medium text-gray-700 mb-1">Pilih Analis</label>
+          <label htmlFor="analystSelect" className="block text-sm font-medium text-gray-700 mb-1">
+            Pilih Analis
+          </label>
           <select
             id="analystSelect"
             value={selectedAnalystId || ''}
             onChange={(e) => setSelectedAnalystId(Number(e.target.value))}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoading}
           >
-            <option value="">{loading ? 'Memuat analis...' : '-- Pilih Analis --'}</option>
-            {analysts
-              .filter((analyst) => analyst.status === 'aktif')
-              .map((analyst) => (
-              <option key={analyst.id} value={analyst.id}>
-                {analyst.name}
-              </option>
+            <option value="" disabled>
+              {isLoading ? 'Memuat analis...' : '-- Pilih Analis --'}
+            </option>
+            {analystsData
+              ?.filter((analyst: Analyst) => analyst.status === 'aktif')
+              .map((analyst: Analyst) => (
+                <option key={analyst.id} value={analyst.id}>
+                  {analyst.name}
+                </option>
               ))}
           </select>
-          {!loading && analysts.length === 0 && (
+          {!isLoading && (!analystsData || analystsData.length === 0) && (
             <p className="text-xs text-red-600 mt-1">Tidak ada analis tersedia.</p>
           )}
         </div>
@@ -137,9 +122,11 @@ export default function AssignAnalystModal({ isOpen, onClose, policy }: AssignAn
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!selectedAnalystId || loading || submitting}
+            disabled={!selectedAnalystId || isLoading || submitting}
             className={`px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm ${
-              submitting || !selectedAnalystId ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              submitting || !selectedAnalystId
+                ? 'bg-blue-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
             {submitting ? 'Memproses...' : 'Tetapkan Analis'}

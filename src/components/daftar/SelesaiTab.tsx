@@ -47,7 +47,7 @@ export default function SelesaiTab() {
                     nama: item.nama_kebijakan || '-',
                     enumerator: item.enumerator || 'Tidak tersedia',
                     nilai: item.nilai_akhir !== undefined ? item.nilai_akhir.toString() : '-',
-                    nilai_akhir: item.nilai_akhir_verif !== undefined ? item.nilai_akhir_verif.toString() : '-', // Added to match Policy interface
+                    nilai_akhir: item.nilai_akhir_verif != null ? item.nilai_akhir_verif.toString() : '-', // Handles both null and undefined
                 }));
 
                 setData(mapped);

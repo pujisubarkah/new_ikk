@@ -33,6 +33,7 @@ interface QuestionListProps {
   onDimensionInfoChange: (dimensionKey: string, info: string) => void;
   apiQuestions: Question[];
   dimensionNotes: Record<string, string>;
+  isReadOnly?: boolean; // 👈 Prop untuk disable input jika sudah terkirim
 }
 
 // Mapping step ke nama dimensi
@@ -60,6 +61,7 @@ export default function QuestionList({
   onDimensionInfoChange,
   apiQuestions,
   dimensionNotes,
+  isReadOnly = false, // Default false
 }: QuestionListProps) {
   const dimensionName = stepDimensionMap[activeStep] ?? '';
   const dimensionKey = dimensionName ? dimensionKeyMap[dimensionName] : '';
@@ -71,6 +73,13 @@ export default function QuestionList({
 
   return (
     <div className="bg-white p-6 rounded-xl shadow space-y-6">
+      {/* Pesan jika form hanya-baca */}
+      {isReadOnly && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded mb-4">
+          Jawaban sudah terkirim dan tidak dapat diedit.
+        </div>
+      )}
+
       <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Pertanyaan</h3>
 
       {/* Jika tidak ada pertanyaan */}
@@ -100,13 +109,14 @@ export default function QuestionList({
                 className="text-blue-600 hover:text-blue-800 focus:outline-none"
                 aria-label="Lihat keterangan indikator"
                 title="Lihat keterangan indikator"
+                disabled={isReadOnly}
               >
                 <Lightbulb className="w-5 h-5" />
               </button>
             </div>
 
             {/* Jawaban Pilihan Radio */}
-            <fieldset className="space-y-3">
+            <fieldset className="space-y-3" disabled={isReadOnly}>
               <legend className="sr-only">Pilihan jawaban untuk {item.indicator_question}</legend>
               {item.instrument_answer
                 .sort((a, b) => a.level_id - b.level_id)
@@ -117,18 +127,27 @@ export default function QuestionList({
                       name={`question-${item.id}`}
                       checked={selectedAnswers[item.id]?.description === opt.level_description}
                       onChange={() =>
+                        !isReadOnly &&
                         onAnswerChange(
                           item.id,
                           opt.level_description,
                           parseInt(opt.level_score, 10) || 0
                         )
                       }
+                      disabled={isReadOnly}
                       className="h-5 w-5 mt-1 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <span className="text-gray-700">{opt.level_description}</span>
                   </label>
                 ))}
             </fieldset>
+
+            {/* Tampilkan Jawaban yang Dipilih */}
+            {selectedAnswers[item.id] && (
+              <div className="mt-2 p-2 border border-gray-300 rounded-md bg-gray-50">
+                <strong>Jawaban Dipilih:</strong> {selectedAnswers[item.id].description}
+              </div>
+            )}
 
             {/* Upload Link Bukti Dukung */}
             <div className="mt-4">
@@ -139,16 +158,18 @@ export default function QuestionList({
                   href="/panduan/unggah-bukti-dukung" 
                   target="_blank" 
                   className="text-blue-600 underline"
+                  rel="noopener noreferrer"
                   >
                   Lihat panduan
-                  </a>
+                </a>
               </label>
               <input
                 id={`upload-${item.id}`}
                 type="url"
                 placeholder="Link publik bukti dukung"
                 value={uploadedFiles[item.id] || ''}
-                onChange={(e) => onLinkUpload(item.id, e.target.value, index)}
+                onChange={(e) => !isReadOnly && onLinkUpload(item.id, e.target.value, index)}
+                disabled={isReadOnly}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 pattern="https://.*"
                 required
@@ -167,7 +188,8 @@ export default function QuestionList({
           <textarea
             id={`dimension-info-${dimensionKey}`}
             value={dimensionNotes[dimensionKey] || ''}
-            onChange={(e) => onDimensionInfoChange(dimensionKey, e.target.value)}
+            onChange={(e) => !isReadOnly && onDimensionInfoChange(dimensionKey, e.target.value)}
+            disabled={isReadOnly}
             placeholder="Masukkan penjelasan atau catatan tambahan untuk dimensi ini..."
             rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaEye, FaPaperPlane, FaTrash } from 'react-icons/fa';
-import useSWR, { mutate } from 'swr';
+import { mutate } from 'swr';
 import AssignAnalystModal from './AssignAnalystModal';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -27,10 +27,15 @@ interface PolicyRowProps {
   item: Policy;
   index: number;
   tab: 'diajukan' | 'disetujui' | 'diproses' | 'selesai';
+  showViewButton?: boolean;
+  showAnalyst?: boolean;
+  showAction?: boolean;
 }
 
+
+
 // Fungsi fetcher untuk SWR
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
+// (fetcher removed because it was unused)
 
 export default function PolicyTableRow({ item, index, tab }: PolicyRowProps) {
   const router = useRouter();

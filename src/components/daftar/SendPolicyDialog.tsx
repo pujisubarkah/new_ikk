@@ -57,6 +57,7 @@ const SendPolicyDialogComponent: React.ForwardRefRenderFunction<HTMLButtonElemen
 
       if (policiesToSend.length === 0) {
         toast.error("Tidak ada kebijakan yang memenuhi syarat untuk dikirim");
+        setIsLoading(false);
         return;
       }
 
@@ -91,7 +92,7 @@ const SendPolicyDialogComponent: React.ForwardRefRenderFunction<HTMLButtonElemen
       <DialogTrigger asChild>
         {children || (
           <Button
-            ref={ref as any}
+            ref={ref as React.Ref<HTMLButtonElement>}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-200"
             disabled={disabled}
           >

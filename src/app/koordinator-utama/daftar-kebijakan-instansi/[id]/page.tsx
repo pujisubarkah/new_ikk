@@ -1,7 +1,8 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import useSWR, { mutate } from "swr";
 import Sidebar from "@/components/sidebar-koornas";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { toast } from "sonner"; // Import toast
@@ -20,64 +21,38 @@ interface KebijakanDetail {
   id: string;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => {
+  if (!res.ok) throw new Error("Failed to fetch data");
+  return res.json();
+});
+
 const Page = () => {
   const { id } = useParams() ?? { id: "" };
   const router = useRouter();
-  const [instansi, setInstansi] = useState<Instansi | null>(null);
   const [kebijakanData, setKebijakanData] = useState<KebijakanDetail[]>([]);
 
-  useEffect(() => {
-    const fetchInstansi = async () => {
-      try {
-        const response = await fetch(`/api/instansi/${id}/instansi`);
-        const data = await response.json();
-        setInstansi(data);
-      } catch (error) {
-        console.error("Failed to fetch instansi data", error);
-      }
-    };
+  // Fetch instansi data
+  const { data: instansi, error: instansiError } = useSWR(id ? `/api/instansi/${id}/instansi` : null, fetcher);
 
-    if (id) {
-      fetchInstansi();
+  // Fetch kebijakan data
+  const { data: kebijakan, error: kebijakanError } = useSWR(id ? `/api/instansi/${id}/kebijakan-diajukan` : null, fetcher);
+
+  // Map kebijakan data when it is fetched
+  React.useEffect(() => {
+    if (kebijakan) {
+      const mappedData: KebijakanDetail[] = kebijakan.map(
+        (policy: { id: string; nama_kebijakan: string; sektor: string; file_url: string; status: string }, index: number) => ({
+          no: index + 1,
+          nama_kebijakan: policy.nama_kebijakan,
+          sektor: policy.sektor || "-",
+          file_url: policy.file_url || "-",
+          status: policy.status,
+          id: policy.id,
+        })
+      );
+      setKebijakanData(mappedData);
     }
-  }, [id]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`/api/instansi/${id}/kebijakan-diajukan`);
-        const data = await response.json();
-
-        const mappedData: KebijakanDetail[] = data.map(
-          (
-            policy: {
-              id: string;
-              nama_kebijakan: string;
-              sektor: string;
-              file_url: string;
-              status: string;
-            },
-            index: number
-          ) => ({
-            no: index + 1,
-            nama_kebijakan: policy.nama_kebijakan,
-            sektor: policy.sektor || "-",
-            file_url: policy.file_url || "-",
-            status: policy.status,
-            id: policy.id,
-          })
-        );
-
-        setKebijakanData(mappedData);
-      } catch (error) {
-        console.error("Failed to fetch kebijakan data", error);
-      }
-    };
-
-    if (id) {
-      fetchData();
-    }
-  }, [id]);
+  }, [kebijakan]);
 
   const handleApprove = async (policyId: string) => {
     try {
@@ -88,6 +63,14 @@ const Page = () => {
       });
 
       if (!response.ok) throw new Error("Gagal menyetujui kebijakan");
+
+      // Update local data after approval
+      mutate(`/api/instansi/${id}/kebijakan-diajukan`, (prevData?: KebijakanDetail[]) => {
+        if (!prevData) return [];
+        return prevData.map(item => 
+          item.id === policyId ? { ...item, status: "Disetujui" } : item
+        );
+      }, false); // false to prevent revalidation
 
       toast.success("Kebijakan berhasil disetujui!"); // Menampilkan toast sukses
     } catch (error) {
@@ -106,7 +89,14 @@ const Page = () => {
 
       if (!response.ok) throw new Error("Gagal menolak kebijakan");
 
-      toast.success("Kebijakan berhasil ditolak!"); // Menampilkan toast sukses
+      mutate(`/api/instansi/${id}/kebijakan-diajukan`, (prevData?: KebijakanDetail[]) => {
+        if (!prevData) return [];
+        return prevData.map(item => 
+          item.id === policyId ? { ...item, status: "Ditolak" } : item
+        );
+      }, false); // false to prevent revalidation
+
+      toast.success("Kebijakan ditolak!"); // Menampilkan toast sukses
     } catch (error) {
       console.error("Error rejecting policy:", error);
       toast.error("Terjadi kesalahan saat menolak kebijakan."); // Menampilkan toast error
@@ -146,41 +136,49 @@ const Page = () => {
               </tr>
             </thead>
             <tbody>
-              {kebijakanData.map((item) => (
-                <tr key={item.id} className="hover:bg-blue-50 transition duration-150">
-                  <td className="px-6 py-4 border-b text-center">{item.no}</td>
-                  <td className="px-6 py-4 border-b">{item.nama_kebijakan}</td>
-                  <td className="px-6 py-4 border-b">{item.sektor}</td>
-                  <td className="px-6 py-4 border-b">
-                    <a
-                      href={item.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      {item.file_url ? "Lihat File" : "Tidak ada file"}
-                    </a>
-                  </td>
-                  <td className="px-6 py-4 border-b">{item.status}</td>
-                  <td className="px-6 py-4 border-b text-center">
-                    <button
-                      onClick={() => handleApprove(item.id)}  // Panggil fungsi approve
-                      className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-xs"
-                    >
-                      <FaCheckCircle className="text-white" />
-                      DISETUJUI
-                    </button>
+              {kebijakanData.length > 0 ? (
+                kebijakanData.map((item) => (
+                  <tr key={item.id} className="hover:bg-blue-50 transition duration-150">
+                    <td className="px-6 py-4 border-b text-center">{item.no}</td>
+                    <td className="px-6 py-4 border-b">{item.nama_kebijakan}</td>
+                    <td className="px-6 py-4 border-b">{item.sektor}</td>
+                    <td className="px-6 py-4 border-b">
+                      <a
+                        href={item.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        {item.file_url ? "Lihat File" : "Tidak ada file"}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4 border-b">{item.status}</td>
+                    <td className="px-6 py-4 border-b text-center">
+                      <button
+                        onClick={() => handleApprove(item.id)}  // Panggil fungsi approve
+                        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-xs"
+                      >
+                        <FaCheckCircle className="text-white" />
+                        DISETUJUI
+                      </button>
 
-                    <button
-                      onClick={() => handleReject(item.id)}  // Panggil fungsi reject
-                      className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg text-xs"
-                    >
-                      <FaTimesCircle className="text-white" />
-                      DITOLAK
-                    </button>
+                      <button
+                        onClick={() => handleReject(item.id)}  // Panggil fungsi reject
+                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg text-xs"
+                      >
+                        <FaTimesCircle className="text-white" />
+                        DITOLAK
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="text-center py-6 text-gray-500">
+                    {kebijakanError ? "Gagal memuat data kebijakan." : "Tidak ada kebijakan yang diajukan."}
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

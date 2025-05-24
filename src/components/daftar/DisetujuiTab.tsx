@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
+import {  useState } from 'react';
 import axios from 'axios';
+import useSWR, { mutate } from 'swr';
 import PolicyTableRow from './PolicyTableRow';
 import PolicyTablePagination from './PolicyTablePagination';
 
@@ -13,56 +14,36 @@ interface Policy {
     nilai_akhir_verif?: string;
 }
 
+const fetcher = (url: string) => axios.get(url).then(res => res.data.data || []);
+
 export default function DisetujuiTab() {
-    // Removed unused router variable
-    const [data, setData] = useState<Policy[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [isLoading, setIsLoading] = useState(true);
-
     const itemsPerPage = 5;
+
+    // Ambil ID admin hanya di client-side
+    const adminId = typeof window !== 'undefined' ? localStorage.getItem('id') : null;
+
+    // Gunakan SWR untuk fetching data
+    const { data, error, isLoading } = useSWR(
+        adminId ? `/api/policies/${adminId}/disetujui` : null,
+        fetcher
+    );
+
+    // Mapping data ke format tabel
+    const mappedData: Policy[] = (data || []).map((item: any, index: number) => ({
+        id: parseInt(item.id),
+        nama: item.nama_kebijakan || '-',
+        analis: item.analis?.nama || item.nama_analis || 'Belum ditetapkan',
+        tanggal: item.tanggal_berlaku
+            ? new Date(item.tanggal_berlaku).toLocaleDateString('id-ID')
+            : '-',
+        nilai_akhir: item.nilai_akhir || '-',
+        nilai_akhir_verif: item.nilai_akhir_verif || '-',
+    }));
+
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentData = data.slice(startIndex, startIndex + itemsPerPage);
-    const totalPages = Math.ceil(data.length / itemsPerPage);
-
-    useEffect(() => {
-        const fetchPolicies = async () => {
-            try {
-                const adminId = localStorage.getItem('id');
-                if (!adminId) throw new Error('Admin ID tidak ditemukan');
-
-                const res = await axios.get(`/api/policies/${adminId}/disetujui`);
-                const fetched = res.data?.data || [];
-                interface FetchedPolicy {
-                    id: string;
-                    nama_kebijakan?: string;
-                    analis?: { nama: string };
-                    nama_analis?: string;
-                    tanggal_berlaku?: string;
-                    nilai_akhir?: string;
-                    nilai_akhir_verif?: string;
-                }
-
-                const mapped = fetched.map((item: FetchedPolicy) => ({
-                    id: parseInt(item.id),
-                    nama: item.nama_kebijakan || '-',
-                    analis: item.analis?.nama || item.nama_analis || 'Belum ditetapkan',
-                    tanggal: item.tanggal_berlaku
-                        ? new Date(item.tanggal_berlaku).toLocaleDateString('id-ID')
-                        : '-',
-                    nilai_akhir: item.nilai_akhir || '-',
-                    nilai_akhir_verif: item.nilai_akhir_verif || '-',
-                }));
-
-                setData(mapped);
-            } catch (err) {
-                console.error('Gagal mengambil data:', err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchPolicies();
-    }, []);
+    const currentData = mappedData.slice(startIndex, startIndex + itemsPerPage);
+    const totalPages = Math.ceil(mappedData.length / itemsPerPage);
 
     return (
         <div className="overflow-x-auto bg-white shadow-md rounded-xl border border-gray-200">
@@ -79,8 +60,14 @@ export default function DisetujuiTab() {
                 <tbody className="bg-white divide-y divide-gray-200">
                     {isLoading ? (
                         <tr>
-                            <td colSpan={5} className="text-center py-6">
+                            <td colSpan={5} className="text-center py-6 text-gray-500">
                                 Memuat data...
+                            </td>
+                        </tr>
+                    ) : error ? (
+                        <tr>
+                            <td colSpan={5} className="text-center py-6 text-red-500">
+                                Gagal mengambil data.
                             </td>
                         </tr>
                     ) : currentData.length > 0 ? (
@@ -96,6 +83,23 @@ export default function DisetujuiTab() {
                     )}
                 </tbody>
             </table>
+
+            {/* Tombol Refresh Manual */}
+            <div className="p-4 flex justify-end">
+                <button
+                    onClick={() => {
+                        const userId = localStorage.getItem('id');
+                        if (userId) {
+                            mutate(`/api/policies/${userId}/disetujui`);
+                        }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+                >
+                    Muat Ulang Data
+                </button>
+            </div>
+
+            {/* Pagination */}
             {totalPages > 1 && (
                 <PolicyTablePagination
                     currentPage={currentPage}
